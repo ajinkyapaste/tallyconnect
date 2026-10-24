@@ -1,0 +1,197 @@
+Created At: 2026-10-16T10:55:49+05:30
+Completed At: 2026-10-16T10:55:50+05:30
+
+				The command exited with code 0.
+				Output:
+				<truncated 10451 lines>
++            )}
++
++            {/* Account / user menu */}
++            <div className="user-menu">
++              <button
++                className="icon-btn user-menu-trigger"
++                onClick={toggleUserMenu}
++                title="Account menu"
++              >
++                <span className="user-avatar">{String(user?.username || 'T').charAt(0).toUpperCase()}</span>
++                {user?.role === 'ADMIN' && <span className="admin-dot" title="Administrator" />}
++              </button>
++              {userMenuOpen && createPortal(
++                <>
++                  <div className="user-menu-scrim" onClick={() => setUserMenuOpen(false)} />
++                  <div className="user-menu-dropdown" style={userMenuStyle}>
++                    <div className="user-menu-head">
++                      <strong>{user?.name || user?.username || 'Tally User'}</strong>
++                      <span>{user?.email || ''}</span>
++                    </div>
++                    <button type="button" onClick={() => handleNav('settings')}><Settings size={16} /> Settings</button>
++                    {user?.role === 'ADMIN' && (
++                      <button type="button" onClick={() => handleNav('users')}><UsersIcon size={16} /> Users &amp; Roles</button>
++                    )}
++                    <button type="button" onClick={() => handleNav('notifications')}><Bell size={16} /> Notifications</button>
++                    <button
++                      type="button"
++                      onClick={() => {
++                        setUserMenuOpen(false);
++                        setShowMasterUnhideModal(true);
++                      }}
++                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
++                      title="Unhide Hidden Items across your workspace"
++                    >
++                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
++                        <Eye size={16} style={{ color: '#10b981' }} />
++                        <span>Unhide Hidden Items</span>
++                      </span>
++                      {globalHiddenCount > 0 && (
++                        <span className="unhide-count-badge" style={{
++                          background: 'rgba(16, 185, 129, 0.15)',
++                          color: '#10b981',
++                          fontWeight: 700,
++                          fontSize: '11px',
++                          padding: '2px 8px',
++                          borderRadius: '12px'
++                        }}>
++                          {globalHiddenCount}
++                        </span>
++                      )}
++                    </button>
++                    <div className="user-menu-sep" />
++                    <button type="button" className="user-menu-logout" onClick={handleLogout}><LogOut size={16} /> Log Out</button>
++                  </div>
++                </>,
++                document.body
++              )}
+             </div>
+           </div>
+         </div>
+ 
+-        {/* Content View */}
+-        <div className="content-scroll">
++        <div className="header-mobile-search">
++            <GlobalSearch
++              companyGuid={companyGuid}
++              query={headerQuery}
++              setQuery={setHeaderQuery}
++              onNavigate={handleNav}
++            />
++          </div>
++        </div>
++
++        {/* Content View — keyed by company so switching remounts the current
++            tab and every view re-fetches for the newly active company. */}
++        <div className="content-scroll" key={companyGuid || 'no-company'}>
+           {renderContent()}
+         </div>
+ 
++        {/* Header Feedback Modal */}
++        <FeedbackModal isOpen={showFeedbackModal} onClose={() => setShowFeedbackModal(false)} />
++
++        {/* Master Restore Hidden Items Modal (Controlled exclusively from Account Menu) */}
++        <MasterUnhideModal
++          isOpen={showMasterUnhideModal}
++          onClose={() => {
++            setShowMasterUnhideModal(false);
++            setGlobalHiddenCount(getGlobalHiddenCount());
++          }}
++        />
++
++        {/* Navigation Tab Context Menu */}
++        {navContextMenu && createPortal(
++          <div
++            className="dashboard-context-menu-scrim"
++            onClick={() => setNavContextMenu(null)}
++            onContextMenu={(e) => { e.preventDefault(); setNavContextMenu(null); }}
++          >
++            <div
++              className="dashboard-context-menu glass-panel"
++              style={{
++                position: 'fixed',
++                left: `${Math.min(navContextMenu.x, window.innerWidth - 180)}px`,
++                top: `${Math.min(navContextMenu.y, window.innerHeight - 200)}px`,
++                zIndex: 99999
++              }}
++              onClick={(e) => e.stopPropagation()}
++            >
++              <div style={{ padding: '6px 12px 4px', borderBottom: '1px solid var(--glass-border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-dim)' }}>
++                {navContextMenu.item.name}
++              </div>
++              <button type="button" onClick={() => { handleNav(navContextMenu.item.id); setNavContextMenu(null); }}>
++                <ExternalLink size={14} />
++                <span>Open Tab</span>
++              </button>
++              <button type="button" onClick={() => toggleNavPin(navContextMenu.item.id)}>
++                <Pin size={14} />
++                <span>{navPinned.includes(navContextMenu.item.id) ? 'Unpin' : 'Pin to Top'}</span>
++              </button>
++              <button type="button" onClick={() => handleNavHide(navContextMenu.item.id)}>
++                <EyeOff size={14} />
++                <span>Hide Tab</span>
++              </button>
++            </div>
++          </div>,
++          document.body
++        )}
++
++        {/* AI Assistant Floating Action Widget */}
++        <AiAssistantWidget companyGuid={companyGuid} syncInfo={syncInfo} />
++
+       </div>
++
++      {/* Mobile Bottom Navigation Bar (Matching user's reference screenshots 2, 3, 4) */}
++      <nav className="mobile-bottom-nav glass-panel" aria-label="Mobile Navigation">
++        <button
++          type="button"
++          className={`mob-nav-item ${currentTab === 'dashboard' ? 'active' : ''}`}
++          onClick={() => handleNav('dashboard')}
++        >
++          <div className="mob-nav-icon"><Home size={18} /></div>
++          <span>Home</span>
++        </button>
++        <button
++          type="button"
++          className={`mob-nav-item ${currentTab === 'bills' ? 'active' : ''}`}
++          onClick={() => handleNav('bills')}
++        >
++          <div className="mob-nav-icon"><Receipt size={18} /></div>
++          <span>Outstanding</span>
++        </button>
++        <button
++          type="button"
++          className={`mob-nav-item ${currentTab === 'ledger' || currentTab === 'ledgers' ? 'active' : ''}`}
++          onClick={() => handleNav('ledger')}
++        >
++          <div className="mob-nav-icon"><UsersIcon size={18} /></div>
++          <span>Team</span>
++        </button>
++        <button
++          type="button"
++          className={`mob-nav-item ${currentTab === 'activity' ? 'active' : ''}`}
++          onClick={() => handleNav('activity')}
++        >
++          <div className="mob-nav-icon"><RotateCcw size={18} /></div>
++          <span>Activity</span>
++        </button>
++        <button
++          type="button"
++          className={`mob-nav-item ${currentTab === 'reports' || currentTab === 'monthly' ? 'active' : ''}`}
++          onClick={() => handleNav('reports')}
++        >
++          <div className="mob-nav-icon"><BarChart3 size={18} /></div>
++          <span>Reports</span>
++        </button>
++      </nav>
++
++      {/* Centralized Liquid Glass Customizer Modal */}
++      <LiquidGlassModal
++        isOpen={showGlassModal}
++        onClose={() => setShowGlassModal(false)}
++        isDarkMode={darkMode}
++      />
+     </div>
+   );
+ }
+ 
+-export default App;
+\ No newline at end of file
++export default App;
+

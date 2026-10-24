@@ -1,0 +1,150 @@
+import express from "express";
+import pool from "../db.js";
+import requireAuth from "../middleware/requireAuth.js";
+import { createMobileNotificationForAdmin } from "../utils/mobileNotification.js";
+
+const router = express.Router();
+
+/* Sync batch size: how many queued commands the agent claims per poll.
+   Tunable via env (SYNC_BATCH_SIZE) so it can be raised after performance
+   testing without a code change. Clamped to a sane range. */
+const SYNC_BATCH_SIZE = Math.min(
+  200,
+  Math.max(1, parseInt(process.env.SYNC_BATCH_SIZE, 10) || 20)
+);
+
+/* =========================================
+   AGENT: FETCH PENDING VOUCHER COMMANDS
+========================================= */
+router.get("/pending", requireAuth, async (req, res) => {
+  const { company_guid } = req.query;
+
+  if (!company_guid) {
+    return res.status(400).json({ message: "company_guid required" });
+  }
+
+  const result = await pool.query(
+    `
+    SELECT id, action, payload
+    FROM sync_queue
+    WHERE status = 'pending'
+      AND entity_type = 'VOUCHER'
+      AND company_guid = $1
+    ORDER BY created_at ASC
+    LIMIT $2
+    `,
+    [company_guid, SYNC_BATCH_SIZE]
+  );
+
+  res.json(result.rows);
+});
+
+/* =========================================
+   AGENT: MARK PROCESSING
+========================================= */
+router.post("/:id/processing", requireAuth, async (req, res) => {
+  await pool.query(
+    `UPDATE sync_queue SET status='processing' WHERE id=$1`,
+    [req.params.id]
+  );
+
+  res.json({ success: true });
+});
+
+/* =========================================
+   AGENT: MARK SUCCESS
+========================================= */
+router.post("/:id/success", requireAuth, async (req, res) => {
+  await pool.query(
+    `
+    UPDATE sync_queue
+    SET status='success',
+        processed_at=now()
+    WHERE id=$1
+    `,
+    [req.params.id]
+  );
+
+  res.json({ success: true });
+});
+
+/* =========================================
+   AGENT: MARK FAILED
+========================================= */
+router.post("/:id/failed", requireAuth, async (req, res) => {
+  const { error } = req.body;
+
+  const result = await pool.query(
+    `
+    UPDATE sync_queue
+    SET status='failed',
+        error=$2
+    WHERE id=$1
+    RETURNING admin_id, entity_type, error
+    `,
+    [req.params.id, error || "Unknown error"]
+  );
+
+  const failed = result.rows[0];
+  if (failed) {
+    createMobileNotificationForAdmin({
+      type: "sync_failed",
+      message: `${failed.entity_type || "Sync"} command failed: ${failed.error || "Unknown error"}`,
+      adminId: failed.admin_id,
+    }).catch((e) => console.error("mobile sync_failed notify error:", e.message));
+  }
+
+  res.json({ success: true });
+});
+
+/* =========================================
+   AGENT: FETCH PENDING BILL COMMANDS
+========================================= */
+router.get("/pending-bills", requireAuth, async (req, res) => {
+  const { company_guid } = req.query;
+
+  if (!company_guid) {
+    return res.status(400).json({ message: "company_guid required" });
+  }
+
+  const result = await pool.query(
+    `
+    SELECT id, action, payload
+    FROM sync_queue
+    WHERE status = 'pending'
+  AND entity_type = 'BILL'
+  AND action = 'CREATE'
+  AND company_guid = $1
+
+    ORDER BY created_at ASC
+    LIMIT $2
+    `,
+    [company_guid, SYNC_BATCH_SIZE]
+  );
+
+  res.json(result.rows);
+});
+
+
+router.get("/pending-ledgers", requireAuth, async (req, res) => {
+
+const { company_guid } = req.query;
+
+const result = await pool.query(
+`
+SELECT id, action, payload
+FROM sync_queue
+WHERE status='pending'
+AND entity_type='LEDGER'
+AND company_guid=$1
+ORDER BY created_at ASC
+LIMIT $2
+`,
+[company_guid, SYNC_BATCH_SIZE]
+);
+
+res.json(result.rows);
+
+});
+
+export default router;

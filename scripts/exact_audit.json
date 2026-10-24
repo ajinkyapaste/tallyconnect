@@ -1,0 +1,2004 @@
+{
+  "total": 191,
+  "connectedCount": 160,
+  "remainingCount": 31,
+  "remaining": [
+    {
+      "key": "GET /company/sync-start/:guid",
+      "method": "GET",
+      "path": "/company/sync-start/:guid",
+      "file": "companies.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "PUT /company/sync-start/:guid",
+      "method": "PUT",
+      "path": "/company/sync-start/:guid",
+      "file": "companies.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /ledger/ledger/user-ledgers",
+      "method": "POST",
+      "path": "/ledger/ledger/user-ledgers",
+      "file": "ledgers.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /ledger/cleanup/ledger",
+      "method": "POST",
+      "path": "/ledger/cleanup/ledger",
+      "file": "ledgers.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /voucher-entry/sync",
+      "method": "POST",
+      "path": "/voucher-entry/sync",
+      "file": "voucherEntry.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /voucher-entry/cleanup/voucher",
+      "method": "POST",
+      "path": "/voucher-entry/cleanup/voucher",
+      "file": "voucherEntry.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /orders/sync",
+      "method": "POST",
+      "path": "/orders/sync",
+      "file": "orders.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /orders/cleanup/order",
+      "method": "POST",
+      "path": "/orders/cleanup/order",
+      "file": "orders.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/sync",
+      "method": "POST",
+      "path": "/bill/sync",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/push-to-tally",
+      "method": "POST",
+      "path": "/bill/push-to-tally",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/ensure-voucher-bill-map",
+      "method": "POST",
+      "path": "/bill/ensure-voucher-bill-map",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/mark-processing",
+      "method": "POST",
+      "path": "/bill/mark-processing",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/mark-success",
+      "method": "POST",
+      "path": "/bill/mark-success",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/mark-failed",
+      "method": "POST",
+      "path": "/bill/mark-failed",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/mark-all-cleared",
+      "method": "POST",
+      "path": "/bill/mark-all-cleared",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /bill/reconcile",
+      "method": "POST",
+      "path": "/bill/reconcile",
+      "file": "bills.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /ageing/sync",
+      "method": "POST",
+      "path": "/ageing/sync",
+      "file": "ageing.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /sales-order/sync",
+      "method": "POST",
+      "path": "/sales-order/sync",
+      "file": "salesOrder.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /sales-order-item/sync",
+      "method": "POST",
+      "path": "/sales-order-item/sync",
+      "file": "salesOrderItem.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /invoice/sync",
+      "method": "POST",
+      "path": "/invoice/sync",
+      "file": "invoice.routes.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /invoice-item/sync",
+      "method": "POST",
+      "path": "/invoice-item/sync",
+      "file": "invoiceItem.routes.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /sync/event",
+      "method": "POST",
+      "path": "/sync/event",
+      "file": "sync.routes.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /inventory/inventory-movement/sync",
+      "method": "POST",
+      "path": "/inventory/inventory-movement/sync",
+      "file": "inventory.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /inventory/cleanup",
+      "method": "POST",
+      "path": "/inventory/cleanup",
+      "file": "inventory.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /api/reports/profit-loss/sync",
+      "method": "POST",
+      "path": "/api/reports/profit-loss/sync",
+      "file": "reports.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "GET /api/auth/pending-reset-requests",
+      "method": "GET",
+      "path": "/api/auth/pending-reset-requests",
+      "file": "forgotPassword.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "GET /api/auth/approve-reset/:token",
+      "method": "GET",
+      "path": "/api/auth/approve-reset/:token",
+      "file": "forgotPassword.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /invoice/bulk-sync",
+      "method": "POST",
+      "path": "/invoice/bulk-sync",
+      "file": "invoice.bulk.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /invoice-item/bulk-sync",
+      "method": "POST",
+      "path": "/invoice-item/bulk-sync",
+      "file": "invoiceItem.bulk.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "POST /ledger-items/sync",
+      "method": "POST",
+      "path": "/ledger-items/sync",
+      "file": "ledgerItems.js",
+      "isConnected": false,
+      "foundIn": []
+    },
+    {
+      "key": "GET /check-db",
+      "method": "GET",
+      "path": "/check-db",
+      "file": "server.js",
+      "isConnected": false,
+      "foundIn": []
+    }
+  ],
+  "connected": [
+    {
+      "key": "POST /auth/register",
+      "method": "POST",
+      "path": "/auth/register",
+      "file": "auth.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "Login.jsx"
+      ]
+    },
+    {
+      "key": "POST /auth/login",
+      "method": "POST",
+      "path": "/auth/login",
+      "file": "auth.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "Login.jsx"
+      ]
+    },
+    {
+      "key": "GET /auth/me",
+      "method": "GET",
+      "path": "/auth/me",
+      "file": "auth.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /company/create",
+      "method": "POST",
+      "path": "/company/create",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /company/select",
+      "method": "POST",
+      "path": "/company/select",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "CompanyDropdown.jsx"
+      ]
+    },
+    {
+      "key": "GET /company/selected",
+      "method": "GET",
+      "path": "/company/selected",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "CompanyDropdown.jsx"
+      ]
+    },
+    {
+      "key": "GET /company",
+      "method": "GET",
+      "path": "/company",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "CompanyDropdown.jsx",
+        "FinancialInsights.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "GET /company/active",
+      "method": "GET",
+      "path": "/company/active",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /company/set-active",
+      "method": "POST",
+      "path": "/company/set-active",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "CompanyDropdown.jsx"
+      ]
+    },
+    {
+      "key": "GET /company/by-guid/:guid",
+      "method": "GET",
+      "path": "/company/by-guid/:guid",
+      "file": "companies.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /ledger/sync",
+      "method": "POST",
+      "path": "/ledger/sync",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /ledger",
+      "method": "GET",
+      "path": "/ledger",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "CreateVoucherWizard.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx",
+        "TallyConnectorModal.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "POST /ledger/user-ledgers",
+      "method": "POST",
+      "path": "/ledger/user-ledgers",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /ledger/users/:userId/ledgers",
+      "method": "GET",
+      "path": "/ledger/users/:userId/ledgers",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /ledger/deleted/history",
+      "method": "GET",
+      "path": "/ledger/deleted/history",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /ledger/deleted/restore/:id",
+      "method": "POST",
+      "path": "/ledger/deleted/restore/:id",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /ledger/:ledgerGuid",
+      "method": "GET",
+      "path": "/ledger/:ledgerGuid",
+      "file": "ledgers.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "CreateVoucherWizard.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx",
+        "TallyConnectorModal.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "POST /voucher-entry/reset-active",
+      "method": "POST",
+      "path": "/voucher-entry/reset-active",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /voucher-entry",
+      "method": "GET",
+      "path": "/voucher-entry",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "DashboardSalesAnalyticsCard.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx",
+        "TallyConnectorModal.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "GET /voucher-entry/paged",
+      "method": "GET",
+      "path": "/voucher-entry/paged",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "DELETE /voucher-entry/:voucherGuid",
+      "method": "DELETE",
+      "path": "/voucher-entry/:voucherGuid",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "DashboardSalesAnalyticsCard.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx",
+        "TallyConnectorModal.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "GET /voucher-entry/:voucherGuid",
+      "method": "GET",
+      "path": "/voucher-entry/:voucherGuid",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "DashboardSalesAnalyticsCard.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx",
+        "TallyConnectorModal.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "GET /voucher-entry/user-vouchers/:userId",
+      "method": "GET",
+      "path": "/voucher-entry/user-vouchers/:userId",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /voucher-entry/user-vouchers",
+      "method": "POST",
+      "path": "/voucher-entry/user-vouchers",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /voucher-entry/ledger/:ledgerGuid",
+      "method": "GET",
+      "path": "/voucher-entry/ledger/:ledgerGuid",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /voucher-entry/bulk-user-vouchers",
+      "method": "POST",
+      "path": "/voucher-entry/bulk-user-vouchers",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /voucher-entry/deleted/restore-voucher/:id",
+      "method": "POST",
+      "path": "/voucher-entry/deleted/restore-voucher/:id",
+      "file": "voucherEntry.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /voucher-entry/bulk-sync",
+      "method": "POST",
+      "path": "/voucher-entry/bulk-sync",
+      "file": "voucherEntry.bulk.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /orders",
+      "method": "GET",
+      "path": "/orders",
+      "file": "orders.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx"
+      ]
+    },
+    {
+      "key": "GET /orders/user-orders/:userId",
+      "method": "GET",
+      "path": "/orders/user-orders/:userId",
+      "file": "orders.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /orders/user-orders",
+      "method": "POST",
+      "path": "/orders/user-orders",
+      "file": "orders.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /orders/bulk-user-orders",
+      "method": "POST",
+      "path": "/orders/bulk-user-orders",
+      "file": "orders.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /bill",
+      "method": "GET",
+      "path": "/bill",
+      "file": "bills.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx"
+      ]
+    },
+    {
+      "key": "GET /bill/ledger/:ledgerGuid",
+      "method": "GET",
+      "path": "/bill/ledger/:ledgerGuid",
+      "file": "bills.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /bill/dashboard-summary",
+      "method": "GET",
+      "path": "/bill/dashboard-summary",
+      "file": "bills.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /ageing",
+      "method": "GET",
+      "path": "/ageing",
+      "file": "ageing.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /ageing/ledger/:ledgerGuid",
+      "method": "GET",
+      "path": "/ageing/ledger/:ledgerGuid",
+      "file": "ageing.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /stock-item/sync",
+      "method": "POST",
+      "path": "/stock-item/sync",
+      "file": "stockItem.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /stock-summary/sync",
+      "method": "POST",
+      "path": "/stock-summary/sync",
+      "file": "stockSummary.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /invoice",
+      "method": "GET",
+      "path": "/invoice",
+      "file": "invoice.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx"
+      ]
+    },
+    {
+      "key": "GET /invoice/ledger/:ledgerGuid",
+      "method": "GET",
+      "path": "/invoice/ledger/:ledgerGuid",
+      "file": "invoice.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /invoice-item/:invoice_guid",
+      "method": "GET",
+      "path": "/invoice-item/:invoice_guid",
+      "file": "invoiceItem.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /sync/trigger",
+      "method": "POST",
+      "path": "/sync/trigger",
+      "file": "sync.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /sync/active-admin",
+      "method": "GET",
+      "path": "/sync/active-admin",
+      "file": "sync.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /inventory",
+      "method": "GET",
+      "path": "/inventory",
+      "file": "inventory.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "CreateVoucherWizard.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx"
+      ]
+    },
+    {
+      "key": "GET /inventory/user-inventory/:userId",
+      "method": "GET",
+      "path": "/inventory/user-inventory/:userId",
+      "file": "inventory.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /inventory/user-inventory",
+      "method": "POST",
+      "path": "/inventory/user-inventory",
+      "file": "inventory.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /inventory/bulk-user-inventory",
+      "method": "POST",
+      "path": "/inventory/bulk-user-inventory",
+      "file": "inventory.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /inventory/full-sync",
+      "method": "POST",
+      "path": "/inventory/full-sync",
+      "file": "inventory.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /inventory/mobile",
+      "method": "GET",
+      "path": "/inventory/mobile",
+      "file": "inventory.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /users/me",
+      "method": "GET",
+      "path": "/users/me",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/me",
+      "method": "PUT",
+      "path": "/users/me",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /users/me/notifications",
+      "method": "GET",
+      "path": "/users/me/notifications",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/me/notifications",
+      "method": "PUT",
+      "path": "/users/me/notifications",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /users/me/avatar",
+      "method": "POST",
+      "path": "/users/me/avatar",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /users",
+      "method": "GET",
+      "path": "/users",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /users",
+      "method": "POST",
+      "path": "/users",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "PUT /users/:id/voucher-permissions",
+      "method": "PUT",
+      "path": "/users/:id/voucher-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "PUT /users/:id/ledger-permissions",
+      "method": "PUT",
+      "path": "/users/:id/ledger-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "PUT /users/:id/orders-permissions",
+      "method": "PUT",
+      "path": "/users/:id/orders-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "PUT /users/:id/inventory-permissions",
+      "method": "PUT",
+      "path": "/users/:id/inventory-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "PUT /users/:id/dashboard-permissions",
+      "method": "PUT",
+      "path": "/users/:id/dashboard-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "DELETE /users/:id",
+      "method": "DELETE",
+      "path": "/users/:id",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /users/:id/ledgers",
+      "method": "GET",
+      "path": "/users/:id/ledgers",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /users/bulk-ledger-assign",
+      "method": "POST",
+      "path": "/users/bulk-ledger-assign",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/bulk-voucher-permissions",
+      "method": "PUT",
+      "path": "/users/bulk-voucher-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/bulk-orders-permissions",
+      "method": "PUT",
+      "path": "/users/bulk-orders-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/bulk-ledger-permissions",
+      "method": "PUT",
+      "path": "/users/bulk-ledger-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /users/:id/invite-info",
+      "method": "GET",
+      "path": "/users/:id/invite-info",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "PUT /users/bulk-inventory-permissions",
+      "method": "PUT",
+      "path": "/users/bulk-inventory-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/bulk-dashboard-permissions",
+      "method": "PUT",
+      "path": "/users/bulk-dashboard-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /users/me/monthly-report-schedule",
+      "method": "PUT",
+      "path": "/users/me/monthly-report-schedule",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /users/me/monthly-report-schedule",
+      "method": "GET",
+      "path": "/users/me/monthly-report-schedule",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/users/me",
+      "method": "GET",
+      "path": "/api/users/me",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/me",
+      "method": "PUT",
+      "path": "/api/users/me",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/users/me/notifications",
+      "method": "GET",
+      "path": "/api/users/me/notifications",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/me/notifications",
+      "method": "PUT",
+      "path": "/api/users/me/notifications",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/users/me/avatar",
+      "method": "POST",
+      "path": "/api/users/me/avatar",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/users",
+      "method": "GET",
+      "path": "/api/users",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/users",
+      "method": "POST",
+      "path": "/api/users",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/:id/voucher-permissions",
+      "method": "PUT",
+      "path": "/api/users/:id/voucher-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/:id/ledger-permissions",
+      "method": "PUT",
+      "path": "/api/users/:id/ledger-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/:id/orders-permissions",
+      "method": "PUT",
+      "path": "/api/users/:id/orders-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/:id/inventory-permissions",
+      "method": "PUT",
+      "path": "/api/users/:id/inventory-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/:id/dashboard-permissions",
+      "method": "PUT",
+      "path": "/api/users/:id/dashboard-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "DELETE /api/users/:id",
+      "method": "DELETE",
+      "path": "/api/users/:id",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/users/:id/ledgers",
+      "method": "GET",
+      "path": "/api/users/:id/ledgers",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/users/bulk-ledger-assign",
+      "method": "POST",
+      "path": "/api/users/bulk-ledger-assign",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/bulk-voucher-permissions",
+      "method": "PUT",
+      "path": "/api/users/bulk-voucher-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/bulk-orders-permissions",
+      "method": "PUT",
+      "path": "/api/users/bulk-orders-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/bulk-ledger-permissions",
+      "method": "PUT",
+      "path": "/api/users/bulk-ledger-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/users/:id/invite-info",
+      "method": "GET",
+      "path": "/api/users/:id/invite-info",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/bulk-inventory-permissions",
+      "method": "PUT",
+      "path": "/api/users/bulk-inventory-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/bulk-dashboard-permissions",
+      "method": "PUT",
+      "path": "/api/users/bulk-dashboard-permissions",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/users/me/monthly-report-schedule",
+      "method": "PUT",
+      "path": "/api/users/me/monthly-report-schedule",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/users/me/monthly-report-schedule",
+      "method": "GET",
+      "path": "/api/users/me/monthly-report-schedule",
+      "file": "users.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /dashboard/summary",
+      "method": "GET",
+      "path": "/dashboard/summary",
+      "file": "dashboard.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "FinancialInsights.jsx"
+      ]
+    },
+    {
+      "key": "GET /dashboard/income-expense",
+      "method": "GET",
+      "path": "/dashboard/income-expense",
+      "file": "dashboard.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "FinancialInsights.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx"
+      ]
+    },
+    {
+      "key": "GET /dashboard/bills",
+      "method": "GET",
+      "path": "/dashboard/bills",
+      "file": "dashboard.js",
+      "isConnected": true,
+      "foundIn": [
+        "Reports.backup.jsx",
+        "Reports.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/reports/monthly-summary",
+      "method": "GET",
+      "path": "/api/reports/monthly-summary",
+      "file": "reports.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/auth/forgot-password",
+      "method": "POST",
+      "path": "/api/auth/forgot-password",
+      "file": "forgotPassword.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/auth/reset-password",
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "file": "forgotPassword.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/auth/send-otp",
+      "method": "POST",
+      "path": "/api/auth/send-otp",
+      "file": "forgotPassword.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "Login.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/auth/verify-otp",
+      "method": "POST",
+      "path": "/api/auth/verify-otp",
+      "file": "forgotPassword.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "Login.jsx"
+      ]
+    },
+    {
+      "key": "POST /send-invite",
+      "method": "POST",
+      "path": "/send-invite",
+      "file": "sendInvite.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /agent/handshake",
+      "method": "POST",
+      "path": "/agent/handshake",
+      "file": "agent.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /agent/agent-info",
+      "method": "POST",
+      "path": "/agent/agent-info",
+      "file": "agent.routes.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /agent-status/sync-status",
+      "method": "POST",
+      "path": "/agent-status/sync-status",
+      "file": "agentStatus.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /agent-status/sync-status",
+      "method": "GET",
+      "path": "/agent-status/sync-status",
+      "file": "agentStatus.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /agent-status/sync-started",
+      "method": "POST",
+      "path": "/agent-status/sync-started",
+      "file": "agentStatus.js",
+      "isConnected": true,
+      "foundIn": [
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /voucher-command/create",
+      "method": "POST",
+      "path": "/voucher-command/create",
+      "file": "UniversalUpdate/voucherCommand.js",
+      "isConnected": true,
+      "foundIn": [
+        "CreateVoucherWizard.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "POST /voucher-command/alter",
+      "method": "POST",
+      "path": "/voucher-command/alter",
+      "file": "UniversalUpdate/voucherCommand.js",
+      "isConnected": true,
+      "foundIn": [
+        "CreateVoucherWizard.jsx"
+      ]
+    },
+    {
+      "key": "GET /sync-queue/pending",
+      "method": "GET",
+      "path": "/sync-queue/pending",
+      "file": "syncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /sync-queue/:id/processing",
+      "method": "POST",
+      "path": "/sync-queue/:id/processing",
+      "file": "syncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /sync-queue/:id/success",
+      "method": "POST",
+      "path": "/sync-queue/:id/success",
+      "file": "syncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /sync-queue/:id/failed",
+      "method": "POST",
+      "path": "/sync-queue/:id/failed",
+      "file": "syncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /sync-queue/pending-bills",
+      "method": "GET",
+      "path": "/sync-queue/pending-bills",
+      "file": "syncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /sync-queue/pending-ledgers",
+      "method": "GET",
+      "path": "/sync-queue/pending-ledgers",
+      "file": "syncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /admin/notifications",
+      "method": "GET",
+      "path": "/admin/notifications",
+      "file": "adminNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /admin/notifications/:id/read",
+      "method": "POST",
+      "path": "/admin/notifications/:id/read",
+      "file": "adminNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /admin/notifications/download/:file",
+      "method": "GET",
+      "path": "/admin/notifications/download/:file",
+      "file": "adminNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "DELETE /admin/notifications/clear-all",
+      "method": "DELETE",
+      "path": "/admin/notifications/clear-all",
+      "file": "adminNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /notify-permission-update",
+      "method": "POST",
+      "path": "/notify-permission-update",
+      "file": "notifypermissionupdate.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /request-to-admin",
+      "method": "POST",
+      "path": "/request-to-admin",
+      "file": "userRequestsforAccess.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /admin/requests",
+      "method": "GET",
+      "path": "/admin/requests",
+      "file": "userRequestsforAccess.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-voucher-command/create",
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/create",
+      "file": "UniversalUpdate/mobileVoucherCommand.js",
+      "isConnected": true,
+      "foundIn": [
+        "CreateVoucherWizard.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-voucher-command/receipt/create",
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/receipt/create",
+      "file": "UniversalUpdate/mobileVoucherCommand.js",
+      "isConnected": true,
+      "foundIn": [
+        "CreateVoucherWizard.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-voucher-command/payment/create",
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/payment/create",
+      "file": "UniversalUpdate/mobileVoucherCommand.js",
+      "isConnected": true,
+      "foundIn": [
+        "CreateVoucherWizard.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-voucher-command/journal/create",
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/journal/create",
+      "file": "UniversalUpdate/mobileVoucherCommand.js",
+      "isConnected": true,
+      "foundIn": [
+        "CreateVoucherWizard.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/mobile-sync-queue/pending",
+      "method": "GET",
+      "path": "/api/mobile-sync-queue/pending",
+      "file": "mobileSyncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/mobile-sync-queue/activity",
+      "method": "GET",
+      "path": "/api/mobile-sync-queue/activity",
+      "file": "mobileSyncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "api.js",
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-sync-queue/:id/processing",
+      "method": "POST",
+      "path": "/api/mobile-sync-queue/:id/processing",
+      "file": "mobileSyncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "api.js",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-sync-queue/:id/success",
+      "method": "POST",
+      "path": "/api/mobile-sync-queue/:id/success",
+      "file": "mobileSyncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "api.js",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /api/mobile-sync-queue/:id/failed",
+      "method": "POST",
+      "path": "/api/mobile-sync-queue/:id/failed",
+      "file": "mobileSyncQueueRoutes.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "api.js",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/mobile/notifications",
+      "method": "GET",
+      "path": "/api/mobile/notifications",
+      "file": "mobileNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/mobile/notifications/config",
+      "method": "GET",
+      "path": "/api/mobile/notifications/config",
+      "file": "mobileNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PUT /api/mobile/notifications/config",
+      "method": "PUT",
+      "path": "/api/mobile/notifications/config",
+      "file": "mobileNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/mobile/notifications/:id/read",
+      "method": "POST",
+      "path": "/api/mobile/notifications/:id/read",
+      "file": "mobileNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "DELETE /api/mobile/notifications/clear-all",
+      "method": "DELETE",
+      "path": "/api/mobile/notifications/clear-all",
+      "file": "mobileNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/mobile/notifications/download/:file",
+      "method": "GET",
+      "path": "/api/mobile/notifications/download/:file",
+      "file": "mobileNotifications.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /ledger-items/ledger/:ledgerGuid",
+      "method": "GET",
+      "path": "/ledger-items/ledger/:ledgerGuid",
+      "file": "ledgerItems.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /ledger-items/item/:itemName/parties",
+      "method": "GET",
+      "path": "/ledger-items/item/:itemName/parties",
+      "file": "ledgerItems.js",
+      "isConnected": true,
+      "foundIn": [
+        "App.jsx"
+      ]
+    },
+    {
+      "key": "GET /entry-field-settings/:voucherType",
+      "method": "GET",
+      "path": "/entry-field-settings/:voucherType",
+      "file": "entryFieldSettings.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "PUT /entry-field-settings/:voucherType",
+      "method": "PUT",
+      "path": "/entry-field-settings/:voucherType",
+      "file": "entryFieldSettings.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "POST /entry-field-settings/:voucherType/custom",
+      "method": "POST",
+      "path": "/entry-field-settings/:voucherType/custom",
+      "file": "entryFieldSettings.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "PATCH /entry-field-settings/:voucherType/custom/:fieldKey",
+      "method": "PATCH",
+      "path": "/entry-field-settings/:voucherType/custom/:fieldKey",
+      "file": "entryFieldSettings.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "DELETE /entry-field-settings/:voucherType/custom/:fieldKey",
+      "method": "DELETE",
+      "path": "/entry-field-settings/:voucherType/custom/:fieldKey",
+      "file": "entryFieldSettings.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js",
+        "TallyConnectorModal.jsx"
+      ]
+    },
+    {
+      "key": "GET /",
+      "method": "GET",
+      "path": "/",
+      "file": "server.js",
+      "isConnected": true,
+      "foundIn": [
+        "ActivityManager.jsx",
+        "adminVisibility.js",
+        "AdminVisibilityModal.jsx",
+        "api.js",
+        "App.jsx",
+        "AttendanceManager.jsx",
+        "CashFlowForecast.jsx",
+        "CompanyDropdown.jsx",
+        "CreateVoucherWizard.jsx",
+        "DashboardAttendanceCard.jsx",
+        "DashboardSalesAnalyticsCard.jsx",
+        "DisplayPreferencesBar.jsx",
+        "FinancialInsights.jsx",
+        "FinancialStatements.jsx",
+        "LiquidGlassCustomizer.jsx",
+        "Login.jsx",
+        "main.jsx",
+        "Reports.backup.jsx",
+        "Reports.jsx",
+        "RowsDropdown.jsx",
+        "SalesAnalyticsDetailView.jsx",
+        "StandardDateFilter.jsx",
+        "StandardPagination.jsx",
+        "TallyConnectLogo.jsx",
+        "TallyConnectorModal.jsx",
+        "uiUtils.jsx",
+        "VoucherManager.jsx"
+      ]
+    },
+    {
+      "key": "GET /api/attendance/me",
+      "method": "GET",
+      "path": "/api/attendance/me",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/attendance/check-in",
+      "method": "POST",
+      "path": "/api/attendance/check-in",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/attendance/check-out",
+      "method": "POST",
+      "path": "/api/attendance/check-out",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/attendance/ping",
+      "method": "POST",
+      "path": "/api/attendance/ping",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/attendance/me/history",
+      "method": "GET",
+      "path": "/api/attendance/me/history",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/attendance/team",
+      "method": "GET",
+      "path": "/api/attendance/team",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/attendance/team/:userId/history",
+      "method": "GET",
+      "path": "/api/attendance/team/:userId/history",
+      "file": "utils/attendanceRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/feedback",
+      "method": "POST",
+      "path": "/api/feedback",
+      "file": "utils/feedbackRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/admin/feedback",
+      "method": "GET",
+      "path": "/api/admin/feedback",
+      "file": "utils/feedbackRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "GET /api/admin/feedback/:id",
+      "method": "GET",
+      "path": "/api/admin/feedback/:id",
+      "file": "utils/feedbackRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "PATCH /api/admin/feedback/:id",
+      "method": "PATCH",
+      "path": "/api/admin/feedback/:id",
+      "file": "utils/feedbackRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    },
+    {
+      "key": "POST /api/admin/feedback/:id/resend-email",
+      "method": "POST",
+      "path": "/api/admin/feedback/:id/resend-email",
+      "file": "utils/feedbackRouter.js",
+      "isConnected": true,
+      "foundIn": [
+        "api.js"
+      ]
+    }
+  ]
+}

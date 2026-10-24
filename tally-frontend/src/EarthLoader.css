@@ -1,0 +1,243 @@
+/* ------------------------------------------------------------------
+   Cinematic Full-Screen Earth Loader Overlay
+   Smooth, responsive, hardware-accelerated, dark space aesthetic
+   ------------------------------------------------------------------ */
+
+.earth-loader-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  /* Deep cosmic space background with subtle electric nebula glow behind Earth */
+  background:
+    radial-gradient(ellipse 65% 65% at 42% 46%, rgba(12, 38, 88, 0.48) 0%, rgba(4, 14, 38, 0.82) 48%, #010308 85%),
+    #010308;
+  background-color: #010308;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: all;
+  user-select: none;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.earth-loader-overlay.fade-out {
+  opacity: 0;
+  transform: scale(1.02);
+  pointer-events: none;
+}
+
+/* 3D WebGL Canvas Layer */
+.earth-canvas-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.earth-canvas-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Cinematic Atmospheric Vignette */
+.earth-loader-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 55%,
+    rgba(2, 6, 16, 0.35) 78%,
+    rgba(1, 3, 8, 0.92) 100%
+  );
+}
+
+/* Foreground UI Container */
+.earth-loader-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 24px 48px;
+  pointer-events: none;
+}
+
+/* Top Branding */
+.earth-loader-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(8, 14, 26, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  animation: earthFadeInDown 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.earth-loader-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Bottom Progress and Status */
+.earth-loader-status-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  animation: earthFadeInUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.earth-loader-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+.earth-loader-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #67e8f9 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.95);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.earth-loader-status-text {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.earth-loader-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: earthPulse 1.6s ease-in-out infinite;
+}
+
+/* Keyframe Animations */
+@keyframes earthPulse {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+    box-shadow: 0 0 14px #38bdf8;
+  }
+}
+
+@keyframes earthFadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes earthFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .earth-loader-ui {
+    padding: 28px 16px 36px;
+  }
+
+  .earth-loader-logo {
+    height: 24px;
+  }
+
+  .earth-loader-status-wrap {
+    max-width: 250px;
+  }
+
+  .earth-loader-status-text {
+    font-size: 12px;
+  }
+}
+
+/* CSS Fallback Photorealistic Earth Sphere (active when WebGL is unavailable or sandboxed) */
+.earth-fallback-viewport {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.earth-fallback-sphere {
+  position: relative;
+  width: min(520px, 75vw);
+  height: min(520px, 75vw);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(56, 189, 248, 0.28) 0%, transparent 60%),
+    url('/earth/earth_day_2048.jpg') repeat-x center center;
+  background-size: auto 100%;
+  box-shadow:
+    inset -40px -40px 90px rgba(0, 0, 0, 0.95),
+    inset 25px 25px 60px rgba(56, 189, 248, 0.45),
+    0 0 80px rgba(14, 165, 233, 0.5),
+    0 0 160px rgba(2, 132, 199, 0.25);
+  animation: earthRotateFallback 45s linear infinite;
+  transform: rotate(-23.4deg);
+}
+
+.earth-fallback-glow {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 65%, rgba(56, 189, 248, 0.35) 90%, rgba(14, 165, 233, 0.7) 100%);
+  pointer-events: none;
+}
+
+@keyframes earthRotateFallback {
+  from { background-position: 0 0; }
+  to { background-position: 2048px 0; }
+}

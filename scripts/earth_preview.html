@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; background: #010308; overflow: hidden; }
+    #canvas-container { width: 900px; height: 900px; position: relative; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <script type="module">
+    import * as THREE from 'http://localhost:5173/node_modules/three/build/three.module.js';
+
+    const container = document.getElementById('canvas-container');
+    const width = 900;
+    const height = 900;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 1000);
+    camera.position.set(0, 0, 3.75);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(1);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    container.appendChild(renderer.domElement);
+
+    const textureLoader = new THREE.TextureLoader();
+    const dayMap = textureLoader.load('http://localhost:5173/earth/earth_day_2048.jpg');
+    const nightMap = textureLoader.load('http://localhost:5173/earth/earth_lights_2048.png');
+    const cloudsMap = textureLoader.load('http://localhost:5173/earth/earth_clouds_1024.png');
+
+    dayMap.colorSpace = THREE.SRGBColorSpace;
+    nightMap.colorSpace = THREE.SRGBColorSpace;
+
+    const earthGroup = new THREE.Group();
+    earthGroup.rotation.z = (23.4 * Math.PI) / 180;
+    scene.add(earthGroup);
+
+    // Sunlight from upper left
+    const sunDirection = new THREE.Vector3(-1.3, 0.45, 0.75).normalize();
+
+    const earthVertexShader = `
+      varying vec3 vNormal;
+      varying vec2 vUv;
+      varying vec3 vPosition;
+
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vUv = uv;
+        vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+
+    const earthFragmentShader = `
+      varying vec3 vNormal;
+      varying vec2 vUv;
+      varying vec3 vPosition;
+
+      uniform sampler2D uDayMap;
+      uniform sampler2D uNightMap;
+      uniform sampler2D uCloudsMap;
+      uniform vec3 uSunDirection;
+
+      void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(-vPosition);
+        vec3 sunDir = normalize(uSunDirection);
+
+        float sunDot = dot(normal, sunDir);
+        float dayFactor = smoothstep(-0.10, 0.22, sunDot);
+
+        vec4 dayColor = texture2D(uDayMap, vUv);
+        vec4 nightColor = texture2D(uNightMap, vUv);
+        vec4 cloudColor = texture2D(uCloudsMap, vUv);
+
+        // Ocean mask
+        float isOcean = clamp((dayColor.b - dayColor.r * 0.7) * 2.5, 0.0, 1.0);
+
+        // Ocean specular sun glint
+        vec3 halfDir = normalize(sunDir + viewDir);
+        float specAngle = max(dot(normal, halfDir), 0.0);
+        float specular = pow(specAngle, 28.0) * isOcean * max(sunDot, 0.0) * 0.85;
+
+        // Soft clouds
+        float cloudDensity = cloudColor.r;
+        vec3 dayClouds = vec3(0.98, 0.99, 1.0) * cloudDensity * (max(sunDot, 0.0) * 0.85 + 0.15);
+
+        // Day surface
+        vec3 daySurface = mix(dayColor.rgb * 1.15, dayClouds, cloudDensity * 0.55) + vec3(specular);
+        vec3 dayDiffuse = daySurface * max(sunDot + 0.08, 0.0);
+
+        // Golden-amber city lights
+        vec3 cityColor = vec3(2.55, 1.82, 0.88);
+        float cityLuma = max(max(nightColor.r, nightColor.g), nightColor.b);
+        vec3 cityLights = pow(cityLuma, 1.25) * cityColor * 4.2 * (1.0 - dayFactor);
+
+        // Night ambient
+        vec3 nightAmbient = dayColor.rgb * 0.12 + vec3(0.012, 0.025, 0.045);
+
+        // Inner atmosphere Fresnel (lit crescent glow)
+        float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.2);
+        float sunAlign = smoothstep(-0.35, 0.65, sunDot);
+        vec3 limbColor = mix(vec3(0.08, 0.42, 0.95), vec3(0.35, 0.82, 1.0), sunAlign);
+        vec3 innerAtmosphere = limbColor * fresnel * (sunAlign * 2.8 + 0.08);
+
+        // Twilight scatter
+        float twilight = smoothstep(-0.12, 0.02, sunDot) * (1.0 - smoothstep(0.02, 0.18, sunDot));
+        vec3 twilightScatter = vec3(0.9, 0.45, 0.15) * twilight * fresnel * 0.7;
+
+        vec3 surface = mix(nightAmbient + cityLights, dayDiffuse, dayFactor);
+        gl_FragColor = vec4(surface + innerAtmosphere + twilightScatter, 1.0);
+      }
+    `;
+
+    const earthMat = new THREE.ShaderMaterial({
+      vertexShader: earthVertexShader,
+      fragmentShader: earthFragmentShader,
+      uniforms: {
+        uDayMap: { value: dayMap },
+        uNightMap: { value: nightMap },
+        uCloudsMap: { value: cloudsMap },
+        uSunDirection: { value: sunDirection }
+      }
+    });
+
+    const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1.0, 64, 64), earthMat);
+    earthGroup.add(earthMesh);
+
+    // Corona Halo
+    const haloVertexShader = `
+      varying vec3 vNormal;
+      varying vec3 vPosition;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+    const haloFragmentShader = `
+      varying vec3 vNormal;
+      varying vec3 vPosition;
+      uniform vec3 uSunDirection;
+
+      void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(-vPosition);
+        vec3 sunDir = normalize(uSunDirection);
+
+        float rim = max(dot(normal, viewDir), 0.0);
+        float corona = pow(rim, 3.2);
+
+        float sunAlign = dot(normal, -sunDir);
+        float sunFactor = smoothstep(-0.25, 0.65, sunAlign);
+
+        vec3 coronaColor = mix(vec3(0.12, 0.48, 0.98), vec3(0.42, 0.85, 1.0), sunFactor);
+        float alpha = corona * (sunFactor * 1.85 + 0.08);
+
+        gl_FragColor = vec4(coronaColor * alpha, alpha);
+      }
+    `;
+    const haloMat = new THREE.ShaderMaterial({
+      vertexShader: haloVertexShader,
+      fragmentShader: haloFragmentShader,
+      uniforms: { uSunDirection: { value: sunDirection } },
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false
+    });
+    const haloMesh = new THREE.Mesh(new THREE.SphereGeometry(1.16, 64, 64), haloMat);
+    earthGroup.add(haloMesh);
+
+    // Starfield
+    const starsCount = 1200;
+    const starPositions = new Float32Array(starsCount * 3);
+    for (let i = 0; i < starsCount; i++) {
+      const r = 40 + Math.random() * 60;
+      const theta = 2 * Math.PI * Math.random();
+      const phi = Math.acos(2 * Math.random() - 1);
+      starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      starPositions[i * 3 + 2] = r * Math.cos(phi);
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMat = new THREE.PointsMaterial({ size: 1.2, color: 0xddeeff, transparent: true, opacity: 0.85 });
+    scene.add(new THREE.Points(starGeo, starMat));
+
+    window.setAngle = (angle) => {
+      earthMesh.rotation.y = angle;
+      renderer.render(scene, camera);
+    };
+
+    // Wait for textures to load
+    setTimeout(() => {
+      window.setAngle(2.8);
+      window.isReady = true;
+    }, 1200);
+  </script>
+</body>
+</html>

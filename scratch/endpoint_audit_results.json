@@ -1,0 +1,613 @@
+{
+  "working": [
+    {
+      "ep": "/admin/notifications",
+      "status": 200
+    },
+    {
+      "ep": "/admin/notifications/",
+      "status": 200
+    },
+    {
+      "ep": "/admin/requests",
+      "status": 200
+    },
+    {
+      "ep": "/ageing/ledger/",
+      "status": 200
+    },
+    {
+      "ep": "/agent-status/sync-status",
+      "status": 200
+    },
+    {
+      "ep": "/api/assistant/models",
+      "status": 200
+    },
+    {
+      "ep": "/api/assistant/providers",
+      "status": 200
+    },
+    {
+      "ep": "/api/assistant/status",
+      "status": 200
+    },
+    {
+      "ep": "/api/assistant/verify",
+      "status": 200
+    },
+    {
+      "ep": "/api/attendance/me",
+      "status": 200
+    },
+    {
+      "ep": "/api/attendance/me/history",
+      "status": 200
+    },
+    {
+      "ep": "/api/attendance/ping",
+      "status": 200
+    },
+    {
+      "ep": "/api/attendance/team",
+      "status": 200
+    },
+    {
+      "ep": "/api/attendance/team/",
+      "status": 200
+    },
+    {
+      "ep": "/api/cashflow/forecast",
+      "status": 200
+    },
+    {
+      "ep": "/api/financial/access",
+      "status": 200
+    },
+    {
+      "ep": "/api/financial/access/",
+      "status": 200
+    },
+    {
+      "ep": "/api/financial/me",
+      "status": 200
+    },
+    {
+      "ep": "/api/financial/periods",
+      "status": 200
+    },
+    {
+      "ep": "/api/leave/calendar",
+      "status": 200
+    },
+    {
+      "ep": "/api/leave/me",
+      "status": 200
+    },
+    {
+      "ep": "/api/leave/requests",
+      "status": 200
+    },
+    {
+      "ep": "/api/leave/requests/",
+      "status": 200
+    },
+    {
+      "ep": "/api/leave/settings",
+      "status": 200
+    },
+    {
+      "ep": "/api/leave/types/defaults",
+      "status": 201
+    },
+    {
+      "ep": "/api/mobile/notifications/config",
+      "status": 200
+    },
+    {
+      "ep": "/api/reminders/history",
+      "status": 200
+    },
+    {
+      "ep": "/api/reminders/templates",
+      "status": 200
+    },
+    {
+      "ep": "/api/reminders/templates/",
+      "status": 200
+    },
+    {
+      "ep": "/api/tally-reports/periods",
+      "status": 200
+    },
+    {
+      "ep": "/api/users",
+      "status": 200
+    },
+    {
+      "ep": "/api/users/",
+      "status": 200
+    },
+    {
+      "ep": "/api/users/me",
+      "status": 200
+    },
+    {
+      "ep": "/api/users/me/monthly-report-schedule",
+      "status": 200
+    },
+    {
+      "ep": "/api/users/me/notifications",
+      "status": 200
+    },
+    {
+      "ep": "/auth/me",
+      "status": 200
+    },
+    {
+      "ep": "/bill",
+      "status": 200
+    },
+    {
+      "ep": "/company",
+      "status": 200
+    },
+    {
+      "ep": "/company/active",
+      "status": 200
+    },
+    {
+      "ep": "/company/agent-config",
+      "status": 200
+    },
+    {
+      "ep": "/company/selected",
+      "status": 200
+    },
+    {
+      "ep": "/company/sync-status",
+      "status": 200
+    },
+    {
+      "ep": "/dashboard/bills",
+      "status": 200
+    },
+    {
+      "ep": "/dashboard/income-expense",
+      "status": 200
+    },
+    {
+      "ep": "/inventory",
+      "status": 200
+    },
+    {
+      "ep": "/inventory/full-sync",
+      "status": 200
+    },
+    {
+      "ep": "/inventory/mobile",
+      "status": 200
+    },
+    {
+      "ep": "/invoice",
+      "status": 200
+    },
+    {
+      "ep": "/invoice-item/",
+      "status": 200
+    },
+    {
+      "ep": "/invoice/ledger/",
+      "status": 200
+    },
+    {
+      "ep": "/ledger",
+      "status": 200
+    },
+    {
+      "ep": "/ledger-items/ledger/",
+      "status": 200
+    },
+    {
+      "ep": "/ledger/",
+      "status": 200
+    },
+    {
+      "ep": "/ledger/deleted/history",
+      "status": 200
+    },
+    {
+      "ep": "/orders",
+      "status": 200
+    },
+    {
+      "ep": "/sync-queue/pending-ledgers",
+      "status": 200
+    },
+    {
+      "ep": "/sync/active-admin",
+      "status": 200
+    },
+    {
+      "ep": "/sync/trigger",
+      "status": 200
+    },
+    {
+      "ep": "/users",
+      "status": 200
+    },
+    {
+      "ep": "/users/",
+      "status": 200
+    },
+    {
+      "ep": "/users/me",
+      "status": 200
+    },
+    {
+      "ep": "/users/me/monthly-report-schedule",
+      "status": 200
+    },
+    {
+      "ep": "/users/me/notifications",
+      "status": 200
+    },
+    {
+      "ep": "/voucher-entry",
+      "status": 200
+    },
+    {
+      "ep": "/voucher-entry/",
+      "status": 200
+    },
+    {
+      "ep": "/voucher-entry/ledger/",
+      "status": 200
+    },
+    {
+      "ep": "/voucher-entry/paged",
+      "status": 200
+    }
+  ],
+  "param_required": [
+    {
+      "ep": "/api/analytics/sales",
+      "status": 400
+    },
+    {
+      "ep": "/api/assistant/ask",
+      "status": 400
+    },
+    {
+      "ep": "/api/auth/send-otp",
+      "status": 400
+    },
+    {
+      "ep": "/api/auth/verify-otp",
+      "status": 400
+    },
+    {
+      "ep": "/api/cashflow/week",
+      "status": 400
+    },
+    {
+      "ep": "/api/feedback",
+      "status": 400
+    },
+    {
+      "ep": "/api/financial/balance-sheet",
+      "status": 400
+    },
+    {
+      "ep": "/api/financial/cash-flow",
+      "status": 400
+    },
+    {
+      "ep": "/api/financial/expenses",
+      "status": 400
+    },
+    {
+      "ep": "/api/financial/ledger-vouchers",
+      "status": 400
+    },
+    {
+      "ep": "/api/financial/profit-loss",
+      "status": 400
+    },
+    {
+      "ep": "/api/financial/trial-balance",
+      "status": 400
+    },
+    {
+      "ep": "/api/leave/holidays",
+      "status": 400
+    },
+    {
+      "ep": "/api/leave/team/",
+      "status": 400
+    },
+    {
+      "ep": "/api/leave/types",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-sync-queue/activity",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-sync-queue/pending",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-voucher-command/contra/create",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-voucher-command/create",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-voucher-command/journal/create",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-voucher-command/payment/create",
+      "status": 400
+    },
+    {
+      "ep": "/api/mobile-voucher-command/receipt/create",
+      "status": 400
+    },
+    {
+      "ep": "/api/reminders/preview",
+      "status": 400
+    },
+    {
+      "ep": "/api/reminders/send",
+      "status": 400
+    },
+    {
+      "ep": "/api/reports/monthly-summary",
+      "status": 400
+    },
+    {
+      "ep": "/auth/login",
+      "status": 400
+    },
+    {
+      "ep": "/bill/dashboard-summary",
+      "status": 400
+    },
+    {
+      "ep": "/company/create",
+      "status": 400
+    },
+    {
+      "ep": "/company/select",
+      "status": 400
+    },
+    {
+      "ep": "/company/set-active",
+      "status": 400
+    },
+    {
+      "ep": "/dashboard/summary",
+      "status": 400
+    },
+    {
+      "ep": "/entry-field-settings/",
+      "status": 400
+    },
+    {
+      "ep": "/inventory/user-inventory",
+      "status": 400
+    },
+    {
+      "ep": "/ledger/user-ledgers",
+      "status": 400
+    },
+    {
+      "ep": "/notify-permission-update",
+      "status": 400
+    },
+    {
+      "ep": "/orders/bulk-user-orders",
+      "status": 400
+    },
+    {
+      "ep": "/orders/user-orders",
+      "status": 400
+    },
+    {
+      "ep": "/request-to-admin",
+      "status": 400
+    },
+    {
+      "ep": "/send-invite",
+      "status": 400
+    },
+    {
+      "ep": "/stock-summary/sync",
+      "status": 400
+    },
+    {
+      "ep": "/sync-queue/pending",
+      "status": 400
+    },
+    {
+      "ep": "/sync-queue/pending-bills",
+      "status": 400
+    },
+    {
+      "ep": "/voucher-command/alter",
+      "status": 400
+    },
+    {
+      "ep": "/voucher-command/create",
+      "status": 400
+    },
+    {
+      "ep": "/voucher-entry/bulk-user-vouchers",
+      "status": 400
+    },
+    {
+      "ep": "/voucher-entry/reset-active",
+      "status": 400
+    },
+    {
+      "ep": "/voucher-entry/user-vouchers",
+      "status": 400
+    }
+  ],
+  "forbidden": [
+    {
+      "ep": "/api/admin/feedback",
+      "status": 403
+    },
+    {
+      "ep": "/api/admin/feedback/",
+      "status": 403
+    },
+    {
+      "ep": "/api/attendance/check-in",
+      "status": 403
+    },
+    {
+      "ep": "/api/attendance/check-out",
+      "status": 403
+    }
+  ],
+  "missing_404": [
+    {
+      "ep": "/admin/notifications/clear-all",
+      "status": 404
+    },
+    {
+      "ep": "/api/financial/stock-values",
+      "status": 404
+    },
+    {
+      "ep": "/api/leave/holidays/",
+      "status": 404
+    },
+    {
+      "ep": "/api/leave/types/",
+      "status": 404
+    },
+    {
+      "ep": "/api/mobile/notifications/clear-all",
+      "status": 404
+    },
+    {
+      "ep": "/api/reminders/",
+      "status": 404
+    },
+    {
+      "ep": "/api/tally-reports/",
+      "status": 404
+    },
+    {
+      "ep": "/api/users/bulk-dashboard-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/api/users/bulk-inventory-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/api/users/bulk-ledger-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/api/users/bulk-orders-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/api/users/bulk-voucher-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/bill/ledger/",
+      "status": 404
+    },
+    {
+      "ep": "/company/by-guid/",
+      "status": 404
+    },
+    {
+      "ep": "/company/selection",
+      "status": 404
+    },
+    {
+      "ep": "/dashboard/order",
+      "status": 404
+    },
+    {
+      "ep": "/ledger-items/item/",
+      "status": 404
+    },
+    {
+      "ep": "/ledger/users/",
+      "status": 404
+    },
+    {
+      "ep": "/users/bulk-dashboard-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/users/bulk-inventory-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/users/bulk-ledger-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/users/bulk-orders-permissions",
+      "status": 404
+    },
+    {
+      "ep": "/users/bulk-voucher-permissions",
+      "status": 404
+    }
+  ],
+  "method_not_allowed": [],
+  "error_500": [
+    {
+      "ep": "/api/users/bulk-ledger-assign",
+      "status": 500
+    },
+    {
+      "ep": "/auth/register",
+      "status": 500
+    },
+    {
+      "ep": "/inventory/bulk-user-inventory",
+      "status": 500
+    },
+    {
+      "ep": "/inventory/user-inventory/",
+      "status": 500
+    },
+    {
+      "ep": "/orders/user-orders/",
+      "status": 500
+    },
+    {
+      "ep": "/stock-item/sync",
+      "status": 500
+    },
+    {
+      "ep": "/users/bulk-ledger-assign",
+      "status": 500
+    },
+    {
+      "ep": "/voucher-entry/deleted/restore-voucher/",
+      "status": 500
+    },
+    {
+      "ep": "/voucher-entry/user-vouchers/",
+      "status": 500
+    }
+  ]
+}

@@ -1,0 +1,1076 @@
+		`"${totalDebit}"`,
+			`"${totalCredit}"`,
+			`"${totalClosingBalance}"`
+		]);
+		const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `Monthly_Sales_FY_${fyYear}-${String(fyYear + 1).slice(-2)}.csv`;
+		a.click();
+	};
+	const exportPDF = () => window.print();
+	return /* @__PURE__ */ _jsxDEV("div", {
+		className: "dashboard-content slide-up",
+		children: [
+			/* @__PURE__ */ _jsxDEV("div", {
+				className: "page-header",
+				style: {
+					marginBottom: "24px",
+					flexWrap: "wrap",
+					gap: "16px",
+					alignItems: "center"
+				},
+				children: [/* @__PURE__ */ _jsxDEV("div", {
+					style: {
+						flex: 1,
+						minWidth: "240px"
+					},
+					children: [/* @__PURE__ */ _jsxDEV("h1", {
+						style: {
+							fontSize: "32px",
+							fontWeight: 800,
+							margin: "0 0 4px",
+							letterSpacing: "-1px",
+							color: "var(--text-dark)"
+						},
+						children: "Monthly Sales & Summary"
+					}, void 0, false, {
+						fileName: _jsxFileName,
+						lineNumber: 1498,
+						columnNumber: 11
+					}, this), /* @__PURE__ */ _jsxDEV("p", {
+						style: {
+							color: "var(--text-muted)",
+							fontSize: "14px",
+							fontWeight: 600,
+							margin: 0
+						},
+						children: [
+							"Financial Year FY ",
+							fyYear,
+							"–",
+							String(fyYear + 1).slice(-2),
+							" (April ",
+							fyYear,
+							" to March ",
+							fyYear + 1,
+							")"
+						]
+					}, void 0, true, {
+						fileName: _jsxFileName,
+						lineNumber: 1501,
+						columnNumber: 11
+					}, this)]
+				}, void 0, true, {
+					fileName: _jsxFileName,
+					lineNumber: 1497,
+					columnNumber: 9
+				}, this), /* @__PURE__ */ _jsxDEV("div", {
+					style: {
+						display: "flex",
+						alignItems: "center",
+						gap: "10px",
+						flexWrap: "wrap"
+					},
+					children: [
+						/* @__PURE__ */ _jsxDEV("div", {
+							className: "glass-panel",
+							style: {
+								display: "flex",
+								alignItems: "center",
+								gap: "8px",
+								padding: "6px 14px",
+								borderRadius: "14px",
+								boxShadow: "none"
+							},
+							children: [/* @__PURE__ */ _jsxDEV(Calendar, {
+								size: 16,
+								color: "var(--primary-color)"
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1516,
+								columnNumber: 13
+							}, this), /* @__PURE__ */ _jsxDEV("select", {
+								id: "fy-selector",
+								name: "fy_year",
+								value: fyYear,
+								onChange: (e) => setFyYear(Number(e.target.value)),
+								style: {
+									border: "none",
+									background: "transparent",
+									fontSize: "14px",
+									fontWeight: 600,
+									color: "var(--text-dark)",
+									cursor: "pointer",
+									outline: "none"
+								},
+								children: [
+									2027,
+									2026,
+									2025,
+									2024,
+									2023
+								].map((y) => /* @__PURE__ */ _jsxDEV("option", {
+									value: y,
+									style: {
+										background: "var(--glass-bg)",
+										color: "var(--text-dark)"
+									},
+									children: [
+										"FY ",
+										y,
+										"–",
+										String(y + 1).slice(-2)
+									]
+								}, y, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1533,
+									columnNumber: 17
+								}, this))
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1517,
+								columnNumber: 13
+							}, this)]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1508,
+							columnNumber: 11
+						}, this),
+						/* @__PURE__ */ _jsxDEV("div", {
+							className: "glass-panel",
+							style: {
+								display: "flex",
+								padding: "3px",
+								borderRadius: "12px",
+								boxShadow: "none",
+								gap: "3px"
+							},
+							children: [/* @__PURE__ */ _jsxDEV("button", {
+								onClick: () => setViewMode("chart"),
+								style: {
+									border: "none",
+									padding: "6px 14px",
+									borderRadius: "8px",
+									fontSize: "13px",
+									fontWeight: 700,
+									cursor: "pointer",
+									background: viewMode === "chart" ? "var(--primary-color)" : "transparent",
+									color: viewMode === "chart" ? "#fff" : "var(--text-muted)",
+									boxShadow: viewMode === "chart" ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
+									transition: "all 0.2s ease"
+								},
+								children: "Chart View"
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1548,
+								columnNumber: 13
+							}, this), /* @__PURE__ */ _jsxDEV("button", {
+								onClick: () => setViewMode("table"),
+								style: {
+									border: "none",
+									padding: "6px 14px",
+									borderRadius: "8px",
+									fontSize: "13px",
+									fontWeight: 700,
+									cursor: "pointer",
+									background: viewMode === "table" ? "var(--primary-color)" : "transparent",
+									color: viewMode === "table" ? "#fff" : "var(--text-muted)",
+									boxShadow: viewMode === "table" ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
+									transition: "all 0.2s ease"
+								},
+								children: "Table View"
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1565,
+								columnNumber: 13
+							}, this)]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1541,
+							columnNumber: 11
+						}, this),
+						/* @__PURE__ */ _jsxDEV(ExportDropdown, {
+							onExportCSV: exportCSV,
+							onExportPDF: exportPDF
+						}, void 0, false, {
+							fileName: _jsxFileName,
+							lineNumber: 1584,
+							columnNumber: 11
+						}, this)
+					]
+				}, void 0, true, {
+					fileName: _jsxFileName,
+					lineNumber: 1506,
+					columnNumber: 9
+				}, this)]
+			}, void 0, true, {
+				fileName: _jsxFileName,
+				lineNumber: 1496,
+				columnNumber: 7
+			}, this),
+			loading && /* @__PURE__ */ _jsxDEV("div", {
+				style: {
+					padding: "60px",
+					textAlign: "center",
+					color: "var(--text-muted)",
+					fontSize: "15px"
+				},
+				children: "Loading monthly summary..."
+			}, void 0, false, {
+				fileName: _jsxFileName,
+				lineNumber: 1588,
+				columnNumber: 19
+			}, this),
+			error && /* @__PURE__ */ _jsxDEV("div", {
+				style: {
+					padding: "40px",
+					textAlign: "center",
+					color: "var(--danger)"
+				},
+				children: error
+			}, void 0, false, {
+				fileName: _jsxFileName,
+				lineNumber: 1589,
+				columnNumber: 17
+			}, this),
+			!loading && !error && /* @__PURE__ */ _jsxDEV(_Fragment, { children: [
+				/* @__PURE__ */ _jsxDEV("div", {
+					className: "grid-3",
+					style: { marginBottom: "24px" },
+					children: [
+						/* @__PURE__ */ _jsxDEV("div", {
+							className: "glass-panel summary-card",
+							style: { transition: "all 0.2s ease" },
+							children: [
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "summary-card-header",
+									children: [/* @__PURE__ */ _jsxDEV("h3", { children: "Total Credit (Sales)" }, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1597,
+										columnNumber: 17
+									}, this), /* @__PURE__ */ _jsxDEV("div", {
+										className: "summary-card-icon",
+										style: {
+											background: "rgba(0, 122, 255, 0.12)",
+											color: "var(--primary-color)"
+										},
+										children: /* @__PURE__ */ _jsxDEV(ArrowDownRight, { size: 18 }, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1599,
+											columnNumber: 19
+										}, this)
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1598,
+										columnNumber: 17
+									}, this)]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1596,
+									columnNumber: 15
+								}, this),
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "amount",
+									children: inr(totalCredit)
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1602,
+									columnNumber: 15
+								}, this),
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "trend",
+									children: /* @__PURE__ */ _jsxDEV("span", {
+										style: { color: "var(--primary-color)" },
+										children: [
+											data.filter((r) => r.credit > 0).length,
+											" active turnover month",
+											data.filter((r) => r.credit > 0).length === 1 ? "" : "s"
+										]
+									}, void 0, true, {
+										fileName: _jsxFileName,
+										lineNumber: 1606,
+										columnNumber: 17
+									}, this)
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1605,
+									columnNumber: 15
+								}, this)
+							]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1595,
+							columnNumber: 13
+						}, this),
+						/* @__PURE__ */ _jsxDEV("div", {
+							className: "glass-panel summary-card",
+							style: { transition: "all 0.2s ease" },
+							children: [
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "summary-card-header",
+									children: [/* @__PURE__ */ _jsxDEV("h3", { children: "Total Debit (Returns)" }, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1614,
+										columnNumber: 17
+									}, this), /* @__PURE__ */ _jsxDEV("div", {
+										className: "summary-card-icon",
+										style: {
+											background: "rgba(255, 59, 48, 0.12)",
+											color: "var(--danger)"
+										},
+										children: /* @__PURE__ */ _jsxDEV(ArrowUpRight, { size: 18 }, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1616,
+											columnNumber: 19
+										}, this)
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1615,
+										columnNumber: 17
+									}, this)]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1613,
+									columnNumber: 15
+								}, this),
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "amount",
+									children: inr(totalDebit)
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1619,
+									columnNumber: 15
+								}, this),
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "trend",
+									children: /* @__PURE__ */ _jsxDEV("span", {
+										style: { color: "var(--danger)" },
+										children: [
+											data.filter((r) => r.debit > 0).length,
+											" debit month",
+											data.filter((r) => r.debit > 0).length === 1 ? "" : "s"
+										]
+									}, void 0, true, {
+										fileName: _jsxFileName,
+										lineNumber: 1623,
+										columnNumber: 17
+									}, this)
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1622,
+									columnNumber: 15
+								}, this)
+							]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1612,
+							columnNumber: 13
+						}, this),
+						/* @__PURE__ */ _jsxDEV("div", {
+							className: "glass-panel summary-card",
+							style: { transition: "all 0.2s ease" },
+							children: [
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "summary-card-header",
+									children: [/* @__PURE__ */ _jsxDEV("h3", { children: "Net Closing Balance" }, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1631,
+										columnNumber: 17
+									}, this), /* @__PURE__ */ _jsxDEV("div", {
+										className: "summary-card-icon",
+										style: {
+											background: totalClosingBalance >= 0 ? "rgba(52, 199, 89, 0.12)" : "rgba(255, 59, 48, 0.12)",
+											color: totalClosingBalance >= 0 ? "var(--success)" : "var(--danger)"
+										},
+										children: /* @__PURE__ */ _jsxDEV(Landmark, { size: 18 }, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1636,
+											columnNumber: 19
+										}, this)
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1632,
+										columnNumber: 17
+									}, this)]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1630,
+									columnNumber: 15
+								}, this),
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "amount",
+									style: { color: totalClosingBalance >= 0 ? "var(--success)" : "var(--danger)" },
+									children: inr(totalClosingBalance)
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1639,
+									columnNumber: 15
+								}, this),
+								/* @__PURE__ */ _jsxDEV("div", {
+									className: "trend",
+									children: /* @__PURE__ */ _jsxDEV("span", {
+										style: { color: totalClosingBalance >= 0 ? "var(--success)" : "var(--danger)" },
+										children: totalClosingBalance >= 0 ? "Cumulative Surplus" : "Cumulative Deficit"
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1645,
+										columnNumber: 17
+									}, this)
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1644,
+									columnNumber: 15
+								}, this)
+							]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1629,
+							columnNumber: 13
+						}, this)
+					]
+				}, void 0, true, {
+					fileName: _jsxFileName,
+					lineNumber: 1594,
+					columnNumber: 11
+				}, this),
+				viewMode === "chart" && /* @__PURE__ */ _jsxDEV("div", {
+					style: {
+						display: "grid",
+						gridTemplateColumns: "repeat(auto-fit, minmax(min(440px, 100%), 1fr))",
+						gap: "24px",
+						marginBottom: "24px"
+					},
+					children: [/* @__PURE__ */ _jsxDEV(MonthlyCreditDebitChart, {
+						data,
+						onSelectMonth: setDrillMonth
+					}, void 0, false, {
+						fileName: _jsxFileName,
+						lineNumber: 1659,
+						columnNumber: 15
+					}, this), /* @__PURE__ */ _jsxDEV(ClosingBalanceTrendChart, {
+						data,
+						onSelectMonth: setDrillMonth
+					}, void 0, false, {
+						fileName: _jsxFileName,
+						lineNumber: 1660,
+						columnNumber: 15
+					}, this)]
+				}, void 0, true, {
+					fileName: _jsxFileName,
+					lineNumber: 1653,
+					columnNumber: 13
+				}, this),
+				viewMode === "table" && /* @__PURE__ */ _jsxDEV("div", {
+					className: "glass-panel",
+					style: {
+						overflow: "hidden",
+						marginBottom: "24px"
+					},
+					children: /* @__PURE__ */ _jsxDEV("div", {
+						style: { overflowX: "auto" },
+						children: /* @__PURE__ */ _jsxDEV("table", {
+							style: {
+								width: "100%",
+								borderCollapse: "collapse",
+								textAlign: "left"
+							},
+							children: [
+								/* @__PURE__ */ _jsxDEV("thead", { children: /* @__PURE__ */ _jsxDEV("tr", {
+									style: {
+										borderBottom: "1px solid var(--glass-border)",
+										background: "var(--glass-hover)"
+									},
+									children: [
+										/* @__PURE__ */ _jsxDEV("th", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "13px",
+												fontWeight: 800,
+												textTransform: "uppercase",
+												letterSpacing: "0.8px",
+												color: "var(--text-dark)"
+											},
+											children: "PARTICULARS"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1676,
+											columnNumber: 23
+										}, this),
+										/* @__PURE__ */ _jsxDEV("th", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "13px",
+												fontWeight: 800,
+												textTransform: "uppercase",
+												letterSpacing: "0.8px",
+												color: "var(--text-dark)",
+												textAlign: "center"
+											},
+											children: "DEBIT"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1679,
+											columnNumber: 23
+										}, this),
+										/* @__PURE__ */ _jsxDEV("th", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "13px",
+												fontWeight: 800,
+												textTransform: "uppercase",
+												letterSpacing: "0.8px",
+												color: "var(--text-dark)",
+												textAlign: "center"
+											},
+											children: "CREDIT"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1682,
+											columnNumber: 23
+										}, this),
+										/* @__PURE__ */ _jsxDEV("th", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "13px",
+												fontWeight: 800,
+												textTransform: "uppercase",
+												letterSpacing: "0.8px",
+												color: "var(--text-dark)",
+												textAlign: "right"
+											},
+											children: "CLOSING BALANCE"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1685,
+											columnNumber: 23
+										}, this)
+									]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1672,
+									columnNumber: 21
+								}, this) }, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1671,
+									columnNumber: 19
+								}, this),
+								/* @__PURE__ */ _jsxDEV("tbody", { children: data.map((row, idx) => /* @__PURE__ */ _jsxDEV("tr", {
+									onClick: () => setDrillMonth(row),
+									style: {
+										borderBottom: "1px solid var(--glass-border)",
+										cursor: "pointer",
+										transition: "background 0.2s ease"
+									},
+									onMouseEnter: (e) => e.currentTarget.style.background = "var(--glass-hover)",
+									onMouseLeave: (e) => e.currentTarget.style.background = "transparent",
+									title: `Click to view ${row.monthLabel} details`,
+									children: [
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "15px",
+												fontWeight: 600,
+												color: "var(--text-dark)"
+											},
+											children: row.monthLabel
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1704,
+											columnNumber: 25
+										}, this),
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "15px",
+												color: "var(--text-dark)",
+												textAlign: "center",
+												fontWeight: 500
+											},
+											children: row.debit > 0 ? inr(row.debit) : "₹0"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1707,
+											columnNumber: 25
+										}, this),
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "15px",
+												color: "var(--text-dark)",
+												textAlign: "center",
+												fontWeight: 500
+											},
+											children: row.credit > 0 ? inr(row.credit) : "₹0"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1710,
+											columnNumber: 25
+										}, this),
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "18px 24px",
+												fontSize: "15px",
+												fontWeight: 700,
+												color: "var(--text-dark)",
+												textAlign: "right"
+											},
+											children: row.closingBalance !== 0 ? inr(row.closingBalance) : "₹0"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1713,
+											columnNumber: 25
+										}, this)
+									]
+								}, row.monthKey || idx, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1692,
+									columnNumber: 23
+								}, this)) }, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1690,
+									columnNumber: 19
+								}, this),
+								/* @__PURE__ */ _jsxDEV("tfoot", { children: /* @__PURE__ */ _jsxDEV("tr", {
+									style: {
+										background: "var(--glass-hover)",
+										borderTop: "2px solid var(--glass-border)"
+									},
+									children: [
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "20px 24px",
+												fontSize: "14px",
+												fontWeight: 800,
+												textTransform: "uppercase",
+												color: "var(--text-dark)"
+											},
+											children: "TOTAL"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1724,
+											columnNumber: 23
+										}, this),
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "20px 24px",
+												fontSize: "15px",
+												fontWeight: 800,
+												textAlign: "center",
+												color: "var(--text-dark)"
+											},
+											children: totalDebit > 0 ? inr(totalDebit) : "₹0"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1727,
+											columnNumber: 23
+										}, this),
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "20px 24px",
+												fontSize: "15px",
+												fontWeight: 800,
+												textAlign: "center",
+												color: "var(--text-dark)"
+											},
+											children: totalCredit > 0 ? inr(totalCredit) : "₹0"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1730,
+											columnNumber: 23
+										}, this),
+										/* @__PURE__ */ _jsxDEV("td", {
+											style: {
+												padding: "20px 24px",
+												fontSize: "16px",
+												fontWeight: 800,
+												textAlign: "right",
+												color: "var(--text-dark)"
+											},
+											children: totalClosingBalance !== 0 ? inr(totalClosingBalance) : "₹0"
+										}, void 0, false, {
+											fileName: _jsxFileName,
+											lineNumber: 1733,
+											columnNumber: 23
+										}, this)
+									]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1720,
+									columnNumber: 21
+								}, this) }, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1719,
+									columnNumber: 19
+								}, this)
+							]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1670,
+							columnNumber: 17
+						}, this)
+					}, void 0, false, {
+						fileName: _jsxFileName,
+						lineNumber: 1669,
+						columnNumber: 15
+					}, this)
+				}, void 0, false, {
+					fileName: _jsxFileName,
+					lineNumber: 1665,
+					columnNumber: 13
+				}, this)
+			] }, void 0, true, {
+				fileName: _jsxFileName,
+				lineNumber: 1592,
+				columnNumber: 9
+			}, this),
+			drillMonth && createPortal(/* @__PURE__ */ _jsxDEV("div", {
+				className: "fade-in modal-overlay",
+				style: {
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					background: "rgba(0,0,0,0.45)",
+					backdropFilter: "blur(8px)",
+					WebkitBackdropFilter: "blur(8px)",
+					zIndex: 1e3,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					padding: "24px"
+				},
+				children: /* @__PURE__ */ _jsxDEV("div", {
+					className: "glass-panel",
+					style: {
+						width: "100%",
+						maxWidth: "520px",
+						padding: "0",
+						overflow: "hidden",
+						display: "flex",
+						flexDirection: "column",
+						boxShadow: "0 24px 48px rgba(0,0,0,0.2)"
+					},
+					children: [/* @__PURE__ */ _jsxDEV("div", {
+						style: {
+							padding: "24px",
+							borderBottom: "1px solid var(--glass-border)",
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+							background: "var(--glass-hover)"
+						},
+						children: [/* @__PURE__ */ _jsxDEV("div", {
+							style: {
+								display: "flex",
+								alignItems: "center",
+								gap: "14px"
+							},
+							children: [/* @__PURE__ */ _jsxDEV("div", {
+								className: "list-icon",
+								style: {
+									color: "#af52de",
+									background: "rgba(175, 82, 222, 0.12)",
+									width: "46px",
+									height: "46px",
+									borderRadius: "14px"
+								},
+								children: /* @__PURE__ */ _jsxDEV(BarChart3, { size: 24 }, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1757,
+									columnNumber: 19
+								}, this)
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1756,
+								columnNumber: 17
+							}, this), /* @__PURE__ */ _jsxDEV("div", { children: [/* @__PURE__ */ _jsxDEV("h3", {
+								style: {
+									fontSize: "20px",
+									fontWeight: 800,
+									margin: 0
+								},
+								children: drillMonth.monthLabel
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1760,
+								columnNumber: 19
+							}, this), /* @__PURE__ */ _jsxDEV("p", {
+								style: {
+									color: "var(--text-muted)",
+									fontSize: "14px",
+									fontWeight: 500,
+									margin: "2px 0 0"
+								},
+								children: "Monthly Account Breakdown"
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1761,
+								columnNumber: 19
+							}, this)] }, void 0, true, {
+								fileName: _jsxFileName,
+								lineNumber: 1759,
+								columnNumber: 17
+							}, this)]
+						}, void 0, true, {
+							fileName: _jsxFileName,
+							lineNumber: 1755,
+							columnNumber: 15
+						}, this), /* @__PURE__ */ _jsxDEV("button", {
+							className: "icon-btn",
+							onClick: () => setDrillMonth(null),
+							style: { background: "rgba(0,0,0,0.05)" },
+							children: /* @__PURE__ */ _jsxDEV(X, { size: 20 }, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1767,
+								columnNumber: 17
+							}, this)
+						}, void 0, false, {
+							fileName: _jsxFileName,
+							lineNumber: 1766,
+							columnNumber: 15
+						}, this)]
+					}, void 0, true, {
+						fileName: _jsxFileName,
+						lineNumber: 1754,
+						columnNumber: 13
+					}, this), /* @__PURE__ */ _jsxDEV("div", {
+						style: {
+							padding: "24px",
+							display: "flex",
+							flexDirection: "column",
+							gap: "20px"
+						},
+						children: [
+							/* @__PURE__ */ _jsxDEV("div", {
+								className: "grid-2",
+								children: [/* @__PURE__ */ _jsxDEV("div", {
+									className: "summary-card",
+									style: {
+										padding: "16px",
+										background: "var(--glass-bg)",
+										borderRadius: "16px",
+										boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
+									},
+									children: [/* @__PURE__ */ _jsxDEV("h4", {
+										style: {
+											fontSize: "12px",
+											textTransform: "uppercase",
+											color: "var(--text-muted)",
+											margin: "0 0 6px",
+											fontWeight: 700
+										},
+										children: "Total Debit"
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1774,
+										columnNumber: 19
+									}, this), /* @__PURE__ */ _jsxDEV("div", {
+										style: {
+											fontSize: "20px",
+											fontWeight: 800,
+											color: "#ff3b30"
+										},
+										children: inr(drillMonth.debit)
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1775,
+										columnNumber: 19
+									}, this)]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1773,
+									columnNumber: 17
+								}, this), /* @__PURE__ */ _jsxDEV("div", {
+									className: "summary-card",
+									style: {
+										padding: "16px",
+										background: "var(--glass-bg)",
+										borderRadius: "16px",
+										boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
+									},
+									children: [/* @__PURE__ */ _jsxDEV("h4", {
+										style: {
+											fontSize: "12px",
+											textTransform: "uppercase",
+											color: "var(--text-muted)",
+											margin: "0 0 6px",
+											fontWeight: 700
+										},
+										children: "Total Credit"
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1778,
+										columnNumber: 19
+									}, this), /* @__PURE__ */ _jsxDEV("div", {
+										style: {
+											fontSize: "20px",
+											fontWeight: 800,
+											color: "#34c759"
+										},
+										children: inr(drillMonth.credit)
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1779,
+										columnNumber: 19
+									}, this)]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1777,
+									columnNumber: 17
+								}, this)]
+							}, void 0, true, {
+								fileName: _jsxFileName,
+								lineNumber: 1772,
+								columnNumber: 15
+							}, this),
+							/* @__PURE__ */ _jsxDEV("div", {
+								className: "summary-card",
+								style: {
+									padding: "18px",
+									background: "rgba(0, 122, 255, 0.05)",
+									border: "1px solid rgba(0, 122, 255, 0.15)",
+									borderRadius: "16px"
+								},
+								children: /* @__PURE__ */ _jsxDEV("div", {
+									style: {
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center"
+									},
+									children: [/* @__PURE__ */ _jsxDEV("span", {
+										style: {
+											fontSize: "14px",
+											fontWeight: 600,
+											color: "var(--text-dark)"
+										},
+										children: "Closing Balance"
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1785,
+										columnNumber: 19
+									}, this), /* @__PURE__ */ _jsxDEV("span", {
+										style: {
+											fontSize: "22px",
+											fontWeight: 800,
+											color: drillMonth.closingBalance >= 0 ? "#34c759" : "#ff3b30"
+										},
+										children: inr(drillMonth.closingBalance)
+									}, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1786,
+										columnNumber: 19
+									}, this)]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1784,
+									columnNumber: 17
+								}, this)
+							}, void 0, false, {
+								fileName: _jsxFileName,
+								lineNumber: 1783,
+								columnNumber: 15
+							}, this),
+							drillMonth.vouchersCount > 0 ? /* @__PURE__ */ _jsxDEV("div", {
+								style: {
+									fontSize: "14px",
+									color: "var(--text-muted)",
+									textAlign: "center"
+								},
+								children: [
+									drillMonth.vouchersCount,
+									" voucher(s) recorded in ",
+									drillMonth.monthLabel,
+									"."
+								]
+							}, void 0, true, {
+								fileName: _jsxFileName,
+								lineNumber: 1793,
+								columnNumber: 17
+							}, this) : /* @__PURE__ */ _jsxDEV("div", {
+								style: {
+									fontSize: "14px",
+									color: "var(--text-muted)",
+									textAlign: "center",
+									padding: "10px 0"
+								},
+								children: [
+									"No individual vouchers recorded for ",
+									drillMonth.monthLabel,
+									"."
+								]
+							}, void 0, true, {
+								fileName: _jsxFileName,
+								lineNumber: 1797,
+								columnNumber: 17
+							}, this),
+							/* @__PURE__ */ _jsxDEV("div", {
+								style: {
+									display: "flex",
+									gap: "10px",
+									justifyContent: "flex-end",
+									marginTop: "10px"
+								},
+								children: [setCurrentTab && /* @__PURE__ */ _jsxDEV("button", {
+									className: "btn-primary",
+									onClick: () => {
+										setDrillMonth(null);
+										setCurrentTab("vouchers");
+									},
+									style: {
+										display: "flex",
+										alignItems: "center",
+										gap: "6px"
+									},
+									children: [/* @__PURE__ */ _jsxDEV(FileText, { size: 16 }, void 0, false, {
+										fileName: _jsxFileName,
+										lineNumber: 1812,
+										columnNumber: 21
+									}, this), " Open Vouchers"]
+								}, void 0, true, {
+									fileName: _jsxFileName,
+									lineNumber: 1804,
+									columnNumber: 19
+								}, this), /* @__PURE__ */ _jsxDEV("button", {
+									className: "btn-secondary",
+									onClick: () => setDrillMonth(null),
+									children: "Close"
+								}, void 0, false, {
+									fileName: _jsxFileName,
+									lineNumber: 1815,
+									columnNumber: 17
+								}, this)]
+							}, void 0, true, {
+								fileName: _jsxFileName,
+								lineNumber: 1802,
+								columnNumber: 15
+							}, this)
+						]
+					}, void 0, true, {
+						fileName: _jsxFileName,
+						lineNumber: 1771,
+						columnNumber: 13
+					}, this)]
+				}, void 0, true, {
+					fileName: _jsxFileName,
+					lineNumber: 1753,
+					columnNumber: 11
+				}, this)
+			}, void 0, false, {
+				fileName: _jsxFileName,
+				lineNumber: 1747,
+				columnNumber: 9
+			}, this), document.body)
+		]
+	}, void 0, true, {
+		fileName: _jsxFileName,
+		lineNumber: 1495,
+		columnNumber: 5
+	}, this);
+};
+_s5(MonthlySummary, "pNfwa3KnjKtM4W0Yrx8QZlKHZTI=");
+_c8 = MonthlySummary;
+/* ---------------- Header Feedback Modal ---------------- */
+const 

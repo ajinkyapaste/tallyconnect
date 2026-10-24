@@ -1,0 +1,22 @@
+[
+  {
+    "step": 102,
+    "target": "import { useEffect, useState } from \"react\";\nimport axios from \"axios\";\n\nfunction TransactionsPage() {",
+    "replacement": "import { useEffect, useState } from \"react\";\nimport axios from \"axios\";\nimport API_BASE from \"../api\";\n\nfunction TransactionsPage() {"
+  },
+  {
+    "step": 102,
+    "target": "  const fetchTransactions = async () => {\n    try {\n      const res = await axios.get(\"http://localhost:4000/voucher\");\n      setTransactions(res.data.vouchers || []);\n    } catch (err) {",
+    "replacement": "  const fetchTransactions = async () => {\n    try {\n      const res = await axios.get(`${API_BASE}/voucher-entry`);\n      setTransactions(res.data.vouchers || []);\n    } catch (err) {"
+  },
+  {
+    "step": 102,
+    "target": "import React, { useEffect, useMemo, useState } from \"react\";\nimport axios from \"axios\";\n\nfunction AccountsPage({ userRole = \"viewer\" }) {",
+    "replacement": "import React, { useEffect, useMemo, useState } from \"react\";\nimport axios from \"axios\";\nimport API_BASE from \"../api\";\n\nfunction AccountsPage({ userRole = \"viewer\" }) {"
+  },
+  {
+    "step": 102,
+    "target": "  const fetchAccounts = async () => {\n    try {\n      const res = await axios.get(\"http://localhost:4000/ledger\");\n      setAccounts(res.data.data || []);\n    } catch (err) {",
+    "replacement": "  const fetchAccounts = async () => {\n    try {\n      const res = await axios.get(`${API_BASE}/ledger`);\n      setAccounts(res.data.data || []);\n    } catch (err) {"
+  }
+]

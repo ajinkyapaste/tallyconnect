@@ -1,0 +1,1593 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import {Menu, Home, ShoppingCart, ArrowDownRight, ArrowUpRight,
+  FileText, Package, Settings, LogOut, Search, Bell, CheckCircle2,
+  TrendingUp, Grid, Landmark, Filter, Plus, ChevronRight, ChevronLeft, RotateCcw, Building2,
+  Users as UsersIcon, CreditCard, Receipt, BarChart3, Clock, Clipboard,
+  X, AlertCircle, Trash2, Download, RefreshCw, Calendar, Layers, Eye,
+  Share2, Tag, Mail as MailIcon, Phone as PhoneIcon, Check,
+  ChevronDown, Inbox, Upload,
+  Star, Sparkles, Bot, Pin, Move, ExternalLink, MessageSquare, Send, EyeOff, MoreVertical, Mic,
+  Megaphone, LayoutGrid, AlertTriangle } from 'lucide-react';
+import './index.css';
+import Login from './Login';
+import { api, getUser, clearSession, IS_HOSTED, submitFeedback, updateDashboardOrder, getDashboardOrder } from './api';
+import CompanyDropdown from './CompanyDropdown';
+import Reports from './Reports';
+import { createHoldTouchHandler, ExportDropdown, UnhideModal, MasterUnhideModal, getGlobalHiddenCount } from './uiUtils';
+import { FinancialInsights } from './FinancialInsights';
+import { VoucherManager } from './VoucherManager';
+import { LiquidGlassModal, LiquidGlassControls, applyGlassSettings, getSavedGlassSettings } from './LiquidGlassCustomizer';
+import { ActivityManager } from './ActivityManager';
+
+/* ---------------- helpers for live data ---------------- */
+const inr = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+const shortDate = (s) =>
+  s ? new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+
+const VOUCHER_META = {
+  sales: { icon: <FileText size={20} />, color: '#ff3b30' },
+  purchase: { icon: <ShoppingCart size={20} />, color: '#007aff' },
+  receipt: { icon: <ArrowDownRight size={20} />, color: '#34c759' },
+  payment: { icon: <ArrowUpRight size={20} />, color: '#ff9500' },
+  journal: { icon: <FileText size={20} />, color: '#5856d6' },
+  contra: { icon: <Landmark size={20} />, color: '#ff2d55' },
+};
+
+const voucherMeta = (type) => {
+  const key = String(type || '').toLowerCase().split(' ')[0];
+  return VOUCHER_META[key] || { icon: <FileText size={20} />, color: 'var(--text-dark)' };
+};
+
+const statusStyle = (status) => {
+  const t = String(status || '').toLowerCase();
+  if (/complete|approved|done|paid|delivered|cleared/.test(t))
+    return { background: 'rgba(52, 199, 89, 0.15)', color: '#248a3d' };
+  if (/cancel|reject|overdue|failed/.test(t))
+    return { background: 'rgba(255, 59, 48, 0.15)', color: '#c0392b' };
+  return { background: 'rgba(255, 204, 0, 0.2)', color: '#b28e00' };
+};
+
+/* Receivables ageing buckets for the dashboard Insights panel.
+   Derived client-side from the existing bills payload so the panel reflects
+   the same data as the Bills page instead of the orphan /ageing table. */
+const AGEING_BUCKETS = [
+  { label: '0–30 days', max: 30, overdue: false },
+  { label: '31–60 days', max: 60, overdue: false },
+  { label: '61–90 days', max: 90, overdue: false },
+  { label: '90+ days', max: Infinity, overdue: true },
+];
+
+const buildReceivableAgeing = (bills, companyGuid) => {
+  const sums = AGEING_BUCKETS.map(() => 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  (Array.isArray(bills) ? bills : []).forEach((b) => {
+    if (!b) return;
+    if (companyGuid && b.company_guid && b.company_guid !== companyGuid) return;
+    if (String(b.bill_type || '').toUpperCase() !== 'RECEIVABLE') return;
+    const pending = Number(b.pending_amount);
+    if (!Number.isFinite(pending) || pending <= 0) return;
+
+    let days = 0;
+    const due = b.due_date ? new Date(b.due_date) : null;
+    if (due && !Number.isNaN(due.getTime())) {
+      due.setHours(0, 0, 0, 0);
+      days = Math.floor((today.getTime() - due.getTime()) / 86400000);
+    }
+
+    const idx = AGEING_BUCKETS.findIndex((bucket) => days <= bucket.max);
+    sums[idx < 0 ? AGEING_BUCKETS.length - 1 : idx] += pending;
+  });
+
+  const total = sums.reduce((s, n) => s + n, 0);
+  if (total <= 0) return [];
+
+  return AGEING_BUCKETS.map((bucket, i) => ({
+    period: bucket.label,
+    amount: sums[i],
+    overdue: bucket.overdue,
+  }));
+};
+
+/* Consistent high-visibility paging footer */
+const Pager = ({ page, pages, onPrev, onNext, total, pageSize }) => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: total ? 'space-between' : 'flex-end',
+    marginTop: '20px',
+    padding: '8px 0',
+    flexWrap: 'wrap',
+    gap: '12px'
+  }}>
+    {total ? (
+      <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>
+        Showing {Math.min((page - 1) * (pageSize || 10) + 1, total)}–{Math.min(page * (pageSize || 10), total)} of {total} records
+      </div>
+    ) : <div />}
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '8px',
+      background: 'var(--glass-bg, rgba(255,255,255,0.75))',
+      padding: '4px 6px',
+      borderRadius: '24px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+      border: '1px solid var(--glass-border, rgba(0,0,0,0.08))'
+    }}>
+      <button
+        className="btn-secondary"
+        style={{
+          padding: '6px 14px',
+          fontSize: '13px',
+          borderRadius: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          cursor: page <= 1 ? 'not-allowed' : 'pointer',
+          opacity: page <= 1 ? 0.45 : 1
+        }}
+        disabled={page <= 1}
+        onClick={onPrev}
+      >
+        <ChevronLeft size={16} /> Previous
+      </button>
+      <span style={{
+        background: 'var(--primary-color, #007aff)',
+        color: 'white',
+        padding: '5px 14px',
+        borderRadius: '16px',
+        fontSize: '13px',
+        fontWeight: 700,
+        boxShadow: '0 2px 8px rgba(0, 122, 255, 0.3)',
+        letterSpacing: '0.3px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        whiteSpace: 'nowrap'
+      }}>
+        Page {page} of {pages}
+      </span>
+      <button
+        className="btn-secondary"
+        style={{
+          padding: '6px 14px',
+          fontSize: '13px',
+          borderRadius: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          cursor: page >= pages ? 'not-allowed' : 'pointer',
+          opacity: page >= pages ? 0.45 : 1
+        }}
+        disabled={page >= pages}
+        onClick={onNext}
+      >
+        Next <ChevronRight size={16} />
+      </button>
+    </div>
+  </div>
+);
+
+/* ---------------- Shared page chrome (Zoho-inspired shell) ---------------- */
+
+/* Every tab id → human name, used for breadcrumbs, titles and menus. */
+const PAGE_TABS = [
+  { id: 'dashboard', name: 'Dashboard' },
+  { id: 'insights', name: 'Financial Insights' },
+  { id: 'ledger', name: 'Ledgers' },
+  { id: 'ledgers', name: 'Ledgers' },
+  { id: 'history', name: 'Ledger History' },
+  { id: 'vouchers', name: 'Vouchers' },
+  { id: 'voucher', name: 'Vouchers' },
+  { id: 'bills', name: 'Bills' },
+  { id: 'activity', name: 'Activity' },
+  { id: 'monthly', name: 'Reports' },
+  { id: 'reports', name: 'Reports' },
+  { id: 'orders', name: 'Order Book' },
+  { id: 'inventory', name: 'Items' },
+  { id: 'items', name: 'Items' },
+  { id: 'companies', name: 'Companies' },
+  { id: 'users', name: 'Users & Roles' },
+  { id: 'notifications', name: 'Notifications' },
+  { id: 'deleted', name: 'Delete History' },
+  { id: 'settings', name: 'Settings' },
+];
+const tabMeta = (id) => PAGE_TABS.find((t) => t.id === id) || { id, name: 'Dashboard' };
+
+/* Sidebar navigation — logically grouped, each item maps 1:1 to an
+   existing tab so nothing is removed or renamed. */
+const NAV_GROUPS = [
+  {
+    id: 'overview', label: 'Overview',
+    items: [
+      { id: 'dashboard', name: 'Dashboard', icon: <Home size={18} />, color: '#007aff' },
+      { id: 'insights', name: 'Financial Insights', icon: <TrendingUp size={18} />, color: '#10b981' },
+    ],
+  },
+  {
+    id: 'accounting', label: 'Accounting',
+    items: [
+      { id: 'ledger', name: 'Ledgers', icon: <Landmark size={18} />, color: '#34c759' },
+      { id: 'vouchers', name: 'Vouchers', icon: <FileText size={18} />, color: '#5856d6' },
+      { id: 'bills', name: 'Bills', icon: <Receipt size={18} />, color: '#ff9500' },
+      { id: 'activity', name: 'Activity', icon: <RotateCcw size={18} />, color: '#e11d48' },
+      { id: 'monthly', name: 'Reports', icon: <BarChart3 size={18} />, color: '#0ea5e9' },
+    ],
+  },
+  {
+    id: 'operations', label: 'Operations',
+    items: [
+      { id: 'orders', name: 'Order Book', icon: <ShoppingCart size={18} />, color: '#ff3b30' },
+      { id: 'inventory', name: 'Items', icon: <Package size={18} />, color: '#007aff' },
+    ],
+  },
+  {
+    id: 'management', label: 'Management',
+    items: [
+      { id: 'companies', name: 'Companies', icon: <Building2 size={18} />, color: '#6366f1' },
+      { id: 'deleted', name: 'Delete History', icon: <RotateCcw size={18} />, color: '#64748b' },
+    ],
+  },
+];
+
+/* Universal loading / empty / error block used across views. */
+const StateBlock = ({ state = 'empty', icon, title, message, onRetry, children }) => {
+  if (state === 'loading') {
+    return (
+      <div className="state-block state-loading">
+        <div className="skeleton-lines"><i /><i /><i /></div>
+      </div>
+    );
+  }
+  if (state === 'error') {
+    return (
+      <div className="state-block state-error">
+        <div className="state-face"><AlertCircle size={22} /></div>
+        <strong>{title || 'Something went wrong'}</strong>
+        <p>{message}</p>
+        {onRetry && (
+          <button className="btn-secondary" style={{ marginTop: 12 }} onClick={onRetry}>Try again</button>
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="state-block">
+      <div className="state-face">{icon || <Inbox size={22} />}</div>
+      <strong>{title || 'Nothing here yet'}</strong>
+      <p>{message || ''}</p>
+      {children}
+    </div>
+  );
+};
+
+/* Dashboard financial KPI card with skeleton loading, drag-and-drop & touch hold. */
+const KpiCard = ({
+  label,
+  value,
+  sub,
+  tone = 'var(--primary-color)',
+  icon,
+  onClick,
+  loading,
+  draggable,
+  isDragging,
+  isDragOver,
+  isPinned,
+  onOptionsClick,
+  ...props
+}) => (
+  <div
+    className={`glass-panel kpi-card draggable-card ${onClick ? 'kpi-clickable' : ''} ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`}
+    onClick={onClick}
+    draggable={draggable}
+    title={onClick ? `Open ${label} · Hold or right-click for options` : undefined}
+    style={{ position: 'relative' }}
+    {...props}
+  >
+    {isPinned && (
+      <span className="pinned-badge" title="Pinned KPI">
+        <Pin size={11} />
+      </span>
+    )}
+    <div className="kpi-top">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span className="kpi-label">{label}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {onOptionsClick && (
+          <button
+            type="button"
+            className="tile-menu-btn"
+            title="Options"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOptionsClick(e);
+            }}
+            style={{ background: 'transparent', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)' }}
+          >
+            <MoreVertical size={14} />
+          </button>
+        )}
+        <span className="kpi-icon" style={{ background: `${tone}1f`, color: tone }}>{icon}</span>
+      </div>
+    </div>
+    <div className={`kpi-value ${loading ? 'kpi-skeleton' : ''}`}>{loading ? '\u00A0' : value}</div>
+    <div className={`kpi-sub ${loading ? 'kpi-skeleton kpi-skeleton-line' : ''}`} style={loading ? undefined : { color: tone }}>{sub}</div>
+  </div>
+);
+
+/* Custom glass sort dropdown — replaces native <select> sorting UI so the
+   popover is consistently styled, opens inside the viewport, and closes on
+   outside click or Escape. */
+const SortDropdown = ({ value, onChange, options, title = 'Sort' }) => {
+  const [open, setOpen] = useState(false);
+  const [align, setAlign] = useState('left');
+  const [menuStyle, setMenuStyle] = useState({});
+  const boxRef = useRef(null);
+  const active = options.find((o) => o.value === value) || options[0];
+
+  const openMenu = () => {
+    const el = boxRef.current;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      const width = Math.min(280, window.innerWidth - 24);
+      setAlign(r.left + width > window.innerWidth - 12 ? 'right' : 'left');
+      setMenuStyle({ maxHeight: `min(320px, ${Math.max(160, window.innerHeight - r.bottom - 12)}px)` });
+    }
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDoc = (e) => {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="sort-dropdown" ref={boxRef}>
+      <button
+        type="button"
+        className="sort-dropdown-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        title={title}
+        onClick={openMenu}
+      >
+        <Filter size={15} />
+        <span className="sort-trigger-label">{active ? active.label : title}</span>
+        <ChevronDown size={15} className={`sort-chev ${open ? 'open' : ''}`} />
+      </button>
+      {open && (
+        <div className={`sort-menu align-${align}`} style={menuStyle} role="listbox">
+          {options.map((o) => (
+            <button
+              type="button"
+              key={o.value}
+              role="option"
+              aria-selected={o.value === value}
+              className={`sort-option ${o.value === value ? 'active' : ''}`}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+            >
+              <span>{o.label}</span>
+              {o.value === value && <Check size={15} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+/* ------------------------------------------------------------------
+   Global search — one box that searches every tab's data and jumps
+   straight to the matching record.
+
+   * Catalogs are read from the same list endpoints each page already
+     calls (api.js de-dupes in-flight GETs and caches them), and are kept
+     in a module-level cache for a few minutes so typing stays instant.
+   * Results are grouped per page; picking one navigates to that tab and
+     seeds its filter via the header query the pages already consume.
+   * The panel is portaled to <body> so the header's backdrop-filter can
+     never trap it; on phones it becomes a bottom sheet.
+   ------------------------------------------------------------------ */
+const SEARCH_CATALOG_TTL = 5 * 60 * 1000;
+let _searchCatalog = { guid: null, at: 0, promise: null, data: null };
+
+const loadSearchCatalog = (companyGuid) => {
+  const now = Date.now();
+  if (
+    _searchCatalog.guid === companyGuid &&
+    _searchCatalog.data &&
+    now - _searchCatalog.at < SEARCH_CATALOG_TTL
+  ) {
+    return Promise.resolve(_searchCatalog.data);
+  }
+  if (_searchCatalog.guid === companyGuid && _searchCatalog.promise) {
+    return _searchCatalog.promise;
+  }
+
+  const promise = Promise.all([
+    api.get('/ledger', { company_guid: companyGuid }).catch(() => ({ data: [] })),
+    api.get('/orders', { company_guid: companyGuid }).catch(() => ({ data: [] })),
+    api.get('/inventory', { company_guid: companyGuid }).catch(() => ({ data: [] })),
+    api.get('/voucher-entry', { company_guid: companyGuid, limit: 200 }).catch(() => ({ data: [] })),
+    api.get('/bill').catch(() => ({ data: [] })),
+    api.get('/invoice').catch(() => ({ data: [] })),
+  ]).then(([led, ord, inv, vou, bill, invoice]) => {
+    const sameCompany = (row) => !companyGuid || !row.company_guid || row.company_guid === companyGuid;
+    const data = {
+      ledger: (led?.data || []).filter(sameCompany),
+      orders: ord?.data || [],
+      inventory: inv?.data || [],
+      vouchers: Array.isArray(vou) ? vou : (vou?.data || vou?.vouchers || []),
+      bills: (bill?.data || []).filter(sameCompany),
+      invoices: invoice?.data || [],
+    };
+    _searchCatalog = { guid: companyGuid, at: Date.now(), promise: null, data };
+    return data;
+  });
+
+  _searchCatalog = { guid: companyGuid, at: 0, promise, data: null };
+  return promise;
+};
+
+const SEARCH_GROUP_DEFS = {
+  parties: { key: 'parties', label: 'Ledgers', tab: 'ledger', icon: <Landmark size={15} />, color: '#34c759' },
+  orders: { key: 'orders', label: 'Orders', tab: 'orders', icon: <ShoppingCart size={15} />, color: '#ff3b30' },
+  inventory: { key: 'inventory', label: 'Items', tab: 'inventory', icon: <Package size={15} />, color: '#ff9500' },
+  vouchers: { key: 'vouchers', label: 'Vouchers', tab: 'vouchers', icon: <FileText size={15} />, color: '#5856d6' },
+  bills: { key: 'bills', label: 'Bills', tab: 'bills', icon: <Receipt size={15} />, color: '#ff9500' },
+  invoices: { key: 'invoices', label: 'Invoices', tab: 'vouchers', icon: <FileText size={15} />, color: '#5856d6' },
+  activity: { key: 'activity', label: 'Activity', tab: 'activity', icon: <RotateCcw size={15} />, color: '#e11d48' },
+};
+
+/* Turn the cached catalogs into grouped, capped result lists for a query. */
+const buildSearchGroups = (catalog, query) => {
+  const needle = String(query || '').trim().toLowerCase();
+  if (!catalog || needle.length < 2) return [];
+  const CAP = 6;
+  const hit = (...vals) => vals.some((v) => String(v == null ? '' : v).toLowerCase().includes(needle));
+  const groups = [];
+
+  const collect = (def, rows, mapRow) => {
+    const items = [];
+    for (const row of rows || []) {
+      const m = mapRow(row);
+      if (!m || !hit(...m.haystack)) continue;
+      items.push({ label: m.label, sub: m.sub, query: m.query });
+      if (items.length >= CAP) break;
+    }
+    if (items.length) groups.push({ ...def, items });
+  };
+
+  collect(SEARCH_GROUP_DEFS.parties, catalog.ledger, (l) => ({
+    haystack: [l.name, l.parent_group, l.type, l.email, l.phone],
+    label: l.name || 'Unnamed ledger',
+    sub: [l.parent_group, l.type].filter(Boolean).join(' · '),
+    query: l.name || '',
+  }));
+  collect(SEARCH_GROUP_DEFS.orders, catalog.orders, (o) => ({
+    haystack: [o.customer, o.id, o.status, o.type],
+    label: o.customer || `Order ${o.id || ''}`.trim(),
+    sub: [o.id ? `#${o.id}` : '', shortDate(o.date), o.status].filter(Boolean).join(' · '),
+    query: o.customer || o.id || '',
+  }));
+  collect(SEARCH_GROUP_DEFS.inventory, catalog.inventory, (it) => ({
+    haystack: [it.name, it.group, it.unit],
+    label: it.name || 'Unnamed item',
+    sub: [it.group, it.unit].filter(Boolean).join(' · '),
+    query: it.name || '',
+  }));
+  collect(SEARCH_GROUP_DEFS.vouchers, catalog.vouchers, (v) => ({
+    haystack: [v.party_name, v.reference_no, v.voucher_type, v.voucher_date],
+    label: v.party_name || v.reference_no || v.voucher_type || 'Voucher',
+    sub: [v.voucher_type, v.reference_no, shortDate(v.voucher_date)].filter(Boolean).join(' · '),
+    query: v.party_name || v.reference_no || v.voucher_type || '',
+  }));
+  collect(SEARCH_GROUP_DEFS.bills, catalog.bills, (b) => ({
+    haystack: [b.bill_name, b.ledger_name, b.bill_type, b.status],
+    label: b.bill_name || b.ledger_name || 'Bill',
+    sub: [b.ledger_name, b.status].filter(Boolean).join(' · '),
+    query: b.bill_name || b.ledger_name || '',
+  }));
+  collect(SEARCH_GROUP_DEFS.invoices, catalog.invoices, (inv) => ({
+    haystack: [inv.invoice_no, inv.party_name, inv.invoice_type],
+    label: inv.party_name || (inv.invoice_no ? `Invoice #${inv.invoice_no}` : 'Invoice'),
+    sub: [inv.invoice_no ? `#${inv.invoice_no}` : '', shortDate(inv.invoice_date)].filter(Boolean).join(' · '),
+    query: inv.party_name || inv.invoice_no || '',
+  }));
+
+  return groups;
+};
+
+const GlobalSearch = ({ companyGuid, query, setQuery, onNavigate }) => {
+  const [open, setOpen] = useState(false);
+  const [catalogState, setCatalogState] = useState({ guid: null, data: null });
+  const [failedGuid, setFailedGuid] = useState(null);
+  const [popStyle, setPopStyle] = useState({});
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const boxRef = useRef(null);
+  const popRef = useRef(null);
+
+  const q = String(query || '').trim();
+  const ready = q.length >= 2;
+
+  /* Derive the catalog for the *current* company so switching companies never
+     shows the previous company's results (no reset effect needed). */
+  const catalog = catalogState.guid === companyGuid ? catalogState.data : null;
+  const failed = failedGuid === companyGuid;
+  const loading = open && ready && !catalog && !failed;
+
+  const pageMatches = useMemo(() => {
+    if (!q) return [];
+    const n = q.toLowerCase();
+    return PAGE_TABS.filter((t) => t.name.toLowerCase().includes(n)).slice(0, 5);
+  }, [q]);
+
+  const groups = useMemo(() => buildSearchGroups(catalog, q), [catalog, q]);
+
+  const flat = useMemo(
+    () => groups.flatMap((g) => g.items.map((it) => ({ ...it, tab: g.tab }))),
+    [groups],
+  );
+
+  const groupsWithIndex = useMemo(() => {
+    let n = 0;
+    return groups.map((g) => ({ ...g, items: g.items.map((it) => ({ ...it, idx: n++ })) }));
+  }, [groups]);
+
+  /* Load the catalogs lazily, once the user starts searching. */
+  useEffect(() => {
+    if (!open || !ready || catalog) return undefined;
+    let alive = true;
+    loadSearchCatalog(companyGuid)
+      .then((data) => {
+        if (!alive) return;
+        setCatalogState({ guid: companyGuid, data });
+        setFailedGuid((g) => (g === companyGuid ? null : g));
+      })
+      .catch(() => { if (alive) setFailedGuid(companyGuid); });
+    return () => { alive = false; };
+  }, [open, ready, catalog, companyGuid]);
+
+  useEffect(() => {
+    if (activeIdx < 0 || !popRef.current) return undefined;
+    const el = popRef.current.querySelector('.search-item.active');
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+    return undefined;
+  }, [activeIdx]);
+
+  const computePop = () => {
+    const el = boxRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const r = el.getBoundingClientRect();
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      setPopStyle({});
+      return;
+    }
+    const width = Math.min(Math.max(r.width, 380), Math.min(520, window.innerWidth - 16));
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+    const maxHeight = Math.max(180, window.innerHeight - r.bottom - 16);
+    setPopStyle({
+      position: 'fixed',
+      top: `${r.bottom + 8}px`,
+      left: `${left}px`,
+      width: `${width}px`,
+      maxHeight: `${maxHeight}px`,
+    });
+  };
+
+  const openPanel = () => {
+    setFailedGuid((g) => (g === companyGuid ? null : g));
+    computePop();
+    setOpen(true);
+  };
+
+  const go = (tab, filter) => {
+    setOpen(false);
+    setActiveIdx(-1);
+    onNavigate(tab, filter);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      if (open) { e.preventDefault(); setOpen(false); }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      if (!open) { openPanel(); return; }
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(i + 1, flat.length - 1));
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      if (!open) return;
+      e.preventDefault();
+      setActiveIdx((i) => Math.max(i - 1, -1));
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIdx >= 0 && flat[activeIdx]) go(flat[activeIdx].tab, flat[activeIdx].query);
+      else if (pageMatches[0]) go(pageMatches[0].id, null);
+      else if (flat[0]) go(flat[0].tab, flat[0].query);
+      else if (q) { setOpen(false); onNavigate('vouchers', q); }
+    }
+  };
+
+  /* Close when clicking outside both the input and the panel. */
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDoc = (e) => {
+      if (boxRef.current && boxRef.current.contains(e.target)) return;
+      if (popRef.current && popRef.current.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onResize = () => computePop();
+    document.addEventListener('mousedown', onDoc);
+    window.addEventListener('resize', onResize);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [open]);
+
+  const showEmpty = ready && !loading && catalog && pageMatches.length === 0 && groups.length === 0;
+
+  return (
+    <div className="header-search global-search" ref={boxRef}>
+      <Search size={18} color="var(--text-muted)" />
+      <input
+        id="header-global-search"
+        name="global_search"
+        type="text"
+        placeholder="Search parties, orders, vouchers…"
+        autoComplete="off"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setActiveIdx(-1); if (!open) openPanel(); }}
+        onFocus={openPanel}
+        onKeyDown={onKeyDown}
+      />
+      {query ? (
+        <button
+          type="button"
+          className="search-clear"
+          title="Clear search"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setQuery('');
+            setActiveIdx(-1);
+            const input = boxRef.current && boxRef.current.querySelector('input');
+            if (input) input.focus();
+          }}
+        >
+          <X size={15} />
+        </button>
+      ) : null}
+
+      {open && createPortal(
+        <div className="search-pop" ref={popRef} style={popStyle} role="listbox">
+          {q.length < 2 ? (
+            <div className="search-pop-hint">
+              <Search size={15} /> Type to search across parties, vouchers, orders, bills and invoices.
+            </div>
+          ) : loading ? (
+            <div className="search-pop-hint">
+              <RefreshCw size={15} className="spin" /> Searching…
+            </div>
+          ) : !catalog && failed ? (
+            <div className="search-pop-hint">
+              <AlertCircle size={15} /> Search data is unavailable right now.
+            </div>
+          ) : showEmpty ? (
+            <div className="search-pop-hint">
+              No matches for “{q}” in the selected company.
+            </div>
+          ) : (
+            <>
+              {pageMatches.length > 0 && (
+                <div className="search-group">
+                  <div className="search-group-head">Pages</div>
+                  {pageMatches.map((p) => (
+                    <button
+                      type="button"
+                      key={p.id}
+                      role="option"
+                      className="search-item"
+                      onClick={() => go(p.id, null)}
+                    >
+                      <span className="search-item-icon" style={{ background: 'rgba(88, 86, 214, 0.12)', color: 'var(--primary-color)' }}>
+                        <ChevronRight size={15} />
+                      </span>
+                      <span className="search-item-text">
+                        <strong>{p.name}</strong>
+                        <small>Open page</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {groupsWithIndex.map((g) => (
+                <div className="search-group" key={g.key}>
+                  <div className="search-group-head">{g.label}</div>
+                  {g.items.map((it) => (
+                    <button
+                      type="button"
+                      key={`${g.key}-${it.idx}`}
+                      role="option"
+                      aria-selected={it.idx === activeIdx}
+                      className={`search-item ${it.idx === activeIdx ? 'active' : ''}`}
+                      onMouseEnter={() => setActiveIdx(it.idx)}
+                      onClick={() => go(g.tab, it.query)}
+                    >
+                      <span className="search-item-icon" style={{ background: `${g.color}1f`, color: g.color }}>
+                        {g.icon}
+                      </span>
+                      <span className="search-item-text">
+                        <strong>{it.label}</strong>
+                        {it.sub ? <small>{it.sub}</small> : null}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </>
+          )}
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+};
+
+/* ---------------- Monthly Summary Chart Components ---------------- */
+const getNiceTicks = (max) => {
+  if (max <= 0) return { ticks: [0], niceMax: 0 };
+  const roughStep = max / 3;
+  const power = Math.pow(10, Math.floor(Math.log10(roughStep || 1)));
+  const normalized = roughStep / power;
+  let niceStep = power;
+  if (normalized < 1.5) niceStep = 1 * power;
+  else if (normalized < 3) niceStep = 2 * power;
+  else if (normalized < 7) niceStep = 5 * power;
+  else niceStep = 10 * power;
+
+  const niceMax = Math.ceil(max / niceStep) * niceStep;
+  const ticks = [];
+  for (let val = 0; val <= niceMax; val += niceStep) {
+    ticks.push(val);
+  }
+  return { ticks, niceMax };
+};
+
+const formatShortInr = (val) => {
+  if (val === 0) return '₹0';
+  const abs = Math.abs(val);
+  const sign = val < 0 ? '-' : '';
+  if (abs >= 10000000) return `${sign}₹${(abs / 10000000).toFixed(1)}Cr`;
+  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L`;
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(0)}k`;
+  return `${sign}₹${abs}`;
+};
+
+const MonthlyCreditDebitChart = ({ data = [], onSelectMonth }) => {
+  const [hoverIndex, setHoverIndex] = useState(null);
+
+  const maxVal = Math.max(...data.map(d => Math.max(Number(d.credit || 0), Number(d.debit || 0))), 0);
+  const { ticks, niceMax } = getNiceTicks(maxVal);
+
+  const width = 560;
+  const height = 280;
+  const padLeft = 60;
+  const padRight = 25;
+  const padTop = 25;
+  const padBottom = 48;
+
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+  const baselineY = padTop + plotH;
+
+  const slotW = plotW / Math.max(data.length, 1);
+  const milestoneIndices = [1, 4, 7, 11]; // May, Aug, Nov, Mar
+
+  return (
+    <div className="glass-panel summary-card" style={{
+      padding: '24px',
+      borderRadius: '20px',
+      gap: '0',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      cursor: 'default'
+    }}>
+      <div className="summary-card-header" style={{ marginBottom: '16px' }}>
+        <div>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)', margin: 0, letterSpacing: '-0.4px' }}>
+            Monthly Credit vs Debit
+          </h3>
+          <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
+            Monthly turnover &amp; returns comparison
+          </p>
+        </div>
+        <div className="summary-card-icon" style={{ background: 'rgba(0, 122, 255, 0.12)', color: 'var(--primary-color)' }}>
+          <BarChart3 size={22} />
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', width: '100%' }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
+        >
+          {/* Grid lines & Y-Axis labels */}
+          {ticks.length > 1 ? (
+            ticks.map((t, idx) => {
+              const y = baselineY - (t / niceMax) * plotH;
+              return (
+                <g key={idx}>
+                  <line
+                    x1={padLeft}
+                    y1={y}
+                    x2={width - padRight}
+                    y2={y}
+                    stroke={t === 0 ? '#9ca3af' : 'rgba(0,0,0,0.06)'}
+                    strokeWidth={t === 0 ? 1.5 : 1}
+                    strokeDasharray={t === 0 ? 'none' : '3 3'}
+                  />
+                  <text
+                    x={padLeft - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    fill="var(--text-muted, #6b7280)"
+                    fontSize="12"
+                    fontWeight="500"
+                  >
+                    {formatShortInr(t)}
+                  </text>
+                </g>
+              );
+            })
+          ) : (
+            <>
+              {[0, 0.33, 0.66, 1].map((pct, idx) => {
+                const y = baselineY - pct * plotH;
+                return (
+                  <line
+                    key={idx}
+                    x1={padLeft}
+                    y1={y}
+                    x2={width - padRight}
+                    y2={y}
+                    stroke={idx === 0 ? '#9ca3af' : 'rgba(0,0,0,0.06)'}
+                    strokeWidth={idx === 0 ? 1.5 : 1}
+                    strokeDasharray={idx === 0 ? 'none' : '3 3'}
+                  />
+                );
+              })}
+              <text
+                x={padLeft - 10}
+                y={baselineY + 4}
+                textAnchor="end"
+                fill="var(--text-muted, #6b7280)"
+                fontSize="12"
+                fontWeight="500"
+              >
+                ₹0
+              </text>
+            </>
+          )}
+
+          {/* Month Slots & Grouped Bars */}
+          {data.map((row, idx) => {
+            const cx = padLeft + (idx + 0.5) * slotW;
+            const barW = Math.min(Math.max(slotW * 0.32, 6), 11);
+            const isMilestone = milestoneIndices.includes(idx);
+
+            const cVal = Number(row.credit || 0);
+            const dVal = Number(row.debit || 0);
+            const cH = niceMax > 0 ? (cVal / niceMax) * plotH : 0;
+            const dH = niceMax > 0 ? (dVal / niceMax) * plotH : 0;
+            const isHovered = hoverIndex === idx;
+
+            return (
+              <g key={row.monthKey || idx}>
+                {isMilestone && (
+                  <>
+                    <line
+                      x1={cx}
+                      y1={baselineY}
+                      x2={cx}
+                      y2={baselineY + 6}
+                      stroke="#9ca3af"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x={cx}
+                      y={baselineY + 22}
+                      textAnchor="middle"
+                      fill="var(--text-muted, #6b7280)"
+                      fontSize="12"
+                      fontWeight="500"
+                    >
+                      {row.monthLabel}
+                    </text>
+                  </>
+                )}
+
+                {isHovered && (
+                  <rect
+                    x={padLeft + idx * slotW + 2}
+                    y={padTop}
+                    width={slotW - 4}
+                    height={plotH}
+                    fill="rgba(37, 99, 235, 0.05)"
+                    rx="4"
+                  />
+                )}
+
+                {cH > 0 && (
+                  <rect
+                    x={cx - barW - 1.5}
+                    y={baselineY - cH}
+                    width={barW}
+                    height={cH}
+                    fill="#2563eb"
+                    rx="2"
+                    style={{ transition: 'height 0.3s ease, y 0.3s ease' }}
+                  />
+                )}
+
+                {dH > 0 && (
+                  <rect
+                    x={cx + 1.5}
+                    y={baselineY - dH}
+                    width={barW}
+                    height={dH}
+                    fill="#ef4444"
+                    rx="2"
+                    style={{ transition: 'height 0.3s ease, y 0.3s ease' }}
+                  />
+                )}
+
+                <rect
+                  x={padLeft + idx * slotW}
+                  y={padTop}
+                  width={slotW}
+                  height={plotH + padBottom}
+                  fill="transparent"
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={() => setHoverIndex(idx)}
+                  onMouseLeave={() => setHoverIndex(null)}
+                  onClick={() => onSelectMonth && onSelectMonth(row)}
+                />
+              </g>
+            );
+          })}
+        </svg>
+
+        {hoverIndex !== null && data[hoverIndex] && (
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            left: `${Math.min(Math.max((padLeft + (hoverIndex + 0.5) * slotW) / width * 100, 22), 78)}%`,
+            transform: 'translateX(-50%)',
+            background: 'var(--glass-bg, rgba(255, 255, 255, 0.95))',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid var(--glass-border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            pointerEvents: 'none',
+            zIndex: 10,
+            minWidth: '160px'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '6px' }}>
+              {data[hoverIndex].monthLabel}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#2563eb', fontWeight: 600, marginBottom: '2px' }}>
+              <span>Credit (Sales):</span>
+              <span>{inr(data[hoverIndex].credit)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#ef4444', fontWeight: 600, marginBottom: '4px' }}>
+              <span>Debit (Returns):</span>
+              <span>{inr(data[hoverIndex].debit)}</span>
+            </div>
+            <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '4px', fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 500 }}>
+              Click to view breakdown
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px',
+        marginTop: '10px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#2563eb', borderRadius: '1px' }}></span>
+          <span style={{ color: '#2563eb', fontSize: '13px', fontWeight: 600 }}>Credit (Sales)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#ef4444', borderRadius: '1px' }}></span>
+          <span style={{ color: '#ef4444', fontSize: '13px', fontWeight: 600 }}>Debit (Returns)</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ClosingBalanceTrendChart = ({ data = [], onSelectMonth }) => {
+  const [hoverIndex, setHoverIndex] = useState(null);
+
+  const balances = data.map(d => Number(d.closingBalance || 0));
+  const rawMin = Math.min(...balances, 0);
+  const rawMax = Math.max(...balances, 0);
+  const isAllZero = rawMin === 0 && rawMax === 0;
+
+  const width = 560;
+  const height = 280;
+  const padLeft = 60;
+  const padRight = 25;
+  const padTop = 25;
+  const padBottom = 48;
+
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+  const baselineY = padTop + plotH;
+
+  const slotW = plotW / Math.max(data.length, 1);
+  const milestoneIndices = [1, 4, 7, 11]; // May, Aug, Nov, Mar
+
+  let ticks = [0];
+  let niceMax = 0;
+  let niceMin = 0;
+
+  if (!isAllZero) {
+    if (rawMin >= 0) {
+      const res = getNiceTicks(rawMax);
+      ticks = res.ticks;
+      niceMax = res.niceMax;
+      niceMin = 0;
+    } else if (rawMax <= 0) {
+      const res = getNiceTicks(Math.abs(rawMin));
+      ticks = res.ticks.map(v => -v).reverse();
+      niceMin = -res.niceMax;
+      niceMax = 0;
+    } else {
+      const posRes = getNiceTicks(rawMax);
+      const negRes = getNiceTicks(Math.abs(rawMin));
+      niceMax = posRes.niceMax;
+      niceMin = -negRes.niceMax;
+      ticks = [...negRes.ticks.slice(1).reverse().map(v => -v), ...posRes.ticks];
+    }
+  }
+
+  const getY = (val) => {
+    if (isAllZero) return baselineY;
+    const span = (niceMax - niceMin) || 1;
+    const frac = (val - niceMin) / span;
+    return baselineY - frac * plotH;
+  };
+
+  const zeroY = getY(0);
+
+  const points = data.map((d, idx) => ({
+    x: padLeft + (idx + 0.5) * slotW,
+    y: getY(Number(d.closingBalance || 0)),
+    data: d,
+    idx
+  }));
+
+  const pathD = points.length > 0
+    ? points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+    : '';
+
+  return (
+    <div className="glass-panel summary-card" style={{
+      padding: '24px',
+      borderRadius: '20px',
+      gap: '0',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      cursor: 'default'
+    }}>
+      <div className="summary-card-header" style={{ marginBottom: '16px' }}>
+        <div>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)', margin: 0, letterSpacing: '-0.4px' }}>
+            Closing Balance Trend
+          </h3>
+          <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
+            Cumulative financial trajectory across FY
+          </p>
+        </div>
+        <div className="summary-card-icon" style={{ background: 'rgba(52, 199, 89, 0.12)', color: 'var(--success)' }}>
+          <TrendingUp size={22} />
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', width: '100%' }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
+        >
+          <defs>
+            <linearGradient id="balanceTrendGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid lines & Y-Axis labels */}
+          {!isAllZero && ticks.length > 1 ? (
+            ticks.map((t, idx) => {
+              const y = getY(t);
+              return (
+                <g key={idx}>
+                  <line
+                    x1={padLeft}
+                    y1={y}
+                    x2={width - padRight}
+                    y2={y}
+                    stroke={t === 0 ? '#9ca3af' : 'rgba(0,0,0,0.06)'}
+                    strokeWidth={t === 0 ? 1.5 : 1}
+                    strokeDasharray={t === 0 ? 'none' : '3 3'}
+                  />
+                  <text
+                    x={padLeft - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    fill="var(--text-muted, #6b7280)"
+                    fontSize="12"
+                    fontWeight="500"
+                  >
+                    {formatShortInr(t)}
+                  </text>
+                </g>
+              );
+            })
+          ) : (
+            <>
+              {[0, 0.33, 0.66, 1].map((pct, idx) => {
+                const y = baselineY - pct * plotH;
+                return (
+                  <line
+                    key={idx}
+                    x1={padLeft}
+                    y1={y}
+                    x2={width - padRight}
+                    y2={y}
+                    stroke={idx === 0 ? '#9ca3af' : 'rgba(0,0,0,0.06)'}
+                    strokeWidth={idx === 0 ? 1.5 : 1}
+                    strokeDasharray={idx === 0 ? 'none' : '3 3'}
+                  />
+                );
+              })}
+              <text
+                x={padLeft - 10}
+                y={baselineY + 4}
+                textAnchor="end"
+                fill="var(--text-muted, #6b7280)"
+                fontSize="12"
+                fontWeight="500"
+              >
+                ₹0
+              </text>
+            </>
+          )}
+
+          {/* Milestone Ticks and Labels on X-axis */}
+          {data.map((row, idx) => {
+            const cx = padLeft + (idx + 0.5) * slotW;
+            const isMilestone = milestoneIndices.includes(idx);
+            if (!isMilestone) return null;
+            return (
+              <g key={`milestone-${idx}`}>
+                <line
+                  x1={cx}
+                  y1={baselineY}
+                  x2={cx}
+                  y2={baselineY + 6}
+                  stroke="#9ca3af"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={cx}
+                  y={baselineY + 22}
+                  textAnchor="middle"
+                  fill="var(--text-muted, #6b7280)"
+                  fontSize="12"
+                  fontWeight="500"
+                >
+                  {row.monthLabel}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Gradient area if balance is positive */}
+          {!isAllZero && points.length > 0 && niceMin >= 0 && (
+            <path
+              d={`${pathD} L ${points[points.length - 1].x} ${zeroY} L ${points[0].x} ${zeroY} Z`}
+              fill="url(#balanceTrendGrad)"
+            />
+          )}
+
+          {/* The Emerald Green Trend Line */}
+          {pathD && (
+            <path
+              d={pathD}
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+
+          {/* Circular Nodes on Each Month */}
+          {points.map((p) => {
+            const isHovered = hoverIndex === p.idx;
+            return (
+              <g key={`pt-${p.idx}`}>
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={isHovered ? 6 : 4}
+                  fill="#ffffff"
+                  stroke="#10b981"
+                  strokeWidth={isHovered ? 3 : 2.5}
+                  style={{ transition: 'r 0.2s ease' }}
+                />
+              </g>
+            );
+          })}
+
+          {/* Transparent hit areas for hover & click */}
+          {data.map((row, idx) => (
+            <rect
+              key={`hit-${idx}`}
+              x={padLeft + idx * slotW}
+              y={padTop}
+              width={slotW}
+              height={plotH + padBottom}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setHoverIndex(idx)}
+              onMouseLeave={() => setHoverIndex(null)}
+              onClick={() => onSelectMonth && onSelectMonth(row)}
+            />
+          ))}
+        </svg>
+
+        {hoverIndex !== null && data[hoverIndex] && (
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            left: `${Math.min(Math.max((padLeft + (hoverIndex + 0.5) * slotW) / width * 100, 22), 78)}%`,
+            transform: 'translateX(-50%)',
+            background: 'var(--glass-bg, rgba(255, 255, 255, 0.95))',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid var(--glass-border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            pointerEvents: 'none',
+            zIndex: 10,
+            minWidth: '160px'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '6px' }}>
+              {data[hoverIndex].monthLabel}
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '12px',
+              color: Number(data[hoverIndex].closingBalance || 0) >= 0 ? '#10b981' : '#ef4444',
+              fontWeight: 800,
+              marginBottom: '4px'
+            }}>
+              <span>Closing Balance:</span>
+              <span>{inr(data[hoverIndex].closingBalance)}</span>
+            </div>
+            <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '4px', fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 500 }}>
+              Click to view breakdown
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        marginTop: '10px'
+      }}>
+        <svg width="26" height="14" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+          <line x1="2" y1="7" x2="24" y2="7" stroke="#10b981" strokeWidth="2.2" />
+          <circle cx="13" cy="7" r="3.5" fill="#ffffff" stroke="#10b981" strokeWidth="2.2" />
+        </svg>
+        <span style={{ color: '#10b981', fontSize: '13px', fontWeight: 600 }}>Closing Balance</span>
+      </div>
+    </div>
+  );
+};
+
+/* ---------------- Monthly Summary / Monthly Sales ---------------- */
+const FY_MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+
+const MonthlySummary = ({ companyGuid, setCurrentTab }) => {
+  const currentCalYear = new Date().getFullYear();
+  const currentMonthNum = new Date().getMonth(); // 0-indexed, 0=Jan, 3=Apr
+  const defaultFyStart = currentMonthNum >= 3 ? currentCalYear : currentCalYear - 1;
+
+  const [fyYear, setFyYear] = useState(defaultFyStart);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('chart'); // 'chart' | 'table'
+  const [drillMonth, setDrillMonth] = useState(null);
+
+  useEffect(() => {
+    if (!companyGuid) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+    let alive = true;
+    setLoading(true);
+    (async () => {
+      let rawIncomeExpense = [];
+      let rawVouchers = [];
+      let failed = false;
+
+      try {
+        // Fetch monthly income/expense summary
+        const ieRes = await api.get('/dashboard/income-expense', { company_guid: companyGuid }).catch(() => []);
+        rawIncomeExpense = Array.isArray(ieRes) ? ieRes : (ieRes && Array.isArray(ieRes.data) ? ieRes.data : []);
+
+        // Also fetch vouchers for detailed monthly debit/credit breakdown
+        const vRes = await api.get('/voucher-entry', { company_guid: companyGuid }).catch(() => []);
+        rawVouchers = Array.isArray(vRes) ? vRes : (vRes && Array.isArray(vRes.data) ? vRes.data : []);
+      } catch (err) {
+        console.error('Monthly Summary Error:', err);
+        failed = true;
+      }
+
+      if (!alive) return;
+
+      // Construct 12 months for Indian Financial Year starting in April of fyYear
+      let cumulativeBalance = 0;
+      const rows = FY_MONTHS.map((monthName, idx) => {
+        const calYear = idx < 9 ? fyYear : fyYear + 1;
+        const monthIndex = idx < 9 ? idx + 3 : idx - 9; // 0-indexed month (Apr=3, Mar=2)
+        const monthLabel = `${monthName} ${calYear}`;
+        const monthKey = `${calYear}-${String(monthIndex + 1).padStart(2, '0')}`;
+
+        // Match from income/expense data
+        let monthDebit = 0;
+        let monthCredit = 0;
+
+        const ieMatch = rawIncomeExpense.find(item => {
+          if (!item.month) return false;
+          let itemYear, itemMonth;
+          if (typeof item.month === 'string') {
+            const m = item.month.match(/^(\d{4})-(\d{2})/);
+            if (m) {
+              itemYear = parseInt(m[1], 10);
+              itemMonth = parseInt(m[2], 10) - 1;
+            }
+          }
+          if (itemYear === undefined) {
+            const d = new Date(item.month);
+            itemYear = d.getFullYear();
+            itemMonth = d.getMonth();
+          }
+          return itemYear === calYear && itemMonth === monthIndex;
+        });
+
+        if (ieMatch) {
+          monthCredit = Number(ieMatch.income) || 0;
+          monthDebit = Number(ieMatch.expense) || 0;
+        }
+
+        // Match vouchers for this month
+        const monthVouchers = rawVouchers.filter(v => {
+          if (!v.voucher_date) return false;
+          let vYear, vMonth;
+          if (typeof v.voucher_date === 'string') {
+            const m = v.voucher_date.match(/^(\d{4})-(\d{2})/);
+            if (m) {
+              vYear = parseInt(m[1], 10);
+              vMonth = parseInt(m[2], 10) - 1;
+            }
+          }
+          if (vYear === undefined) {
+            const d = new Date(v.voucher_date);
+            vYear = d.getFullYear();
+            vMonth = d.getMonth();
+          }
+          return vYear === calYear && vMonth === monthIndex;
+        });
+
+        if (monthVouchers.length > 0 && !ieMatch) {
+          monthVouchers.forEach(v => {
+            const amt = Number(v.amount) || 0;
+            const t = String(v.voucher_type || '').toLowerCase();
+            if (/sale|receipt|credit/i.test(t)) {
+              monthCredit += amt;
+            } else {
+              monthDebit += amt;
+            }
+          });
+        }
+
+        cumulativeBalance += (monthCredit - monthDebit);
+
+        return {
+          monthLabel,
+          monthKey,
+          monthName,
+          calYear,
+          debit: monthDebit,
+          credit: monthCredit,
+          closingBalance: cumulativeBalance,
+          turnover: monthCredit,
+          expense: monthDebit,
+          profit: monthCredit - monthDebit,
+          vouchersCount: monthVouchers.length,
+          vouchers: monthVouchers
+        };
+      });
+
+      setData(rows);
+      setError(failed ? 'Failed to load monthly summary' : null);
+      setLoading(false);
+    })();
+
+    return () => { alive = false; };
+  }, [companyGuid, fyYear]);
+
+  const totalDebit = data.reduce((s, r) => s + (r.debit || 0), 0);
+  const totalCredit = data.reduce((s, r) => s + (r.credit || 0), 0);
+  const totalClosingBalance = totalCredit - totalDebit;
+
+  const exportCSV = () => {
+    if (!data.length) return alert('No data to export');
+    const headers = ['PARTICULARS', 'DEBIT', 'CREDIT', 'CLOSING BALANCE'];
+    const csvRows = [headers.join(',')];
+    data.forEach(r => {
+      csvRows.push([r.monthLabel, r.debit, r.credit, r.closingBalance].map(v => '"' + (v || 0) + '"').join(','));
+    });
+    csvRows.push(['"TOTAL"', `"${totalDebit}"`, `"${totalCredit}"`, `"${totalClosingBalance}"`]);
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Monthly_Sales_FY_${fyYear}-${String(fyYear + 1).slice(-2)}.csv`;
+    a.click();
+  };
+
+  const exportPDF = () => window.print();
+
+  return (
+    <div className="dashboard-content slide-up">
+      <div className="page-header" style={{ marginBottom: '24px', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+        <div style={{ flex: 1, minWidth: '240px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: 800, margin: '0 0 4px', letterSpacing: '-1px', color: 'var(--text-dark)' }}>
+            Monthly Sales &amp; Summary
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 600, margin: 0 }}>
+            Financial Year FY {fyYear}–{String(fyYear + 1).slice(-2)} (April {fyYear} to March {fyYear + 1})
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Financial Year Selector */}
+          <div className="glass-panel" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 14px',
+            borderRadius: '14px',
+            boxShadow: 'none'
+          }}>
+            <Calendar size={16} color="var(--primary-color)" />
+            <select
+              id="fy-selector"
+              name="fy_year"
+              value={fyYear}
+              onChange={(e) => setFyYear(Number(e.target.value))}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--text-dark)',
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              {[2027, 2026, 2025, 2024, 2023].map(y => (
+                <option key={y} value={y} style={{ background: 'var(--glass-bg)', color: 'var(--text-dark)' }}>
+                  FY {y}–{String(y + 1).slice(-2)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          
+                </div>
+                <div className="summary-card" style={{ padding: '16px', background: 'var(--glass-bg)', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }}>
+                  <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 6px', fontWeight: 700 }}>Total Credit</h4>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#34c759' }}>{inr(drillMonth.credit)}</div>
+                </div>
+              </div>
+
+              <div className="summary-card" style={{ padding: '18px', background: 'rgba(0, 122, 255, 0.05)', border: '1px solid rgba(0, 122, 255, 0.15)', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-dark)' }}>Closing Balance</span>
+                  <span style={{ fontSize: '22px', fontWeight: 800, color: drillMonth.closingBalance >= 0 ? '#34c759' : '#ff3b30' }}>
+                    {inr(drillMonth.closingBalance)}
+                  </span>
+                </div>
+              </div>
+
+              {drillMonth.vouchersCount > 0 ? (
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                  {drillMonth.vouchersCount} voucher(s) recorded in {drillMonth.monthLabel}.
+                </div>
+              ) : (
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>
+                  No individual vouchers recorded for {drillMonth.monthLabel}.
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                {setCurrentTab && (
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      setDrillMonth(null);
+                      setCurrentTab('vouchers');
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FileText size={16} /> Open Vouchers
+                  </button>
+                )}
+                <button className="btn-secondary" onClick={() => setDrillMonth(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
+
+/* ---------------- Header Feedback Modal ---------------- */

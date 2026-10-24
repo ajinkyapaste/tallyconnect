@@ -1,0 +1,11 @@
+﻿import { makePool } from "./_shared.mjs";
+const pool = makePool();
+const q = async (label, sql) => { const r = await pool.query(sql); console.log("== "+label+" ("+r.rowCount+") =="); console.log(JSON.stringify(r.rows, null, 1)); };
+await q("users", "SELECT id, email, username, role, admin_id FROM users ORDER BY id");
+await q("companies", "SELECT company_guid, name, admin_id FROM companies");
+await q("active_company", "SELECT * FROM active_company");
+await q("bills", "SELECT bill_guid, company_guid, ledger_name, bill_name, bill_amount, pending_amount, bill_type, status, due_date FROM bills");
+await q("vouchers", "SELECT voucher_guid, company_guid, voucher_date, voucher_type, reference_no, net_amount, party_name, is_active FROM vouchers");
+await q("deleted", "SELECT id, entity_type, entity_guid, deleted_from FROM deleted_records");
+await q("stock_summary", "SELECT item_name, closing_qty, closing_value FROM stock_summary");
+await pool.end();

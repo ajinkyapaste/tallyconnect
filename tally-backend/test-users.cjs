@@ -1,0 +1,1 @@
+const { Pool } = require('pg'); const pool = new Pool({ connectionString: 'postgres://postgres:postgres@localhost:5432/tallyconnect' }); pool.query('SELECT id, email, role, admin_id FROM users').then(r => console.log(r.rows)).finally(() => pool.end());

@@ -1,0 +1,130 @@
++/* ---------------- Bills Management ---------------- */
++const BillsManager = ({ companyGuid }) => {
++  const [bills, setBills] = useState([]);
++  const [loading, setLoading] = useState(true);
++  const [error, setError] = useState(null);
++
++  const fetchBills = async () => {
++    setLoading(true);
++    try {
++      const res = await api.get('/bill');
++      const data = res?.data || [];
++      const filtered = companyGuid ? data.filter(b => b.company_guid === companyGuid) : data;
++      setBills(filtered);
++      setError(null);
++    } catch (err) {
++      setError(err.message || 'Failed to fetch bills');
++    } finally {
++      setLoading(false);
++    }
++  };
++
++  useEffect(() => {
++    if (companyGuid) fetchBills();
++    else {
++      setBills([]);
++      setLoading(false);
++    }
++  }, [companyGuid]);
++
++  return (
++    <div className="fade-in">
++      <div className="page-header">
++        <div>
++          <h1>Outstanding Bills</h1>
++          <p>Track payables and receivables</p>
++        </div>
++        <div className="header-actions">
++          <button className="btn-secondary" onClick={fetchBills} disabled={!companyGuid}>
++            <RotateCcw size={16} /> Refresh
++          </button>
++        </div>
++      </div>
++
++      {!companyGuid ? (
++        <div className="glass-panel" style={{ textAlign: 'center', padding: '40px' }}>
++          <p style={{ color: 'var(--text-muted)' }}>Please select a company to view bills.</p>
++        </div>
++      ) : (
++        <div className="glass-panel">
++          <div className="list-header">
++            <h3>All Bills ({bills.length})</h3>
++          </div>
++          {loading && <div style={{ padding: '24px', textAlign: 'center' }}>Loading bills...</div>}
++          {error && <div style={{ padding: '24px', textAlign: 'center', color: 'var(--danger)' }}>{error}</div>}
++          
++          {!loading && !error && (
++            <div className="table-responsive">
++              <table className="data-table" style={{ marginTop: '16px' }}>
++                <thead>
++                  <tr>
++                    <th>Bill Name</th>
++                    <th>Ledger</th>
++                    <th>Type</th>
++                    <th style={{ textAlign: 'right' }}>Total Amount</th>
++                    <th style={{ textAlign: 'right' }}>Pending</th>
++                    <th>Due Date</th>
++                    <th>Status</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {bills.map(b => (
++                    <tr key={b.bill_guid || b.id}>
++                      <td>{b.bill_name}</td>
++                      <td>{b.ledger_name}</td>
++                      <td>
++                        <span className="badge" style={
++                          b.bill_type === 'RECEIVABLE' ? { background: 'rgba(52, 199, 89, 0.15)', color: '#248a3d' } 
++                          : { background: 'rgba(255, 59, 48, 0.15)', color: '#c0392b' }
++                        }>
++                          {b.bill_type || 'UNKNOWN'}
++                        </span>
++                      </td>
++                      <td style={{ textAlign: 'right' }}>{inr(b.bill_amount)}</td>
++                      <td style={{ textAlign: 'right' }}>{inr(b.pending_amount)}</td>
++                      <td>{shortDate(b.due_date) || 'N/A'}</td>
++                      <td>
++                        <span className="badge" style={statusStyle(b.status)}>
++                          {b.status}
++                        </span>
++                      </td>
++                    </tr>
++                  ))}
++                  {bills.length === 0 && (
++                     <tr>
++                      <td colSpan="7" style={{ textAlign: 'center', padding: '24px' }}>No bills found</td>
++                    </tr>
++                  )}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </div>
++      )}
++    </div>
++  );
++};
++
+ /* ---------------- App ---------------- */
+ function App() {
+   const [user, setUser] = useState(getUser());
+@@ -1526,6 +1526,7 @@
+       case 'vouchers': return <VoucherExplore externalQuery={headerQuery} />;
+       case 'companies': return <CompanyManager companyGuid={companyGuid} setCompanyGuid={setCompanyGuid} />;
+       case 'users': return <UsersManager />;
++      case 'bills': return <BillsManager companyGuid={companyGuid} />;
+       case 'settings': return (
+         <SettingsHub
+           primaryColor={primaryColor} setPrimaryColor={setPrimaryColor}
+@@ -1548,6 +1548,7 @@
+     { id: 'vouchers', name: 'Voucher Explore', icon: <FileText size={18} />, color: '#5856d6' },
+     { id: 'companies', name: 'Companies', icon: <Building2 size={18} />, color: '#ff2d55' },
+     { id: 'users', name: 'Users', icon: <UsersIcon size={18} />, color: '#007aff' },
++    { id: 'bills', name: 'Bills', icon: <CreditCard size={18} />, color: '#ff9500' },
+   ];
+ 
+   return (
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+

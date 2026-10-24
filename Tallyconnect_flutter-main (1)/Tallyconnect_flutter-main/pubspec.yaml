@@ -1,0 +1,60 @@
+name: tallyconnect_ui
+description: "TallyConnect — Liquid Glass mobile app (Android + iOS)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.6
+  path: ^1.9.1
+  image_picker: ^1.2.0
+  share_plus: ^13.3.1
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  http: ^1.6.0
+  flutter_secure_storage: ^11.2.0
+  flutter_local_notifications: ^22.3.1
+  timezone: ^0.11.1
+  flutter_timezone: ^5.1.1
+  url_launcher: ^6.3.3
+  speech_to_text: ^7.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Launch splash image (Earth at night).
+  assets:
+    - assets/images/splash_globe.jpg
+    - assets/images/splash_logo.png
+    # Letter masks for the theme-matched TC shortcut icon.
+    - assets/images/tc_icon_t.png
+    - assets/images/tc_icon_c.png
+
+  # Figtree (SIL OFL 1.1, github.com/erikdkennedy/figtree) — the prototype's
+  # only typeface, bundled so the app never depends on a network font.
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Figtree-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Figtree-ExtraBold.ttf
+          weight: 800

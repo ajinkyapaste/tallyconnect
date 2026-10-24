@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>TallyConnect — Comprehensive API to Function Mapping Report</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1e293b;
+    margin: 40px;
+  }
+  h1 {
+    font-size: 24pt;
+    color: #1e1b4b;
+    border-bottom: 2px solid #4f46e5;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+  h2 {
+    font-size: 16pt;
+    color: #312e81;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 4px;
+  }
+  h3 {
+    font-size: 13pt;
+    color: #4338ca;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  p {
+    margin: 6px 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 10pt;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 700;
+  }
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .method-get {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    font-weight: 700;
+    font-family: Consolas, monospace;
+    font-size: 9pt;
+  }
+  .method-post {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #fef3c7;
+    color: #b45309;
+    font-weight: 700;
+    font-family: Consolas, monospace;
+    font-size: 9pt;
+  }
+  code {
+    font-family: Consolas, 'Courier New', monospace;
+    background-color: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 9.5pt;
+    color: #0f172a;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 8.5pt;
+    font-weight: 600;
+    background-color: #ede9fe;
+    color: #5b21b6;
+  }
+</style>
+</head>
+<body>
+
+<h1>TallyConnect — Full API to Frontend Function Mapping</h1>
+<p><strong>Scope:</strong> Complete mapping of every single API endpoint, HTTP method, calling frontend function, parent component/module, input parameters (query/body), and data consumption purpose across the TallyConnect web application.</p>
+<p><strong>Generated for:</strong> TallyConnect React Web Application (Vite + React 19)</p>
+
+<h2>1. Summary Statistics</h2>
+<table>
+  <tr><th>Total Unique API Endpoints</th><th>Total Calling Functions</th><th>Frontend Source Modules</th><th>HTTP Methods Used</th></tr>
+  <tr><td><strong>24 Endpoints</strong></td><td><strong>32 Functions</strong></td><td><strong>4 Modules</strong> (<code>Reports.jsx</code>, <code>App.jsx</code>, <code>CompanyDropdown.jsx</code>, <code>api.js</code>)</td><td><strong>GET, POST</strong></td></tr>
+</table>
+
+<h2>2. Module-by-Module API Calling Function Breakdown</h2>
+
+<h3>A. Reports Module (<code>src/Reports.jsx</code>)</h3>
+<p>The centralized Reports dashboard coordinates financial summary calculations, chart analytics, and 13 drill-down reports.</p>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>HTTP Method</th>
+      <th>API Endpoint</th>
+      <th>Calling Function / Hook</th>
+      <th>Parameters / Payload</th>
+      <th>Purpose & Data Used For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/voucher-entry</code></td>
+      <td><code>fetchReportsData()</code> (line 546)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Powers Sales, Purchases, Receipts, Payments totals & counts; Top Customers ranking; Sales Register; Purchase Register; Day Book; Quiet Customers detection.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/ledger</code></td>
+      <td><code>fetchReportsData()</code> (line 547)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Retrieves Sundry Debtors and Sundry Creditors; computes party balances, customer/supplier summaries, and inactive accounts.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/inventory</code></td>
+      <td><code>fetchReportsData()</code> (line 548)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Retrieves inventory items, opening/inward/outward/closing quantities and valuations; powers Stock Summary and Items Not Moving reports.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/dashboard/bills</code></td>
+      <td><code>fetchReportsData()</code> (line 549)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Retrieves pending bills with due dates and pending amounts; powers Outstanding / Pending Bills count & amounts and customer bill tags.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/dashboard/income-expense</code></td>
+      <td><code>fetchReportsData()</code> (line 550)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Retrieves monthly financial breakdown; powers Month-wise Summary charts, historical trends, and Expenses drill-down view.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>B. Authentication & Core Network Services (<code>src/api.js</code>)</h3>
+<p>Authentication helpers and foundational HTTP request handling.</p>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>HTTP Method</th>
+      <th>API Endpoint</th>
+      <th>Calling Function</th>
+      <th>Parameters / Payload</th>
+      <th>Purpose & Data Used For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/auth/login</code></td>
+      <td><code>login()</code> (line 250)</td>
+      <td><code>{ username, password, loginType }</code></td>
+      <td>Authenticates user credentials; returns JWT token and user profile object. Sets session in localStorage.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/auth/register</code></td>
+      <td><code>register()</code> (line 256)</td>
+      <td><code>{ username, email, password, isAdmin }</code></td>
+      <td>Registers a new account.</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/auth/me</code></td>
+      <td><code>fetchMe()</code> (line 260)</td>
+      <td>Bearer JWT Header</td>
+      <td>Validates active JWT token, checks role (ADMIN/USER), and returns profile metadata.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>C. Company Selection & Multi-Tenancy (<code>src/CompanyDropdown.jsx</code> & <code>src/App.jsx</code>)</h3>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>HTTP Method</th>
+      <th>API Endpoint</th>
+      <th>Calling Function</th>
+      <th>Parameters / Payload</th>
+      <th>Purpose & Data Used For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>9</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/company</code></td>
+      <td><code>loadCompanies()</code> in CompanyDropdown (line 44), <code>fetchCompanies()</code> in App (line 4400)</td>
+      <td>None</td>
+      <td>Fetches list of all companies accessible to the user.</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/company/selected</code></td>
+      <td><code>loadCompanies()</code> (line 45), <code>fetchCompanies()</code> (line 4401)</td>
+      <td>None</td>
+      <td>Identifies the user's currently selected company GUID and details.</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/company/active</code></td>
+      <td>Company resolution effect in <code>App.jsx</code> (line 6330)</td>
+      <td>None</td>
+      <td>Resolves current active company context on initial application boot.</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/company/select</code></td>
+      <td><code>selectCompany()</code> (line 110), <code>handleSelectCompany()</code> (line 4418)</td>
+      <td><code>{ company_guid: guid }</code></td>
+      <td>Switches the active company in prototype/legacy backend.</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/company/set-active</code></td>
+      <td><code>selectCompany()</code> (line 117), <code>handleSelectCompany()</code> (line 4442)</td>
+      <td><code>{ company_guid: guid }</code></td>
+      <td>Switches active company in production/hosted backend.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>D. Main Application Operations (<code>src/App.jsx</code>)</h3>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>HTTP Method</th>
+      <th>API Endpoint</th>
+      <th>Calling Function / Component</th>
+      <th>Parameters / Payload</th>
+      <th>Purpose & Data Used For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>14</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/dashboard/summary</code></td>
+      <td><code>loadDashboard()</code> (line 1812)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Retrieves high-level summary KPI totals for the main Dashboard view.</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/orders</code></td>
+      <td><code>prefetchAll()</code> (line 370), <code>fetchOrders()</code> (line 3517)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Populates Order Book view with sales/purchase order vouchers and status.</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/bill</code></td>
+      <td><code>prefetchAll()</code> (line 373), <code>loadDashboard()</code> (line 1821), <code>fetchBills()</code> (line 5002)</td>
+      <td>None / company context</td>
+      <td>Populates the Bills view and outstanding receivables/payables tracking.</td>
+    </tr>
+    <tr>
+      <td>17</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/bill/ledger/:ledgerGuid</code></td>
+      <td><code>openDetails()</code> in LedgerList (line 2274), <code>openDetails()</code> in Bills (line 5038)</td>
+      <td><code>ledgerGuid</code> in URL path</td>
+      <td>Fetches pending bills specific to a single ledger / customer / supplier.</td>
+    </tr>
+    <tr>
+      <td>18</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/invoice</code></td>
+      <td><code>prefetchAll()</code> (line 374), <code>fetchInvoices()</code> (line 5660)</td>
+      <td>None / company context</td>
+      <td>Fetches all sales invoices for the Invoices list view.</td>
+    </tr>
+    <tr>
+      <td>19</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/invoice-item/:invoiceGuid</code></td>
+      <td><code>openDetails()</code> in Invoices (line 5697)</td>
+      <td><code>invoiceGuid</code> in URL path</td>
+      <td>Fetches line items, item quantities, rates, and taxes for an invoice detail view.</td>
+    </tr>
+    <tr>
+      <td>20</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/invoice/ledger/:ledgerGuid</code></td>
+      <td><code>openDetails()</code> in Invoices (line 5699)</td>
+      <td><code>ledgerGuid</code> in URL path</td>
+      <td>Fetches past invoice history for a specific customer.</td>
+    </tr>
+    <tr>
+      <td>21</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/ledger/:guid</code></td>
+      <td><code>openDetails()</code> in LedgerList (line 2268)</td>
+      <td><code>guid</code> in URL path</td>
+      <td>Fetches comprehensive ledger details, address, GSTIN, opening/closing balance.</td>
+    </tr>
+    <tr>
+      <td>22</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/ledger-items/ledger/:guid</code></td>
+      <td><code>openDetails()</code> in LedgerList (line 2270)</td>
+      <td><code>guid</code> in URL path</td>
+      <td>Fetches items transacted with this specific ledger party.</td>
+    </tr>
+    <tr>
+      <td>23</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/voucher-entry/ledger/:guid</code></td>
+      <td><code>openDetails()</code> in LedgerList (line 2272)</td>
+      <td><code>guid</code> in URL path</td>
+      <td>Fetches transaction voucher register for a specific party.</td>
+    </tr>
+    <tr>
+      <td>24</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/ageing/ledger/:guid</code></td>
+      <td><code>openDetails()</code> in LedgerList (line 2276)</td>
+      <td><code>guid</code> in URL path</td>
+      <td>Calculates bill ageing buckets (0-30, 31-60, 61-90, 90+ days) for the ledger.</td>
+    </tr>
+    <tr>
+      <td>25</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/agent-status/sync-status</code></td>
+      <td><code>fetchSyncStatus()</code> (line 6263), <code>openDetails()</code> (line 2293)</td>
+      <td><code>company_guid: companyGuid</code></td>
+      <td>Polls desktop Tally sync connector status and last sync timestamp.</td>
+    </tr>
+    <tr>
+      <td>26</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/voucher-entry/:id</code></td>
+      <td><code>openVoucherDetails()</code> in LedgerList (line 2368), <code>openVoucherDetails()</code> in VoucherExplore (line 3897)</td>
+      <td><code>id</code> or <code>voucher_guid</code> in URL path</td>
+      <td>Fetches complete voucher details, debit/credit ledger breakdown, and narration.</td>
+    </tr>
+    <tr>
+      <td>27</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/stock-summary/sync</code></td>
+      <td><code>handleSync()</code> in Inventory (line 3033)</td>
+      <td><code>{ company_guid, name }</code></td>
+      <td>Initiates Tally synchronization request for stock item summary.</td>
+    </tr>
+    <tr>
+      <td>28</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/stock-item/sync</code></td>
+      <td><code>handleSync()</code> in Inventory (line 3042)</td>
+      <td><code>{ company_guid, name }</code></td>
+      <td>Initiates item-level sync with Tally desktop connector.</td>
+    </tr>
+    <tr>
+      <td>29</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/inventory/user-inventory</code></td>
+      <td><code>handleSync()</code> in Inventory (line 3054)</td>
+      <td><code>{ userId, items: [name] }</code></td>
+      <td>Associates synced item with user account.</td>
+    </tr>
+    <tr>
+      <td>30</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/ledger/deleted/history</code></td>
+      <td><code>fetchHistory()</code> in DeletedHistory (line 3362)</td>
+      <td>None</td>
+      <td>Fetches audit log of soft-deleted ledger accounts.</td>
+    </tr>
+    <tr>
+      <td>31</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/ledger/deleted/restore/:id</code></td>
+      <td><code>handleRestore()</code> in DeletedHistory (line 3385)</td>
+      <td><code>id</code> in URL path</td>
+      <td>Restores a previously deleted ledger account.</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/voucher-command/create</code></td>
+      <td><code>handleCreateVoucher()</code> in VoucherExplore (line 3930)</td>
+      <td><code>{ company_guid, voucher_type, party, ... }</code></td>
+      <td>Queues an entry creation command to be sent to Tally connector.</td>
+    </tr>
+    <tr>
+      <td>33</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/users</code></td>
+      <td><code>fetchUsers()</code> in Settings (line 4817)</td>
+      <td>None</td>
+      <td>Fetches list of registered users for admin settings.</td>
+    </tr>
+    <tr>
+      <td>34</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/users</code></td>
+      <td><code>handleCreateUser()</code> in Settings (line 4836)</td>
+      <td><code>{ email, password }</code></td>
+      <td>Creates a new user login from the settings panel.</td>
+    </tr>
+    <tr>
+      <td>35</td>
+      <td><span class="method-get">GET</span></td>
+      <td><code>/admin/notifications</code></td>
+      <td><code>fetchNotifications()</code> (line 5956), <code>fetchUnread()</code> (line 6248)</td>
+      <td>None</td>
+      <td>Retrieves administrative sync alerts and system notifications.</td>
+    </tr>
+    <tr>
+      <td>36</td>
+      <td><span class="method-post">POST</span></td>
+      <td><code>/admin/notifications/:id/read</code></td>
+      <td><code>markRead()</code> in AdminNotifications (line 5972)</td>
+      <td><code>id</code> in URL path</td>
+      <td>Marks an admin notification as read.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>3. Reverse Lookup: By API Endpoint</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Methods</th>
+      <th>All Calling Functions Across Codebase</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>/voucher-entry</code></td><td>GET</td><td><code>Reports.jsx -> fetchReportsData()</code><br><code>App.jsx -> prefetchAll()</code><br><code>App.jsx -> MonthWiseSummary.load()</code><br><code>App.jsx -> Dashboard.loadDashboard()</code><br><code>App.jsx -> VoucherExplore.fetchVouchers()</code></td></tr>
+    <tr><td><code>/voucher-entry/:id</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openVoucherDetails()</code><br><code>App.jsx -> VoucherExplore.openVoucherDetails()</code></td></tr>
+    <tr><td><code>/voucher-entry/ledger/:guid</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openDetails()</code></td></tr>
+    <tr><td><code>/ledger</code></td><td>GET</td><td><code>Reports.jsx -> fetchReportsData()</code><br><code>App.jsx -> prefetchAll()</code><br><code>App.jsx -> Dashboard.loadDashboard()</code><br><code>App.jsx -> LedgerList.load()</code><br><code>App.jsx -> VoucherExplore (party picker)</code><br><code>App.jsx -> Invoices (party picker)</code></td></tr>
+    <tr><td><code>/ledger/:guid</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openDetails()</code></td></tr>
+    <tr><td><code>/ledger-items/ledger/:guid</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openDetails()</code></td></tr>
+    <tr><td><code>/ledger/deleted/history</code></td><td>GET</td><td><code>App.jsx -> DeletedHistory.fetchHistory()</code></td></tr>
+    <tr><td><code>/ledger/deleted/restore/:id</code></td><td>POST</td><td><code>App.jsx -> DeletedHistory.handleRestore()</code></td></tr>
+    <tr><td><code>/inventory</code></td><td>GET</td><td><code>Reports.jsx -> fetchReportsData()</code><br><code>App.jsx -> prefetchAll()</code><br><code>App.jsx -> Inventory.fetchInventory()</code><br><code>App.jsx -> Inventory.handleSync()</code></td></tr>
+    <tr><td><code>/stock-summary/sync</code></td><td>POST</td><td><code>App.jsx -> Inventory.handleSync()</code></td></tr>
+    <tr><td><code>/stock-item/sync</code></td><td>POST</td><td><code>App.jsx -> Inventory.handleSync()</code></td></tr>
+    <tr><td><code>/inventory/user-inventory</code></td><td>POST</td><td><code>App.jsx -> Inventory.handleSync()</code></td></tr>
+    <tr><td><code>/bill</code></td><td>GET</td><td><code>App.jsx -> prefetchAll()</code><br><code>App.jsx -> Dashboard.loadDashboard()</code><br><code>App.jsx -> Bills.fetchBills()</code></td></tr>
+    <tr><td><code>/bill/ledger/:guid</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openDetails()</code><br><code>App.jsx -> Bills.openDetails()</code></td></tr>
+    <tr><td><code>/dashboard/bills</code></td><td>GET</td><td><code>Reports.jsx -> fetchReportsData()</code></td></tr>
+    <tr><td><code>/dashboard/income-expense</code></td><td>GET</td><td><code>Reports.jsx -> fetchReportsData()</code><br><code>App.jsx -> MonthWiseSummary.load()</code><br><code>App.jsx -> Dashboard.loadDashboard()</code></td></tr>
+    <tr><td><code>/dashboard/summary</code></td><td>GET</td><td><code>App.jsx -> Dashboard.loadDashboard()</code></td></tr>
+    <tr><td><code>/invoice</code></td><td>GET</td><td><code>App.jsx -> prefetchAll()</code><br><code>App.jsx -> Invoices.fetchInvoices()</code></td></tr>
+    <tr><td><code>/invoice-item/:invoiceGuid</code></td><td>GET</td><td><code>App.jsx -> Invoices.openDetails()</code></td></tr>
+    <tr><td><code>/invoice/ledger/:ledgerGuid</code></td><td>GET</td><td><code>App.jsx -> Invoices.openDetails()</code></td></tr>
+    <tr><td><code>/orders</code></td><td>GET</td><td><code>App.jsx -> prefetchAll()</code><br><code>App.jsx -> Orders.fetchOrders()</code></td></tr>
+    <tr><td><code>/ageing/ledger/:guid</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openDetails()</code></td></tr>
+    <tr><td><code>/agent-status/sync-status</code></td><td>GET</td><td><code>App.jsx -> LedgerList.openDetails()</code><br><code>App.jsx -> fetchSyncStatus()</code></td></tr>
+    <tr><td><code>/company</code></td><td>GET</td><td><code>CompanyDropdown.jsx -> loadCompanies()</code><br><code>App.jsx -> Companies.fetchCompanies()</code></td></tr>
+    <tr><td><code>/company/selected</code></td><td>GET</td><td><code>CompanyDropdown.jsx -> loadCompanies()</code><br><code>App.jsx -> Companies.fetchCompanies()</code></td></tr>
+    <tr><td><code>/company/active</code></td><td>GET</td><td><code>App.jsx -> active company resolution effect</code></td></tr>
+    <tr><td><code>/company/select</code></td><td>POST</td><td><code>CompanyDropdown.jsx -> selectCompany()</code><br><code>App.jsx -> Companies.handleSelectCompany()</code></td></tr>
+    <tr><td><code>/company/set-active</code></td><td>POST</td><td><code>CompanyDropdown.jsx -> selectCompany()</code><br><code>App.jsx -> Companies.handleSelectCompany()</code></td></tr>
+    <tr><td><code>/voucher-command/create</code></td><td>POST</td><td><code>App.jsx -> VoucherExplore.handleCreateVoucher()</code></td></tr>
+    <tr><td><code>/users</code></td><td>GET, POST</td><td><code>App.jsx -> Settings.fetchUsers()</code> (GET)<br><code>App.jsx -> Settings.handleCreateUser()</code> (POST)</td></tr>
+    <tr><td><code>/admin/notifications</code></td><td>GET</td><td><code>App.jsx -> AdminNotifications.fetchNotifications()</code><br><code>App.jsx -> fetchUnread()</code></td></tr>
+    <tr><td><code>/admin/notifications/:id/read</code></td><td>POST</td><td><code>App.jsx -> AdminNotifications.markRead()</code></td></tr>
+    <tr><td><code>/auth/login</code></td><td>POST</td><td><code>api.js -> login()</code></td></tr>
+    <tr><td><code>/auth/register</code></td><td>POST</td><td><code>api.js -> register()</code></td></tr>
+    <tr><td><code>/auth/me</code></td><td>GET</td><td><code>api.js -> fetchMe()</code></td></tr>
+  </tbody>
+</table>
+
+<p style="margin-top: 32px; font-size: 9pt; color: #64748b;">Report automatically compiled from static AST and call-graph analysis of TallyConnect frontend source files.</p>
+</body>
+</html>

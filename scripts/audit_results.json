@@ -1,0 +1,5020 @@
+{
+  "total": 200,
+  "connected": 137,
+  "notConnected": 63,
+  "byCategory": {
+    "User-facing (UI)": {
+      "total": 65,
+      "connected": 29,
+      "notConnected": 36,
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/",
+          "sourceFile": "server.js",
+          "mountPrefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/adminVisibility.js",
+            "src/AdminVisibilityModal.jsx",
+            "src/api.js",
+            "src/App.jsx",
+            "src/AttendanceManager.jsx",
+            "src/CashFlowForecast.jsx",
+            "src/CompanyDropdown.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/DashboardAttendanceCard.jsx",
+            "src/DashboardSalesAnalyticsCard.jsx",
+            "src/DisplayPreferencesBar.jsx",
+            "src/FinancialInsights.jsx",
+            "src/FinancialStatements.jsx",
+            "src/LiquidGlassCustomizer.jsx",
+            "src/Login.jsx",
+            "src/main.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/RowsDropdown.jsx",
+            "src/SalesAnalyticsDetailView.jsx",
+            "src/StandardDateFilter.jsx",
+            "src/StandardPagination.jsx",
+            "src/TallyConnectLogo.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/uiUtils.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/check-db",
+          "sourceFile": "server.js",
+          "mountPrefix": "",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/notifications",
+          "subPath": "/",
+          "sourceFile": "routes/adminNotifications.js",
+          "prefix": "/admin/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/admin/notifications/:id/read",
+          "subPath": "/:id/read",
+          "sourceFile": "routes/adminNotifications.js",
+          "prefix": "/admin/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/notifications/download/:file",
+          "subPath": "/download/:file",
+          "sourceFile": "routes/adminNotifications.js",
+          "prefix": "/admin/notifications",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/admin/notifications/clear-all",
+          "subPath": "/clear-all",
+          "sourceFile": "routes/adminNotifications.js",
+          "prefix": "/admin/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/ageing/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/ageing.js",
+          "prefix": "/ageing",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/ageing",
+          "subPath": "/",
+          "sourceFile": "routes/ageing.js",
+          "prefix": "/ageing",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/ageing/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/ageing.js",
+          "prefix": "/ageing",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/entry-field-settings/:voucherType",
+          "subPath": "/:voucherType",
+          "sourceFile": "routes/entryFieldSettings.js",
+          "prefix": "/entry-field-settings",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/entry-field-settings/:voucherType",
+          "subPath": "/:voucherType",
+          "sourceFile": "routes/entryFieldSettings.js",
+          "prefix": "/entry-field-settings",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/entry-field-settings/:voucherType/custom",
+          "subPath": "/:voucherType/custom",
+          "sourceFile": "routes/entryFieldSettings.js",
+          "prefix": "/entry-field-settings",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PATCH",
+          "path": "/entry-field-settings/:voucherType/custom/:fieldKey",
+          "subPath": "/:voucherType/custom/:fieldKey",
+          "sourceFile": "routes/entryFieldSettings.js",
+          "prefix": "/entry-field-settings",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/entry-field-settings/:voucherType/custom/:fieldKey",
+          "subPath": "/:voucherType/custom/:fieldKey",
+          "sourceFile": "routes/entryFieldSettings.js",
+          "prefix": "/entry-field-settings",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/",
+          "subPath": "/",
+          "sourceFile": "routes/invoice.routes.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/adminVisibility.js",
+            "src/AdminVisibilityModal.jsx",
+            "src/api.js",
+            "src/App.jsx",
+            "src/AttendanceManager.jsx",
+            "src/CashFlowForecast.jsx",
+            "src/CompanyDropdown.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/DashboardAttendanceCard.jsx",
+            "src/DashboardSalesAnalyticsCard.jsx",
+            "src/DisplayPreferencesBar.jsx",
+            "src/FinancialInsights.jsx",
+            "src/FinancialStatements.jsx",
+            "src/LiquidGlassCustomizer.jsx",
+            "src/Login.jsx",
+            "src/main.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/RowsDropdown.jsx",
+            "src/SalesAnalyticsDetailView.jsx",
+            "src/StandardDateFilter.jsx",
+            "src/StandardPagination.jsx",
+            "src/TallyConnectLogo.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/uiUtils.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/:invoice_guid",
+          "subPath": "/:invoice_guid",
+          "sourceFile": "routes/invoiceItem.routes.js",
+          "prefix": "",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/",
+          "subPath": "/",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/adminVisibility.js",
+            "src/AdminVisibilityModal.jsx",
+            "src/api.js",
+            "src/App.jsx",
+            "src/AttendanceManager.jsx",
+            "src/CashFlowForecast.jsx",
+            "src/CompanyDropdown.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/DashboardAttendanceCard.jsx",
+            "src/DashboardSalesAnalyticsCard.jsx",
+            "src/DisplayPreferencesBar.jsx",
+            "src/FinancialInsights.jsx",
+            "src/FinancialStatements.jsx",
+            "src/LiquidGlassCustomizer.jsx",
+            "src/Login.jsx",
+            "src/main.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/RowsDropdown.jsx",
+            "src/SalesAnalyticsDetailView.jsx",
+            "src/StandardDateFilter.jsx",
+            "src/StandardPagination.jsx",
+            "src/TallyConnectLogo.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/uiUtils.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/user-ledgers",
+          "subPath": "/user-ledgers",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/cleanup/ledger",
+          "subPath": "/cleanup/ledger",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/deleted/history",
+          "subPath": "/deleted/history",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/deleted/restore/:id",
+          "subPath": "/deleted/restore/:id",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/:ledgerGuid",
+          "subPath": "/:ledgerGuid",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/notify-permission-update",
+          "subPath": "/",
+          "sourceFile": "routes/notifypermissionupdate.js",
+          "prefix": "/notify-permission-update",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/reports/monthly-summary",
+          "subPath": "/monthly-summary",
+          "sourceFile": "routes/reports.js",
+          "prefix": "/api/reports",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/reports/profit-loss/sync",
+          "subPath": "/profit-loss/sync",
+          "sourceFile": "routes/reports.js",
+          "prefix": "/api/reports",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/sales-order/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/salesOrder.js",
+          "prefix": "/sales-order",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/sales-order-item/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/salesOrderItem.js",
+          "prefix": "/sales-order-item",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/send-invite",
+          "subPath": "/",
+          "sourceFile": "routes/sendInvite.js",
+          "prefix": "/send-invite",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/request-to-admin",
+          "subPath": "/request-to-admin",
+          "sourceFile": "routes/userRequestsforAccess.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/admin/requests",
+          "subPath": "/admin/requests",
+          "sourceFile": "routes/userRequestsforAccess.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/me",
+          "subPath": "/me",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/me",
+          "subPath": "/me",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/me",
+          "subPath": "/me",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/me/notifications",
+          "subPath": "/me/notifications",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/me/notifications",
+          "subPath": "/me/notifications",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/users/me/avatar",
+          "subPath": "/me/avatar",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users",
+          "subPath": "/",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users",
+          "subPath": "/",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/users",
+          "subPath": "/",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/:id/voucher-permissions",
+          "subPath": "/:id/voucher-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/:id/ledger-permissions",
+          "subPath": "/:id/ledger-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/:id/orders-permissions",
+          "subPath": "/:id/orders-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/:id/inventory-permissions",
+          "subPath": "/:id/inventory-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/:id/dashboard-permissions",
+          "subPath": "/:id/dashboard-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/:id",
+          "subPath": "/:id",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/:id/ledgers",
+          "subPath": "/:id/ledgers",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/users/bulk-ledger-assign",
+          "subPath": "/bulk-ledger-assign",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/bulk-voucher-permissions",
+          "subPath": "/bulk-voucher-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/bulk-orders-permissions",
+          "subPath": "/bulk-orders-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/bulk-ledger-permissions",
+          "subPath": "/bulk-ledger-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/:id/invite-info",
+          "subPath": "/:id/invite-info",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/bulk-inventory-permissions",
+          "subPath": "/bulk-inventory-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/bulk-dashboard-permissions",
+          "subPath": "/bulk-dashboard-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/users/me/monthly-report-schedule",
+          "subPath": "/me/monthly-report-schedule",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/me/monthly-report-schedule",
+          "subPath": "/me/monthly-report-schedule",
+          "sourceFile": "routes/users.js",
+          "prefix": "/api/users",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/reset-active",
+          "subPath": "/reset-active",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/",
+          "subPath": "/",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/adminVisibility.js",
+            "src/AdminVisibilityModal.jsx",
+            "src/api.js",
+            "src/App.jsx",
+            "src/AttendanceManager.jsx",
+            "src/CashFlowForecast.jsx",
+            "src/CompanyDropdown.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/DashboardAttendanceCard.jsx",
+            "src/DashboardSalesAnalyticsCard.jsx",
+            "src/DisplayPreferencesBar.jsx",
+            "src/FinancialInsights.jsx",
+            "src/FinancialStatements.jsx",
+            "src/LiquidGlassCustomizer.jsx",
+            "src/Login.jsx",
+            "src/main.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/RowsDropdown.jsx",
+            "src/SalesAnalyticsDetailView.jsx",
+            "src/StandardDateFilter.jsx",
+            "src/StandardPagination.jsx",
+            "src/TallyConnectLogo.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/uiUtils.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/paged",
+          "subPath": "/paged",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/:voucherGuid",
+          "subPath": "/:voucherGuid",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/:voucherGuid",
+          "subPath": "/:voucherGuid",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "GET",
+          "path": "/user-vouchers/:userId",
+          "subPath": "/user-vouchers/:userId",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/user-vouchers",
+          "subPath": "/user-vouchers",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/bulk-user-vouchers",
+          "subPath": "/bulk-user-vouchers",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/cleanup/voucher",
+          "subPath": "/cleanup/voucher",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "User-facing (UI)"
+        },
+        {
+          "method": "POST",
+          "path": "/deleted/restore-voucher/:id",
+          "subPath": "/deleted/restore-voucher/:id",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "User-facing (UI)"
+        }
+      ]
+    },
+    "Agent & Tally Connector (Desktop Worker)": {
+      "total": 23,
+      "connected": 20,
+      "notConnected": 3,
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/agent/handshake",
+          "subPath": "/handshake",
+          "sourceFile": "routes/agent.routes.js",
+          "prefix": "/agent",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/agent/agent-info",
+          "subPath": "/agent-info",
+          "sourceFile": "routes/agent.routes.js",
+          "prefix": "/agent",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/agent-status/sync-status",
+          "subPath": "/sync-status",
+          "sourceFile": "routes/agentStatus.js",
+          "prefix": "/agent-status",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "GET",
+          "path": "/agent-status/sync-status",
+          "subPath": "/sync-status",
+          "sourceFile": "routes/agentStatus.js",
+          "prefix": "/agent-status",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/agent-status/sync-started",
+          "subPath": "/sync-started",
+          "sourceFile": "routes/agentStatus.js",
+          "prefix": "/agent-status",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/invoice/bulk-sync",
+          "subPath": "/bulk-sync",
+          "sourceFile": "routes/invoice.bulk.js",
+          "prefix": "/invoice",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/invoice.routes.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/invoice-item/bulk-sync",
+          "subPath": "/bulk-sync",
+          "sourceFile": "routes/invoiceItem.bulk.js",
+          "prefix": "/invoice-item",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/invoiceItem.routes.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync/event",
+          "subPath": "/event",
+          "sourceFile": "routes/sync.routes.js",
+          "prefix": "/sync",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync/trigger",
+          "subPath": "/trigger",
+          "sourceFile": "routes/sync.routes.js",
+          "prefix": "/sync",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "GET",
+          "path": "/sync/active-admin",
+          "subPath": "/active-admin",
+          "sourceFile": "routes/sync.routes.js",
+          "prefix": "/sync",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "GET",
+          "path": "/sync-queue/pending",
+          "subPath": "/pending",
+          "sourceFile": "routes/syncQueueRoutes.js",
+          "prefix": "/sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync-queue/:id/processing",
+          "subPath": "/:id/processing",
+          "sourceFile": "routes/syncQueueRoutes.js",
+          "prefix": "/sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync-queue/:id/success",
+          "subPath": "/:id/success",
+          "sourceFile": "routes/syncQueueRoutes.js",
+          "prefix": "/sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync-queue/:id/failed",
+          "subPath": "/:id/failed",
+          "sourceFile": "routes/syncQueueRoutes.js",
+          "prefix": "/sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "GET",
+          "path": "/sync-queue/pending-bills",
+          "subPath": "/pending-bills",
+          "sourceFile": "routes/syncQueueRoutes.js",
+          "prefix": "/sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "GET",
+          "path": "/sync-queue/pending-ledgers",
+          "subPath": "/pending-ledgers",
+          "sourceFile": "routes/syncQueueRoutes.js",
+          "prefix": "/sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/voucher-command/create",
+          "subPath": "/create",
+          "sourceFile": "routes/UniversalUpdate/voucherCommand.js",
+          "prefix": "/voucher-command",
+          "isConnected": true,
+          "connectedIn": [
+            "src/CreateVoucherWizard.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/voucher-command/alter",
+          "subPath": "/alter",
+          "sourceFile": "routes/UniversalUpdate/voucherCommand.js",
+          "prefix": "/voucher-command",
+          "isConnected": true,
+          "connectedIn": [
+            "src/CreateVoucherWizard.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/voucher-entry/bulk-sync",
+          "subPath": "/bulk-sync",
+          "sourceFile": "routes/voucherEntry.bulk.js",
+          "prefix": "/voucher-entry",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        },
+        {
+          "method": "POST",
+          "path": "/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx",
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Agent & Tally Connector (Desktop Worker)"
+        }
+      ]
+    },
+    "Auth & Security": {
+      "total": 13,
+      "connected": 11,
+      "notConnected": 2,
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/auth/register",
+          "subPath": "/register",
+          "sourceFile": "routes/auth.js",
+          "prefix": "/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/Login.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "subPath": "/login",
+          "sourceFile": "routes/auth.js",
+          "prefix": "/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/Login.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "subPath": "/me",
+          "sourceFile": "routes/auth.js",
+          "prefix": "/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "subPath": "/login",
+          "sourceFile": "routes/auth.js",
+          "prefix": "/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/Login.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "subPath": "/login",
+          "sourceFile": "routes/auth.js",
+          "prefix": "/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/Login.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/pending-reset-requests",
+          "subPath": "/pending-reset-requests",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/forgot-password",
+          "subPath": "/forgot-password",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/approve-reset/:token",
+          "subPath": "/approve-reset/:token",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/reset-password",
+          "subPath": "/reset-password",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/forgot-password",
+          "subPath": "/forgot-password",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/reset-password",
+          "subPath": "/reset-password",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/TallyConnectorModal.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/send-otp",
+          "subPath": "/send-otp",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/Login.jsx"
+          ],
+          "category": "Auth & Security"
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/verify-otp",
+          "subPath": "/verify-otp",
+          "sourceFile": "routes/forgotPassword.js",
+          "prefix": "/api/auth",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/Login.jsx"
+          ],
+          "category": "Auth & Security"
+        }
+      ]
+    },
+    "Core ERP Data": {
+      "total": 84,
+      "connected": 63,
+      "notConnected": 21,
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/bill/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/push-to-tally",
+          "subPath": "/push-to-tally",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/bill",
+          "subPath": "/",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/bill/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/bill/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/ensure-voucher-bill-map",
+          "subPath": "/ensure-voucher-bill-map",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/mark-processing",
+          "subPath": "/mark-processing",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/mark-success",
+          "subPath": "/mark-success",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/mark-failed",
+          "subPath": "/mark-failed",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/bill/dashboard-summary",
+          "subPath": "/dashboard-summary",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/mark-all-cleared",
+          "subPath": "/mark-all-cleared",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/bill/reconcile",
+          "subPath": "/reconcile",
+          "sourceFile": "routes/bills.js",
+          "prefix": "/bill",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/company/create",
+          "subPath": "/create",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/company/select",
+          "subPath": "/select",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/CompanyDropdown.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/company/selected",
+          "subPath": "/selected",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/CompanyDropdown.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/company",
+          "subPath": "/",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/CompanyDropdown.jsx",
+            "src/FinancialInsights.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/company/active",
+          "subPath": "/active",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/company/set-active",
+          "subPath": "/set-active",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/CompanyDropdown.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/company/set-active",
+          "subPath": "/set-active",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/CompanyDropdown.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/company/by-guid/:guid",
+          "subPath": "/by-guid/:guid",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/company/sync-start/:guid",
+          "subPath": "/sync-start/:guid",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/company/sync-start/:guid",
+          "subPath": "/sync-start/:guid",
+          "sourceFile": "routes/companies.js",
+          "prefix": "/company",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboard/summary",
+          "subPath": "/summary",
+          "sourceFile": "routes/dashboard.js",
+          "prefix": "/dashboard",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/FinancialInsights.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboard/income-expense",
+          "subPath": "/income-expense",
+          "sourceFile": "routes/dashboard.js",
+          "prefix": "/dashboard",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboard/bills",
+          "subPath": "/bills",
+          "sourceFile": "routes/dashboard.js",
+          "prefix": "/dashboard",
+          "isConnected": true,
+          "connectedIn": [
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory",
+          "subPath": "/",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory",
+          "subPath": "/",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/user-inventory/:userId",
+          "subPath": "/user-inventory/:userId",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/user-inventory/:userId",
+          "subPath": "/user-inventory/:userId",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/user-inventory",
+          "subPath": "/user-inventory",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/user-inventory",
+          "subPath": "/user-inventory",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/bulk-user-inventory",
+          "subPath": "/bulk-user-inventory",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/bulk-user-inventory",
+          "subPath": "/bulk-user-inventory",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/full-sync",
+          "subPath": "/full-sync",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/full-sync",
+          "subPath": "/full-sync",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/inventory-movement/sync",
+          "subPath": "/inventory-movement/sync",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/inventory-movement/sync",
+          "subPath": "/inventory-movement/sync",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/cleanup",
+          "subPath": "/cleanup",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/cleanup",
+          "subPath": "/cleanup",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/mobile",
+          "subPath": "/mobile",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/mobile",
+          "subPath": "/mobile",
+          "sourceFile": "routes/inventory.js",
+          "prefix": "/inventory",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/invoice.routes.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/ledger-items/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/ledgerItems.js",
+          "prefix": "/ledger-items",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/ledger-items/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/ledgerItems.js",
+          "prefix": "/ledger-items",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/ledger-items/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/ledgerItems.js",
+          "prefix": "/ledger-items",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/ledger-items/item/:itemName/parties",
+          "subPath": "/item/:itemName/parties",
+          "sourceFile": "routes/ledgerItems.js",
+          "prefix": "/ledger-items",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/:userId/ledgers",
+          "subPath": "/users/:userId/ledgers",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/user-ledgers",
+          "subPath": "/ledger/user-ledgers",
+          "sourceFile": "routes/ledgers.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/orders",
+          "subPath": "/",
+          "sourceFile": "routes/orders.js",
+          "prefix": "/orders",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/user-orders/:userId",
+          "subPath": "/user-orders/:userId",
+          "sourceFile": "routes/orders.js",
+          "prefix": "/orders",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/orders/user-orders",
+          "subPath": "/user-orders",
+          "sourceFile": "routes/orders.js",
+          "prefix": "/orders",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/orders/bulk-user-orders",
+          "subPath": "/bulk-user-orders",
+          "sourceFile": "routes/orders.js",
+          "prefix": "/orders",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/orders/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/orders.js",
+          "prefix": "/orders",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/orders/cleanup/order",
+          "subPath": "/cleanup/order",
+          "sourceFile": "routes/orders.js",
+          "prefix": "/orders",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/stock-item/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/stockItem.js",
+          "prefix": "/stock-item",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/stock-summary/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/stockSummary.js",
+          "prefix": "/stock-summary",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/stock-summary/sync",
+          "subPath": "/sync",
+          "sourceFile": "routes/stockSummary.js",
+          "prefix": "/stock-summary",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/me",
+          "subPath": "/me",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/me",
+          "subPath": "/me",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/me",
+          "subPath": "/me",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/me/notifications",
+          "subPath": "/me/notifications",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/me/notifications",
+          "subPath": "/me/notifications",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/users/me/avatar",
+          "subPath": "/me/avatar",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users",
+          "subPath": "/",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users",
+          "subPath": "/",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/users",
+          "subPath": "/",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/:id/voucher-permissions",
+          "subPath": "/:id/voucher-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/:id/ledger-permissions",
+          "subPath": "/:id/ledger-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/:id/orders-permissions",
+          "subPath": "/:id/orders-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/:id/inventory-permissions",
+          "subPath": "/:id/inventory-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/:id/dashboard-permissions",
+          "subPath": "/:id/dashboard-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "DELETE",
+          "path": "/users/:id",
+          "subPath": "/:id",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/:id/ledgers",
+          "subPath": "/:id/ledgers",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "POST",
+          "path": "/users/bulk-ledger-assign",
+          "subPath": "/bulk-ledger-assign",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/bulk-voucher-permissions",
+          "subPath": "/bulk-voucher-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/bulk-orders-permissions",
+          "subPath": "/bulk-orders-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/bulk-ledger-permissions",
+          "subPath": "/bulk-ledger-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/:id/invite-info",
+          "subPath": "/:id/invite-info",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/bulk-inventory-permissions",
+          "subPath": "/bulk-inventory-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/bulk-dashboard-permissions",
+          "subPath": "/bulk-dashboard-permissions",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "PUT",
+          "path": "/users/me/monthly-report-schedule",
+          "subPath": "/me/monthly-report-schedule",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/users/me/monthly-report-schedule",
+          "subPath": "/me/monthly-report-schedule",
+          "sourceFile": "routes/users.js",
+          "prefix": "/users",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "Core ERP Data"
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/:ledgerGuid",
+          "subPath": "/ledger/:ledgerGuid",
+          "sourceFile": "routes/voucherEntry.js",
+          "prefix": "",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx",
+            "src/CreateVoucherWizard.jsx",
+            "src/FinancialInsights.jsx",
+            "src/Reports.backup.jsx",
+            "src/Reports.jsx",
+            "src/TallyConnectorModal.jsx",
+            "src/VoucherManager.jsx"
+          ],
+          "category": "Core ERP Data"
+        }
+      ]
+    },
+    "Mobile App (Flutter/Android)": {
+      "total": 15,
+      "connected": 14,
+      "notConnected": 1,
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/mobile/notifications",
+          "subPath": "/",
+          "sourceFile": "routes/mobileNotifications.js",
+          "prefix": "/api/mobile/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile/notifications/config",
+          "subPath": "/config",
+          "sourceFile": "routes/mobileNotifications.js",
+          "prefix": "/api/mobile/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/mobile/notifications/config",
+          "subPath": "/config",
+          "sourceFile": "routes/mobileNotifications.js",
+          "prefix": "/api/mobile/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile/notifications/:id/read",
+          "subPath": "/:id/read",
+          "sourceFile": "routes/mobileNotifications.js",
+          "prefix": "/api/mobile/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/api.js",
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/mobile/notifications/clear-all",
+          "subPath": "/clear-all",
+          "sourceFile": "routes/mobileNotifications.js",
+          "prefix": "/api/mobile/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile/notifications/download/:file",
+          "subPath": "/download/:file",
+          "sourceFile": "routes/mobileNotifications.js",
+          "prefix": "/api/mobile/notifications",
+          "isConnected": true,
+          "connectedIn": [
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile-sync-queue/pending",
+          "subPath": "/pending",
+          "sourceFile": "routes/mobileSyncQueueRoutes.js",
+          "prefix": "/api/mobile-sync-queue",
+          "isConnected": false,
+          "connectedIn": [],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "GET",
+          "path": "/api/mobile-sync-queue/activity",
+          "subPath": "/activity",
+          "sourceFile": "routes/mobileSyncQueueRoutes.js",
+          "prefix": "/api/mobile-sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-sync-queue/:id/processing",
+          "subPath": "/:id/processing",
+          "sourceFile": "routes/mobileSyncQueueRoutes.js",
+          "prefix": "/api/mobile-sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-sync-queue/:id/success",
+          "subPath": "/:id/success",
+          "sourceFile": "routes/mobileSyncQueueRoutes.js",
+          "prefix": "/api/mobile-sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-sync-queue/:id/failed",
+          "subPath": "/:id/failed",
+          "sourceFile": "routes/mobileSyncQueueRoutes.js",
+          "prefix": "/api/mobile-sync-queue",
+          "isConnected": true,
+          "connectedIn": [
+            "src/ActivityManager.jsx",
+            "src/App.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-voucher-command/create",
+          "subPath": "/create",
+          "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+          "prefix": "/api/mobile-voucher-command",
+          "isConnected": true,
+          "connectedIn": [
+            "src/CreateVoucherWizard.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-voucher-command/receipt/create",
+          "subPath": "/receipt/create",
+          "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+          "prefix": "/api/mobile-voucher-command",
+          "isConnected": true,
+          "connectedIn": [
+            "src/CreateVoucherWizard.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-voucher-command/payment/create",
+          "subPath": "/payment/create",
+          "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+          "prefix": "/api/mobile-voucher-command",
+          "isConnected": true,
+          "connectedIn": [
+            "src/CreateVoucherWizard.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        },
+        {
+          "method": "POST",
+          "path": "/api/mobile-voucher-command/journal/create",
+          "subPath": "/journal/create",
+          "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+          "prefix": "/api/mobile-voucher-command",
+          "isConnected": true,
+          "connectedIn": [
+            "src/CreateVoucherWizard.jsx"
+          ],
+          "category": "Mobile App (Flutter/Android)"
+        }
+      ]
+    }
+  },
+  "results": [
+    {
+      "method": "GET",
+      "path": "/",
+      "sourceFile": "server.js",
+      "mountPrefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/adminVisibility.js",
+        "src/AdminVisibilityModal.jsx",
+        "src/api.js",
+        "src/App.jsx",
+        "src/AttendanceManager.jsx",
+        "src/CashFlowForecast.jsx",
+        "src/CompanyDropdown.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/DashboardAttendanceCard.jsx",
+        "src/DashboardSalesAnalyticsCard.jsx",
+        "src/DisplayPreferencesBar.jsx",
+        "src/FinancialInsights.jsx",
+        "src/FinancialStatements.jsx",
+        "src/LiquidGlassCustomizer.jsx",
+        "src/Login.jsx",
+        "src/main.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/RowsDropdown.jsx",
+        "src/SalesAnalyticsDetailView.jsx",
+        "src/StandardDateFilter.jsx",
+        "src/StandardPagination.jsx",
+        "src/TallyConnectLogo.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/uiUtils.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/check-db",
+      "sourceFile": "server.js",
+      "mountPrefix": "",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/notifications",
+      "subPath": "/",
+      "sourceFile": "routes/adminNotifications.js",
+      "prefix": "/admin/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/notifications/:id/read",
+      "subPath": "/:id/read",
+      "sourceFile": "routes/adminNotifications.js",
+      "prefix": "/admin/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/notifications/download/:file",
+      "subPath": "/download/:file",
+      "sourceFile": "routes/adminNotifications.js",
+      "prefix": "/admin/notifications",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/notifications/clear-all",
+      "subPath": "/clear-all",
+      "sourceFile": "routes/adminNotifications.js",
+      "prefix": "/admin/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/ageing/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/ageing.js",
+      "prefix": "/ageing",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/ageing",
+      "subPath": "/",
+      "sourceFile": "routes/ageing.js",
+      "prefix": "/ageing",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/ageing/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/ageing.js",
+      "prefix": "/ageing",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/agent/handshake",
+      "subPath": "/handshake",
+      "sourceFile": "routes/agent.routes.js",
+      "prefix": "/agent",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/agent/agent-info",
+      "subPath": "/agent-info",
+      "sourceFile": "routes/agent.routes.js",
+      "prefix": "/agent",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/agent-status/sync-status",
+      "subPath": "/sync-status",
+      "sourceFile": "routes/agentStatus.js",
+      "prefix": "/agent-status",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/agent-status/sync-status",
+      "subPath": "/sync-status",
+      "sourceFile": "routes/agentStatus.js",
+      "prefix": "/agent-status",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/agent-status/sync-started",
+      "subPath": "/sync-started",
+      "sourceFile": "routes/agentStatus.js",
+      "prefix": "/agent-status",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "subPath": "/register",
+      "sourceFile": "routes/auth.js",
+      "prefix": "/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/Login.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "subPath": "/login",
+      "sourceFile": "routes/auth.js",
+      "prefix": "/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/Login.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "subPath": "/me",
+      "sourceFile": "routes/auth.js",
+      "prefix": "/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "subPath": "/login",
+      "sourceFile": "routes/auth.js",
+      "prefix": "/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/Login.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "subPath": "/login",
+      "sourceFile": "routes/auth.js",
+      "prefix": "/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/Login.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/push-to-tally",
+      "subPath": "/push-to-tally",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/bill",
+      "subPath": "/",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/bill/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/bill/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/ensure-voucher-bill-map",
+      "subPath": "/ensure-voucher-bill-map",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/mark-processing",
+      "subPath": "/mark-processing",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/mark-success",
+      "subPath": "/mark-success",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/mark-failed",
+      "subPath": "/mark-failed",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/bill/dashboard-summary",
+      "subPath": "/dashboard-summary",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/mark-all-cleared",
+      "subPath": "/mark-all-cleared",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bill/reconcile",
+      "subPath": "/reconcile",
+      "sourceFile": "routes/bills.js",
+      "prefix": "/bill",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/company/create",
+      "subPath": "/create",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/company/select",
+      "subPath": "/select",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/CompanyDropdown.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/company/selected",
+      "subPath": "/selected",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/CompanyDropdown.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "subPath": "/",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/CompanyDropdown.jsx",
+        "src/FinancialInsights.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/company/active",
+      "subPath": "/active",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/company/set-active",
+      "subPath": "/set-active",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/CompanyDropdown.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/company/set-active",
+      "subPath": "/set-active",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/CompanyDropdown.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/company/by-guid/:guid",
+      "subPath": "/by-guid/:guid",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/company/sync-start/:guid",
+      "subPath": "/sync-start/:guid",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/company/sync-start/:guid",
+      "subPath": "/sync-start/:guid",
+      "sourceFile": "routes/companies.js",
+      "prefix": "/company",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboard/summary",
+      "subPath": "/summary",
+      "sourceFile": "routes/dashboard.js",
+      "prefix": "/dashboard",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/FinancialInsights.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboard/income-expense",
+      "subPath": "/income-expense",
+      "sourceFile": "routes/dashboard.js",
+      "prefix": "/dashboard",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboard/bills",
+      "subPath": "/bills",
+      "sourceFile": "routes/dashboard.js",
+      "prefix": "/dashboard",
+      "isConnected": true,
+      "connectedIn": [
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/entry-field-settings/:voucherType",
+      "subPath": "/:voucherType",
+      "sourceFile": "routes/entryFieldSettings.js",
+      "prefix": "/entry-field-settings",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/entry-field-settings/:voucherType",
+      "subPath": "/:voucherType",
+      "sourceFile": "routes/entryFieldSettings.js",
+      "prefix": "/entry-field-settings",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/entry-field-settings/:voucherType/custom",
+      "subPath": "/:voucherType/custom",
+      "sourceFile": "routes/entryFieldSettings.js",
+      "prefix": "/entry-field-settings",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PATCH",
+      "path": "/entry-field-settings/:voucherType/custom/:fieldKey",
+      "subPath": "/:voucherType/custom/:fieldKey",
+      "sourceFile": "routes/entryFieldSettings.js",
+      "prefix": "/entry-field-settings",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "DELETE",
+      "path": "/entry-field-settings/:voucherType/custom/:fieldKey",
+      "subPath": "/:voucherType/custom/:fieldKey",
+      "sourceFile": "routes/entryFieldSettings.js",
+      "prefix": "/entry-field-settings",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/pending-reset-requests",
+      "subPath": "/pending-reset-requests",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/forgot-password",
+      "subPath": "/forgot-password",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/approve-reset/:token",
+      "subPath": "/approve-reset/:token",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "subPath": "/reset-password",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/forgot-password",
+      "subPath": "/forgot-password",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "subPath": "/reset-password",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/send-otp",
+      "subPath": "/send-otp",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/Login.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/verify-otp",
+      "subPath": "/verify-otp",
+      "sourceFile": "routes/forgotPassword.js",
+      "prefix": "/api/auth",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/Login.jsx"
+      ],
+      "category": "Auth & Security"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory",
+      "subPath": "/",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory",
+      "subPath": "/",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory/user-inventory/:userId",
+      "subPath": "/user-inventory/:userId",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory/user-inventory/:userId",
+      "subPath": "/user-inventory/:userId",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/user-inventory",
+      "subPath": "/user-inventory",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/user-inventory",
+      "subPath": "/user-inventory",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/bulk-user-inventory",
+      "subPath": "/bulk-user-inventory",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/bulk-user-inventory",
+      "subPath": "/bulk-user-inventory",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/full-sync",
+      "subPath": "/full-sync",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/full-sync",
+      "subPath": "/full-sync",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/inventory-movement/sync",
+      "subPath": "/inventory-movement/sync",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/inventory-movement/sync",
+      "subPath": "/inventory-movement/sync",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/cleanup",
+      "subPath": "/cleanup",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/cleanup",
+      "subPath": "/cleanup",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory/mobile",
+      "subPath": "/mobile",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory/mobile",
+      "subPath": "/mobile",
+      "sourceFile": "routes/inventory.js",
+      "prefix": "/inventory",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/bulk-sync",
+      "subPath": "/bulk-sync",
+      "sourceFile": "routes/invoice.bulk.js",
+      "prefix": "/invoice",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/invoice.routes.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "subPath": "/",
+      "sourceFile": "routes/invoice.routes.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/adminVisibility.js",
+        "src/AdminVisibilityModal.jsx",
+        "src/api.js",
+        "src/App.jsx",
+        "src/AttendanceManager.jsx",
+        "src/CashFlowForecast.jsx",
+        "src/CompanyDropdown.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/DashboardAttendanceCard.jsx",
+        "src/DashboardSalesAnalyticsCard.jsx",
+        "src/DisplayPreferencesBar.jsx",
+        "src/FinancialInsights.jsx",
+        "src/FinancialStatements.jsx",
+        "src/LiquidGlassCustomizer.jsx",
+        "src/Login.jsx",
+        "src/main.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/RowsDropdown.jsx",
+        "src/SalesAnalyticsDetailView.jsx",
+        "src/StandardDateFilter.jsx",
+        "src/StandardPagination.jsx",
+        "src/TallyConnectLogo.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/uiUtils.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/invoice.routes.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/invoice-item/bulk-sync",
+      "subPath": "/bulk-sync",
+      "sourceFile": "routes/invoiceItem.bulk.js",
+      "prefix": "/invoice-item",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/invoiceItem.routes.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/:invoice_guid",
+      "subPath": "/:invoice_guid",
+      "sourceFile": "routes/invoiceItem.routes.js",
+      "prefix": "",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/ledger-items/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/ledgerItems.js",
+      "prefix": "/ledger-items",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/ledger-items/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/ledgerItems.js",
+      "prefix": "/ledger-items",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger-items/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/ledgerItems.js",
+      "prefix": "/ledger-items",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger-items/item/:itemName/parties",
+      "subPath": "/item/:itemName/parties",
+      "sourceFile": "routes/ledgerItems.js",
+      "prefix": "/ledger-items",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "subPath": "/",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/adminVisibility.js",
+        "src/AdminVisibilityModal.jsx",
+        "src/api.js",
+        "src/App.jsx",
+        "src/AttendanceManager.jsx",
+        "src/CashFlowForecast.jsx",
+        "src/CompanyDropdown.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/DashboardAttendanceCard.jsx",
+        "src/DashboardSalesAnalyticsCard.jsx",
+        "src/DisplayPreferencesBar.jsx",
+        "src/FinancialInsights.jsx",
+        "src/FinancialStatements.jsx",
+        "src/LiquidGlassCustomizer.jsx",
+        "src/Login.jsx",
+        "src/main.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/RowsDropdown.jsx",
+        "src/SalesAnalyticsDetailView.jsx",
+        "src/StandardDateFilter.jsx",
+        "src/StandardPagination.jsx",
+        "src/TallyConnectLogo.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/uiUtils.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/user-ledgers",
+      "subPath": "/user-ledgers",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/:userId/ledgers",
+      "subPath": "/users/:userId/ledgers",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/user-ledgers",
+      "subPath": "/ledger/user-ledgers",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/cleanup/ledger",
+      "subPath": "/cleanup/ledger",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/deleted/history",
+      "subPath": "/deleted/history",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/deleted/restore/:id",
+      "subPath": "/deleted/restore/:id",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/:ledgerGuid",
+      "subPath": "/:ledgerGuid",
+      "sourceFile": "routes/ledgers.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mobile/notifications",
+      "subPath": "/",
+      "sourceFile": "routes/mobileNotifications.js",
+      "prefix": "/api/mobile/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mobile/notifications/config",
+      "subPath": "/config",
+      "sourceFile": "routes/mobileNotifications.js",
+      "prefix": "/api/mobile/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/mobile/notifications/config",
+      "subPath": "/config",
+      "sourceFile": "routes/mobileNotifications.js",
+      "prefix": "/api/mobile/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile/notifications/:id/read",
+      "subPath": "/:id/read",
+      "sourceFile": "routes/mobileNotifications.js",
+      "prefix": "/api/mobile/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/mobile/notifications/clear-all",
+      "subPath": "/clear-all",
+      "sourceFile": "routes/mobileNotifications.js",
+      "prefix": "/api/mobile/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mobile/notifications/download/:file",
+      "subPath": "/download/:file",
+      "sourceFile": "routes/mobileNotifications.js",
+      "prefix": "/api/mobile/notifications",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mobile-sync-queue/pending",
+      "subPath": "/pending",
+      "sourceFile": "routes/mobileSyncQueueRoutes.js",
+      "prefix": "/api/mobile-sync-queue",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mobile-sync-queue/activity",
+      "subPath": "/activity",
+      "sourceFile": "routes/mobileSyncQueueRoutes.js",
+      "prefix": "/api/mobile-sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-sync-queue/:id/processing",
+      "subPath": "/:id/processing",
+      "sourceFile": "routes/mobileSyncQueueRoutes.js",
+      "prefix": "/api/mobile-sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-sync-queue/:id/success",
+      "subPath": "/:id/success",
+      "sourceFile": "routes/mobileSyncQueueRoutes.js",
+      "prefix": "/api/mobile-sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-sync-queue/:id/failed",
+      "subPath": "/:id/failed",
+      "sourceFile": "routes/mobileSyncQueueRoutes.js",
+      "prefix": "/api/mobile-sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/notify-permission-update",
+      "subPath": "/",
+      "sourceFile": "routes/notifypermissionupdate.js",
+      "prefix": "/notify-permission-update",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/orders",
+      "subPath": "/",
+      "sourceFile": "routes/orders.js",
+      "prefix": "/orders",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/user-orders/:userId",
+      "subPath": "/user-orders/:userId",
+      "sourceFile": "routes/orders.js",
+      "prefix": "/orders",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/orders/user-orders",
+      "subPath": "/user-orders",
+      "sourceFile": "routes/orders.js",
+      "prefix": "/orders",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/orders/bulk-user-orders",
+      "subPath": "/bulk-user-orders",
+      "sourceFile": "routes/orders.js",
+      "prefix": "/orders",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/orders/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/orders.js",
+      "prefix": "/orders",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/orders/cleanup/order",
+      "subPath": "/cleanup/order",
+      "sourceFile": "routes/orders.js",
+      "prefix": "/orders",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/monthly-summary",
+      "subPath": "/monthly-summary",
+      "sourceFile": "routes/reports.js",
+      "prefix": "/api/reports",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/reports/profit-loss/sync",
+      "subPath": "/profit-loss/sync",
+      "sourceFile": "routes/reports.js",
+      "prefix": "/api/reports",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/sales-order/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/salesOrder.js",
+      "prefix": "/sales-order",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/sales-order-item/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/salesOrderItem.js",
+      "prefix": "/sales-order-item",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/send-invite",
+      "subPath": "/",
+      "sourceFile": "routes/sendInvite.js",
+      "prefix": "/send-invite",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/stock-item/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/stockItem.js",
+      "prefix": "/stock-item",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/stock-summary/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/stockSummary.js",
+      "prefix": "/stock-summary",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/stock-summary/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/stockSummary.js",
+      "prefix": "/stock-summary",
+      "isConnected": true,
+      "connectedIn": [
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/sync/event",
+      "subPath": "/event",
+      "sourceFile": "routes/sync.routes.js",
+      "prefix": "/sync",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync/trigger",
+      "subPath": "/trigger",
+      "sourceFile": "routes/sync.routes.js",
+      "prefix": "/sync",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/sync/active-admin",
+      "subPath": "/active-admin",
+      "sourceFile": "routes/sync.routes.js",
+      "prefix": "/sync",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/sync-queue/pending",
+      "subPath": "/pending",
+      "sourceFile": "routes/syncQueueRoutes.js",
+      "prefix": "/sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync-queue/:id/processing",
+      "subPath": "/:id/processing",
+      "sourceFile": "routes/syncQueueRoutes.js",
+      "prefix": "/sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync-queue/:id/success",
+      "subPath": "/:id/success",
+      "sourceFile": "routes/syncQueueRoutes.js",
+      "prefix": "/sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync-queue/:id/failed",
+      "subPath": "/:id/failed",
+      "sourceFile": "routes/syncQueueRoutes.js",
+      "prefix": "/sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/sync-queue/pending-bills",
+      "subPath": "/pending-bills",
+      "sourceFile": "routes/syncQueueRoutes.js",
+      "prefix": "/sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/sync-queue/pending-ledgers",
+      "subPath": "/pending-ledgers",
+      "sourceFile": "routes/syncQueueRoutes.js",
+      "prefix": "/sync-queue",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/create",
+      "subPath": "/create",
+      "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+      "prefix": "/api/mobile-voucher-command",
+      "isConnected": true,
+      "connectedIn": [
+        "src/CreateVoucherWizard.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/receipt/create",
+      "subPath": "/receipt/create",
+      "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+      "prefix": "/api/mobile-voucher-command",
+      "isConnected": true,
+      "connectedIn": [
+        "src/CreateVoucherWizard.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/payment/create",
+      "subPath": "/payment/create",
+      "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+      "prefix": "/api/mobile-voucher-command",
+      "isConnected": true,
+      "connectedIn": [
+        "src/CreateVoucherWizard.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile-voucher-command/journal/create",
+      "subPath": "/journal/create",
+      "sourceFile": "routes/UniversalUpdate/mobileVoucherCommand.js",
+      "prefix": "/api/mobile-voucher-command",
+      "isConnected": true,
+      "connectedIn": [
+        "src/CreateVoucherWizard.jsx"
+      ],
+      "category": "Mobile App (Flutter/Android)"
+    },
+    {
+      "method": "POST",
+      "path": "/voucher-command/create",
+      "subPath": "/create",
+      "sourceFile": "routes/UniversalUpdate/voucherCommand.js",
+      "prefix": "/voucher-command",
+      "isConnected": true,
+      "connectedIn": [
+        "src/CreateVoucherWizard.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/voucher-command/alter",
+      "subPath": "/alter",
+      "sourceFile": "routes/UniversalUpdate/voucherCommand.js",
+      "prefix": "/voucher-command",
+      "isConnected": true,
+      "connectedIn": [
+        "src/CreateVoucherWizard.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/request-to-admin",
+      "subPath": "/request-to-admin",
+      "sourceFile": "routes/userRequestsforAccess.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/requests",
+      "subPath": "/admin/requests",
+      "sourceFile": "routes/userRequestsforAccess.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/me",
+      "subPath": "/me",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/me",
+      "subPath": "/me",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/me",
+      "subPath": "/me",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/me",
+      "subPath": "/me",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/me",
+      "subPath": "/me",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/me",
+      "subPath": "/me",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/me/notifications",
+      "subPath": "/me/notifications",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/me/notifications",
+      "subPath": "/me/notifications",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/me/notifications",
+      "subPath": "/me/notifications",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/me/notifications",
+      "subPath": "/me/notifications",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/users/me/avatar",
+      "subPath": "/me/avatar",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/api/users/me/avatar",
+      "subPath": "/me/avatar",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "subPath": "/",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "subPath": "/",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "subPath": "/",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "subPath": "/",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/users",
+      "subPath": "/",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/api/users",
+      "subPath": "/",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/:id/voucher-permissions",
+      "subPath": "/:id/voucher-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/:id/voucher-permissions",
+      "subPath": "/:id/voucher-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/:id/ledger-permissions",
+      "subPath": "/:id/ledger-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/:id/ledger-permissions",
+      "subPath": "/:id/ledger-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/:id/orders-permissions",
+      "subPath": "/:id/orders-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/:id/orders-permissions",
+      "subPath": "/:id/orders-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/:id/inventory-permissions",
+      "subPath": "/:id/inventory-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/:id/inventory-permissions",
+      "subPath": "/:id/inventory-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/:id/dashboard-permissions",
+      "subPath": "/:id/dashboard-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/:id/dashboard-permissions",
+      "subPath": "/:id/dashboard-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "DELETE",
+      "path": "/users/:id",
+      "subPath": "/:id",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/users/:id",
+      "subPath": "/:id",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/:id/ledgers",
+      "subPath": "/:id/ledgers",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/:id/ledgers",
+      "subPath": "/:id/ledgers",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/users/bulk-ledger-assign",
+      "subPath": "/bulk-ledger-assign",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/api/users/bulk-ledger-assign",
+      "subPath": "/bulk-ledger-assign",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/bulk-voucher-permissions",
+      "subPath": "/bulk-voucher-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/bulk-voucher-permissions",
+      "subPath": "/bulk-voucher-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/bulk-orders-permissions",
+      "subPath": "/bulk-orders-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/bulk-orders-permissions",
+      "subPath": "/bulk-orders-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/bulk-ledger-permissions",
+      "subPath": "/bulk-ledger-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/bulk-ledger-permissions",
+      "subPath": "/bulk-ledger-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/:id/invite-info",
+      "subPath": "/:id/invite-info",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/:id/invite-info",
+      "subPath": "/:id/invite-info",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/bulk-inventory-permissions",
+      "subPath": "/bulk-inventory-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/bulk-inventory-permissions",
+      "subPath": "/bulk-inventory-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/bulk-dashboard-permissions",
+      "subPath": "/bulk-dashboard-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/bulk-dashboard-permissions",
+      "subPath": "/bulk-dashboard-permissions",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/me/monthly-report-schedule",
+      "subPath": "/me/monthly-report-schedule",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/users/me/monthly-report-schedule",
+      "subPath": "/me/monthly-report-schedule",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/users/me/monthly-report-schedule",
+      "subPath": "/me/monthly-report-schedule",
+      "sourceFile": "routes/users.js",
+      "prefix": "/users",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/me/monthly-report-schedule",
+      "subPath": "/me/monthly-report-schedule",
+      "sourceFile": "routes/users.js",
+      "prefix": "/api/users",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/voucher-entry/bulk-sync",
+      "subPath": "/bulk-sync",
+      "sourceFile": "routes/voucherEntry.bulk.js",
+      "prefix": "/voucher-entry",
+      "isConnected": true,
+      "connectedIn": [
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "POST",
+      "path": "/reset-active",
+      "subPath": "/reset-active",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/sync",
+      "subPath": "/sync",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/App.jsx",
+        "src/TallyConnectorModal.jsx"
+      ],
+      "category": "Agent & Tally Connector (Desktop Worker)"
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "subPath": "/",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/ActivityManager.jsx",
+        "src/adminVisibility.js",
+        "src/AdminVisibilityModal.jsx",
+        "src/api.js",
+        "src/App.jsx",
+        "src/AttendanceManager.jsx",
+        "src/CashFlowForecast.jsx",
+        "src/CompanyDropdown.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/DashboardAttendanceCard.jsx",
+        "src/DashboardSalesAnalyticsCard.jsx",
+        "src/DisplayPreferencesBar.jsx",
+        "src/FinancialInsights.jsx",
+        "src/FinancialStatements.jsx",
+        "src/LiquidGlassCustomizer.jsx",
+        "src/Login.jsx",
+        "src/main.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/RowsDropdown.jsx",
+        "src/SalesAnalyticsDetailView.jsx",
+        "src/StandardDateFilter.jsx",
+        "src/StandardPagination.jsx",
+        "src/TallyConnectLogo.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/uiUtils.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/paged",
+      "subPath": "/paged",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "DELETE",
+      "path": "/:voucherGuid",
+      "subPath": "/:voucherGuid",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/:voucherGuid",
+      "subPath": "/:voucherGuid",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/user-vouchers/:userId",
+      "subPath": "/user-vouchers/:userId",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/user-vouchers",
+      "subPath": "/user-vouchers",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/:ledgerGuid",
+      "subPath": "/ledger/:ledgerGuid",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx",
+        "src/CreateVoucherWizard.jsx",
+        "src/FinancialInsights.jsx",
+        "src/Reports.backup.jsx",
+        "src/Reports.jsx",
+        "src/TallyConnectorModal.jsx",
+        "src/VoucherManager.jsx"
+      ],
+      "category": "Core ERP Data"
+    },
+    {
+      "method": "POST",
+      "path": "/bulk-user-vouchers",
+      "subPath": "/bulk-user-vouchers",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js"
+      ],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/cleanup/voucher",
+      "subPath": "/cleanup/voucher",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": false,
+      "connectedIn": [],
+      "category": "User-facing (UI)"
+    },
+    {
+      "method": "POST",
+      "path": "/deleted/restore-voucher/:id",
+      "subPath": "/deleted/restore-voucher/:id",
+      "sourceFile": "routes/voucherEntry.js",
+      "prefix": "",
+      "isConnected": true,
+      "connectedIn": [
+        "src/api.js",
+        "src/App.jsx"
+      ],
+      "category": "User-facing (UI)"
+    }
+  ]
+}
