@@ -2516,19 +2516,30 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
 
   return (
     <>
-      {/* Floating Action Button */}
-      <button
-        type="button"
-        className={`ai-assistant-fab ${isOpen ? 'active' : ''}`}
-        onClick={() => setIsOpen((prev) => !prev)}
-        title="Lumilo AI Assistant"
-        aria-label="Open AI Assistant"
-      >
-        <span className="ai-fab-icon">
-          {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
-        </span>
-        {!isOpen && <span className="ai-fab-pulse" />}
-      </button>
+      {/* Floating Action Button with Beta Badge Underneath */}
+      <div className="ai-fab-container">
+        <button
+          type="button"
+          className={`ai-assistant-fab ${isOpen ? 'active' : ''}`}
+          onClick={() => setIsOpen((prev) => !prev)}
+          title="Lumilo AI Assistant (Beta)"
+          aria-label="Open AI Assistant"
+        >
+          <span className="ai-fab-icon">
+            {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+          </span>
+          {!isOpen && <span className="ai-fab-pulse" />}
+        </button>
+        <div
+          className="ai-fab-beta-badge"
+          aria-label="Beta Version"
+          onClick={() => setIsOpen((prev) => !prev)}
+          title="AI Assistant (Beta)"
+        >
+          <span className="beta-dot" />
+          <span>Beta</span>
+        </div>
+      </div>
 
       {/* AI Assistant Modal Dialog */}
       {isOpen && createPortal(
@@ -2540,7 +2551,7 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
             {/* Header */}
             <div className="ai-dialog-header">
               <div>
-                <h3 className="ai-dialog-title">AI assistant</h3>
+                <h3 className="ai-dialog-title">AI Assistant</h3>
                 <p className="ai-dialog-sub">Answers from Lumilo · {aiKey ? (selectedProviderMeta.label || 'Connected') : 'Live Tally Analytics'}</p>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -16132,65 +16143,83 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
       {/* Contextual Popover Menu for Bill Records */}
       {menuBill && createPortal(
         <div
-          className="dashboard-context-menu-scrim"
+          className="item-popover-overlay"
           onClick={() => setMenuBill(null)}
           onContextMenu={(e) => { e.preventDefault(); setMenuBill(null); }}
         >
           <div
             className="item-popover-box"
-            style={{
-              position: 'fixed',
-              left: `${Math.min(menuBill.x, window.innerWidth - 200)}px`,
-              top: `${Math.min(menuBill.y, window.innerHeight - 250)}px`,
-              zIndex: 999999
-            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="item-popover-header">
-              {menuBill.bill.bill_name || 'Bill'}
+            <div className="item-popover-header-row">
+              <div
+                className="item-popover-icon-badge"
+                style={{
+                  color: menuBill.bill.bill_type === 'RECEIVABLE' ? '#10b981' : '#be123c',
+                  background: menuBill.bill.bill_type === 'RECEIVABLE' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(225, 29, 72, 0.12)',
+                  borderColor: menuBill.bill.bill_type === 'RECEIVABLE' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(225, 29, 72, 0.3)'
+                }}
+              >
+                <FileText size={18} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="item-popover-item-name" title={menuBill.bill.bill_name}>
+                  {menuBill.bill.bill_name || 'Bill'}
+                </div>
+                {menuBill.bill.ledger_name && (
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {menuBill.bill.ledger_name}
+                  </div>
+                )}
+              </div>
             </div>
+
             <button
               type="button"
-              className="item-popover-row"
+              className="item-popover-action-btn"
               onClick={() => handleToggleBillRecordPin(menuBill.bill)}
             >
-              <Pin size={14} style={{ color: isBillPinned(menuBill.bill) ? 'var(--primary-color)' : undefined }} />
+              <Pin size={18} style={{ color: isBillPinned(menuBill.bill) ? 'var(--primary-color)' : '#4f46e5' }} />
               <span>{isBillPinned(menuBill.bill) ? 'Unpin' : 'Pin'}</span>
             </button>
+
             <button
               type="button"
-              className="item-popover-row"
+              className="item-popover-action-btn"
               onClick={() => {
                 const b = menuBill.bill;
                 setMenuBill(null);
                 openBill(b);
               }}
             >
-              <ExternalLink size={14} />
+              <ExternalLink size={18} style={{ color: '#0ea5e9' }} />
               <span>Open</span>
             </button>
+
             <button
               type="button"
-              className="item-popover-row"
+              className="item-popover-action-btn"
               onClick={() => {
                 setMenuBill(null);
                 showBillsNotice('Tile ready: Drag and drop anywhere to reorder');
               }}
             >
-              <Move size={14} />
+              <Move size={18} style={{ color: '#64748b' }} />
               <span>Drag</span>
             </button>
+
             <button
               type="button"
-              className="item-popover-row"
+              className="item-popover-action-btn"
               onClick={() => handleHideBillRecord(menuBill.bill)}
             >
-              <EyeOff size={14} />
+              <EyeOff size={18} style={{ color: '#64748b' }} />
               <span>Hide</span>
             </button>
+
             <button
               type="button"
-              className="item-popover-row"
+              className="item-popover-action-btn share-action"
               onClick={() => {
                 const b = menuBill.bill;
                 const shareText = `Bill: ${b.bill_name}\nParty: ${b.ledger_name || '—'}\nAmount: ${inr(billTotal(b))}\nPending: ${inr(b.pending_amount)}\nDue: ${shortDate(b.due_date) || '—'}`;
@@ -16203,12 +16232,13 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
                 }
               }}
             >
-              <Share2 size={14} />
+              <Share2 size={18} />
               <span>Share</span>
             </button>
+
             <button
               type="button"
-              className="item-popover-row"
+              className="item-popover-action-btn"
               onClick={() => {
                 const b = menuBill.bill;
                 setMenuBill(null);
@@ -16217,7 +16247,7 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
                 setReminderModalOpen(true);
               }}
             >
-              <MailIcon size={14} style={{ color: '#8C1D3F' }} />
+              <MailIcon size={18} style={{ color: '#8C1D3F' }} />
               <span>Email Reminder</span>
             </button>
           </div>
@@ -16839,7 +16869,7 @@ const AdminNotifications = ({ onNavigate }) => {
     if (!fileName) return;
     try {
       const token = localStorage.getItem('tc_token');
-      const origin = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/+$/, '');
+      const origin = (import.meta.env.VITE_API_URL || 'https://tallymobile.utkarshmishra.online').replace(/\/+$/, '');
       const downloadUrl = `${origin}/admin/notifications/download/${encodeURIComponent(fileName)}`;
       const mobileDownloadUrl = `${origin}/api/mobile/notifications/download/${encodeURIComponent(fileName)}`;
 
@@ -18259,11 +18289,7 @@ function App() {
         </button>
       </nav>
 
-      {/* Fixed Beta Version Badge at Left Bottom */}
-      <div className="fixed-beta-badge" aria-label="Beta Version">
-        <span className="beta-dot" />
-        <span>Beta Version</span>
-      </div>
+
 
       {/* Centralized Liquid Glass Customizer Modal */}
       <LiquidGlassModal

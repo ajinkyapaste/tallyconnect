@@ -679,6 +679,8 @@ export const getLeaveTeamMember = (userId, params) => api.get(`/api/leave/team/$
 /* ---------------- Mobile Sync Queue & Ingestion Helpers ---------------- */
 export const getMobilePendingQueue = (company_guid) => api.get('/api/mobile-sync-queue/pending', { company_guid });
 export const getMobileQueueActivity = (company_guid) => api.get('/api/mobile-sync-queue/activity', { company_guid });
+export const retryMobileSyncEntry = (id) => api.post(`/api/mobile-sync-queue/${encodeURIComponent(id)}/retry`);
+export const editMobileVoucher = (payload) => api.post('/api/mobile-voucher-command/edit', payload);
 export const syncInventoryItem = (itemData) => api.post('/inventory/full-sync', itemData);
 
 /* ---------------- API User Route Alias Mapping (/api/users/*) ---------------- */

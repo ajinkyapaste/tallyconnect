@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, Printer, X, Check, CheckCircle2, Pin,
   Move, EyeOff, MoreVertical, Calendar, Building2, Plus, Download,
   SlidersHorizontal, ArrowUpRight, ArrowDownRight, Tag, Landmark,
-  AlertCircle, Sparkles, Filter, Shield
+  AlertCircle, Sparkles, Filter, Shield, Edit3
 } from 'lucide-react';
 import { api, IS_HOSTED, getUser } from './api';
 import { createHoldTouchHandler, ExportDropdown, UnhideModal } from './uiUtils';
@@ -416,6 +416,7 @@ export const VoucherManager = ({
   const [createParty, setCreateParty] = useState('');
   const [createItems, setCreateItems] = useState([{ ledger_name: '', is_debit: false, amount: '' }]);
   const [parties, setParties] = useState([]);
+  const [editingVoucher, setEditingVoucher] = useState(null);
 
   // Drag, Pin, and Hide states
   const [voucherOrder, setVoucherOrder] = useState(() => {
@@ -2557,6 +2558,19 @@ export const VoucherManager = ({
               type="button"
               className="item-popover-action-btn"
               onClick={() => {
+                const target = menuVoucher;
+                setMenuVoucher(null);
+                setEditingVoucher(target);
+              }}
+            >
+              <Edit3 size={18} style={{ color: '#2563eb' }} />
+              <span>Edit Voucher</span>
+            </button>
+
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => {
                 setMenuVoucher(null);
                 showToast('Voucher ready: Drag and drop anywhere to reorder');
               }}
@@ -2604,6 +2618,25 @@ export const VoucherManager = ({
         parties={parties}
         showToast={showToast}
       />
+
+      {/* Edit Voucher Wizard (Alters existing synced voucher in Tally) */}
+      {editingVoucher && (
+        <CreateVoucherWizard
+          isOpen={!!editingVoucher}
+          initialVoucher={editingVoucher}
+          initialType={editingVoucher.voucher_type || 'Sales'}
+          onClose={() => setEditingVoucher(null)}
+          onSuccess={() => {
+            setEditingVoucher(null);
+            fetchVouchers();
+            showToast('Voucher alteration queued for Tally sync');
+          }}
+          companyGuid={companyGuid}
+          activeCompanyName={activeCompanyName}
+          parties={parties}
+          showToast={showToast}
+        />
+      )}
 
       {/* Toast Feedback */}
       {toastMessage && (

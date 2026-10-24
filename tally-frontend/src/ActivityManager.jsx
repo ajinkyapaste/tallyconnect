@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Laptop, RotateCcw, CheckCircle2, Clock, AlertCircle, Search,
@@ -8,9 +8,10 @@ import {
   LayoutGrid, List, Copy, Eye, ArrowUpDown, Layers, CheckCheck,
   Edit3, Zap, Server, Activity, ShieldCheck, Database, Radio,
   HardDrive, Info, Terminal, X, ExternalLink, Pin, EyeOff, Move, Share2,
-  ArrowLeftRight
+  ArrowLeftRight, MoreVertical
 } from 'lucide-react';
-import { api, getUser } from './api';
+import { api, getUser, retryMobileSyncEntry } from './api';
+import { createHoldTouchHandler, UnhideModal } from './uiUtils';
 import { CreateVoucherWizard } from './CreateVoucherWizard';
 import { TallyConnectorModal } from './TallyConnectorModal';
 import { CardContextMenu, HiddenCardsChip, useCardGridPreferences } from './CardGridPreferences';
@@ -120,6 +121,242 @@ export const ActivityManager = ({
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [copiedVoucherNo, setCopiedVoucherNo] = useState(null);
   const [editingVoucher, setEditingVoucher] = useState(null);
+  const [menuActivity, setMenuActivity] = useState(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const [retryingId, setRetryingId] = useState(null);
+  const [showUnhideModal, setShowUnhideModal] = useState(false);
+
+  // Drag, Pin, and Hide states for activity items
+  const [pinnedActivityIds, setPinnedActivityIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tc_activity_pinned');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [hiddenActivityIds, setHiddenActivityIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tc_activity_hidden');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [activityOrder, setActivityOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tc_activity_order');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [draggedActivityKey, setDraggedActivityKey] = useState(null);
+  const [dragOverActivityKey, setDragOverActivityKey] = useState(null);
+  const wasActivityDraggingRef = useRef(false);
+
+  const showToast = useCallback((msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 2500);
+  }, []);
+
+  const getActKey = useCallback((item) => {
+    if (!item) return '';
+    return String(item.id || item.voucher_no || item.voucher_guid || '');
+  }, []);
+
+  const isItemPinned = useCallback((item) => {
+    const key = getActKey(item);
+    return pinnedActivityIds.includes(key);
+  }, [pinnedActivityIds, getActKey]);
+
+  const handleTogglePin = useCallback((item) => {
+    const key = getActKey(item);
+    const pinned = pinnedActivityIds.includes(key);
+    let next;
+    if (pinned) {
+      next = pinnedActivityIds.filter((k) => k !== key);
+      showToast('Unpinned activity entry');
+    } else {
+      next = [key, ...pinnedActivityIds.filter((k) => k !== key)];
+      showToast('Pinned activity entry to top');
+    }
+    setPinnedActivityIds(next);
+    try { localStorage.setItem('tc_activity_pinned', JSON.stringify(next)); } catch { }
+    setMenuActivity(null);
+  }, [pinnedActivityIds, getActKey, showToast]);
+
+  const handleHideActivity = useCallback((item) => {
+    const key = getActKey(item);
+    const next = [...new Set([...hiddenActivityIds, key])];
+    setHiddenActivityIds(next);
+    try {
+      localStorage.setItem('tc_activity_hidden', JSON.stringify(next));
+      const meta = JSON.parse(localStorage.getItem('tc_activity_meta_map') || '{}');
+      meta[key] = `${item.voucher_type || 'Voucher'} #${item.voucher_no || ''} • ${item.customer || ''} (${formatInr(item.amount)})`;
+      localStorage.setItem('tc_activity_meta_map', JSON.stringify(meta));
+    } catch { }
+    window.dispatchEvent(new Event('tc-unhide-activity-sync'));
+    setMenuActivity(null);
+    showToast('Activity hidden. Restore anytime.');
+  }, [hiddenActivityIds, getActKey, showToast]);
+
+  const handleUnhideOneActivity = useCallback((id) => {
+    const next = hiddenActivityIds.filter((k) => k !== id);
+    setHiddenActivityIds(next);
+    try { localStorage.setItem('tc_activity_hidden', JSON.stringify(next)); } catch { }
+    showToast('Restored activity to list');
+  }, [hiddenActivityIds, showToast]);
+
+  const handleUnhideAllActivities = useCallback(() => {
+    setHiddenActivityIds([]);
+    try { localStorage.removeItem('tc_activity_hidden'); } catch { }
+    setShowUnhideModal(false);
+    showToast('All hidden activities restored');
+  }, [showToast]);
+
+  // Hidden Activities list for UnhideModal
+  const hiddenActivitiesList = useMemo(() => {
+    const meta = (() => {
+      try { return JSON.parse(localStorage.getItem('tc_activity_meta_map') || '{}'); } catch { return {}; }
+    })();
+    return hiddenActivityIds.map((id) => {
+      const act = activities.find((a) => getActKey(a) === id || String(a.id) === id || a.voucher_no === id);
+      const name = act ? `${act.voucher_type || 'Activity'} #${act.voucher_no || ''} • ${act.customer || ''}` : (meta[id] || id);
+      return {
+        id,
+        name,
+        title: name,
+        label: name,
+        hint: act ? `${formatInr(act.amount)} • ${formatDateDisplay(act.date)}` : 'Activity',
+        subtitle: act ? `${formatInr(act.amount)} • ${formatDateDisplay(act.date)}` : 'Activity',
+        color: '#f43f5e',
+        icon: <RotateCcw size={16} />
+      };
+    });
+  }, [hiddenActivityIds, activities, getActKey]);
+
+  const canRetryItem = useCallback((item) => {
+    if (!item) return false;
+    const isQueued = item.queue_id || item.channel === 'Mobile App' || item.entity_type === 'MOBILE_VOUCHER';
+    if (!isQueued) return false;
+    const rawS = String(item.raw_status || item.status || '').toLowerCase();
+    if (rawS === 'success' || rawS === 'sent') return false;
+    if (rawS === 'failed' || rawS === 'not sent') return true;
+    if (rawS === 'processing' || rawS === 'pending' || rawS === 'waiting') {
+      const dateTs = new Date(item.updated_at || item.created_at).getTime();
+      if (!isNaN(dateTs) && Date.now() - dateTs > 15 * 60 * 1000) return true;
+    }
+    return false;
+  }, []);
+
+  const handleRetry = useCallback(async (item) => {
+    if (!item) return;
+    const queueId = item.queue_id || (
+      typeof item.id === 'number'
+        ? item.id
+        : (typeof item.id === 'string' && item.id.startsWith('queue-')
+          ? Number.parseInt(item.id.split('-').pop(), 10)
+          : null)
+    );
+    if (!queueId) {
+      showToast('Cannot retry this entry: no queue id found');
+      return;
+    }
+
+    setRetryingId(item.id);
+    try {
+      const res = await retryMobileSyncEntry(queueId);
+      if (res?.success) {
+        showToast(`Transmission re-queued! (Retry #${res.retry_count || 1})`);
+        setActivities((prev) =>
+          prev.map((act) => {
+            if (act.id === item.id || (act.queue_id && act.queue_id === queueId)) {
+              return {
+                ...act,
+                status: 'Waiting',
+                raw_status: 'pending',
+                retry_count: res.retry_count || (act.retry_count || 0) + 1,
+                error: null
+              };
+            }
+            return act;
+          })
+        );
+        setSelectedActivity((prev) => {
+          if (!prev || (prev.id !== item.id && (!prev.queue_id || prev.queue_id !== queueId))) return prev;
+          return {
+            ...prev,
+            status: 'Waiting',
+            raw_status: 'pending',
+            retry_count: res.retry_count || (prev.retry_count || 0) + 1,
+            error: null
+          };
+        });
+      } else {
+        showToast(res?.message || 'Retry response received');
+      }
+    } catch (err) {
+      console.error('Retry mobile entry failed:', err);
+      showToast(err?.response?.data?.message || err?.message || 'Could not retry entry');
+    } finally {
+      setRetryingId(null);
+      setMenuActivity(null);
+    }
+  }, [showToast]);
+
+  const handleActivityDragStart = (e, item) => {
+    wasActivityDraggingRef.current = true;
+    const key = getActKey(item);
+    setDraggedActivityKey(key);
+    try {
+      e.dataTransfer.setData('text/plain', key);
+      e.dataTransfer.effectAllowed = 'move';
+    } catch { }
+  };
+
+  const handleActivityDragOver = (e, item) => {
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = 'move'; } catch { }
+    const key = getActKey(item);
+    if (dragOverActivityKey !== key) setDragOverActivityKey(key);
+  };
+
+  const handleActivityDrop = (e, targetItem, listSource) => {
+    e.preventDefault();
+    let sourceKey = draggedActivityKey;
+    if (!sourceKey && e.dataTransfer) {
+      try { sourceKey = e.dataTransfer.getData('text/plain'); } catch { }
+    }
+    const targetKey = getActKey(targetItem);
+    setDraggedActivityKey(null);
+    setDragOverActivityKey(null);
+    setTimeout(() => { wasActivityDraggingRef.current = false; }, 200);
+
+    if (!sourceKey || sourceKey === targetKey) return;
+
+    const currentKeys = (listSource || activities).map(getActKey);
+    const fromIdx = currentKeys.indexOf(sourceKey);
+    const toIdx = currentKeys.indexOf(targetKey);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const newOrder = [...(activityOrder.length > 0 ? activityOrder : currentKeys)];
+    const existingFrom = newOrder.indexOf(sourceKey);
+    const existingTo = newOrder.indexOf(targetKey);
+    if (existingFrom !== -1 && existingTo !== -1) {
+      const [moved] = newOrder.splice(existingFrom, 1);
+      newOrder.splice(existingTo, 0, moved);
+    } else {
+      const [moved] = currentKeys.splice(fromIdx, 1);
+      currentKeys.splice(toIdx, 0, moved);
+      newOrder.length = 0;
+      newOrder.push(...currentKeys);
+    }
+
+    setActivityOrder(newOrder);
+    try { localStorage.setItem('tc_activity_order', JSON.stringify(newOrder)); } catch { }
+    showToast('Activity entry reordered');
+  };
+
+  const handleActivityDragEnd = () => {
+    setDraggedActivityKey(null);
+    setDragOverActivityKey(null);
+    setTimeout(() => { wasActivityDraggingRef.current = false; }, 200);
+  };
 
   // Agent & Tally Connector Diagnostic States
   const [showConnectorModal, setShowConnectorModal] = useState(false);
@@ -311,9 +548,19 @@ export const ActivityManager = ({
 
         const vNo = p.voucher_no || p.reference_no || p.name || p.bill_name || (isLedger ? `LED-${row.id || Date.now()}` : isMobile ? `MOB-${row.id || Date.now()}` : `VCH-${row.id || Date.now()}`);
 
+        const rawQueueId = Number.isInteger(Number(row.id)) && Number(row.id) > 0 ? Number(row.id) : null;
         return {
           id: row.id ? (String(row.id).startsWith('queue-') || String(row.id).startsWith('vch-') ? String(row.id) : `queue-${row.entity_type || 'vch'}-${row.id}`) : `act-${row.created_at || Date.now()}`,
-          voucher_guid: row.voucher_guid || row.entity_guid || p.voucher_guid || null,
+          queue_id: rawQueueId,
+          voucher_guid: row.voucher_guid || row.entity_guid || row.tally_guid || row.target_guid || p.voucher_guid || null,
+          tally_guid: row.tally_guid || null,
+          target_guid: row.target_guid || null,
+          edit_of: row.edit_of || null,
+          created_by: row.created_by || null,
+          retry_count: Number(row.retry_count) || 0,
+          updated_at: row.updated_at || null,
+          error: row.error || null,
+          raw_status: row.status || null,
           voucher_type: displayType,
           base_voucher_type: rawType,
           voucher_no: vNo,
@@ -451,7 +698,7 @@ export const ActivityManager = ({
           sessionStorage.removeItem('tc_target_voucher_guid');
         }
       }
-    } catch {}
+    } catch { }
   }, [activities]);
 
   // Metric counts matching Screenshot 1 (Sent, Waiting, Not sent)
@@ -508,11 +755,28 @@ export const ActivityManager = ({
         const matchesType = String(act.voucher_type || '').toLowerCase().includes(q);
         if (!matchesCustomer && !matchesNo && !matchesType) return false;
       }
+      const key = getActKey(act);
+      if (hiddenActivityIds.includes(key)) return false;
       return true;
     });
 
-    // Sorting
+    // Sorting: Pinned items at top, then drag activityOrder, then chosen sortBy
     return list.sort((a, b) => {
+      const keyA = getActKey(a);
+      const keyB = getActKey(b);
+      const pinA = pinnedActivityIds.includes(keyA);
+      const pinB = pinnedActivityIds.includes(keyB);
+      if (pinA && !pinB) return -1;
+      if (!pinA && pinB) return 1;
+
+      if (activityOrder.length > 0 && sortBy === 'newest') {
+        const idxA = activityOrder.indexOf(keyA);
+        const idxB = activityOrder.indexOf(keyB);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+      }
+
       if (sortBy === 'amount_desc') {
         return (Number(b.amount) || 0) - (Number(a.amount) || 0);
       }
@@ -521,7 +785,7 @@ export const ActivityManager = ({
       }
       return new Date(b.date || 0) - new Date(a.date || 0);
     });
-  }, [activities, activeFilter, statusFilter, searchQuery, sortBy]);
+  }, [activities, activeFilter, statusFilter, searchQuery, sortBy, hiddenActivityIds, pinnedActivityIds, activityOrder, getActKey]);
 
   // Aggregate metrics
   const totalVolume = useMemo(() => {
@@ -1306,6 +1570,7 @@ export const ActivityManager = ({
                     color: 'var(--text-muted, #64748b)'
                   }}
                 >
+                  <th style={{ width: '36px', padding: '14px 8px', textAlign: 'center' }}></th>
                   <th style={{ padding: '14px 20px' }}>Status</th>
                   <th style={{ padding: '14px 16px' }}>Voucher Type</th>
                   <th style={{ padding: '14px 16px' }}>Voucher #</th>
@@ -1322,23 +1587,44 @@ export const ActivityManager = ({
                   const statusBadge = getStatusBadge(item.status);
                   const Icon = meta.icon;
                   const isCopied = copiedVoucherNo === item.voucher_no;
+                  const isPinned = isItemPinned(item);
+                  const isDragging = draggedActivityKey === getActKey(item);
+                  const isDragOver = dragOverActivityKey === getActKey(item);
 
                   return (
                     <tr
                       key={item.id || index}
-                      onClick={() => setSelectedActivity(item)}
+                      draggable
+                      onDragStart={(e) => handleActivityDragStart(e, item)}
+                      onDragOver={(e) => handleActivityDragOver(e, item)}
+                      onDrop={(e) => handleActivityDrop(e, item, filteredActivities)}
+                      onDragEnd={handleActivityDragEnd}
+                      onClick={() => {
+                        if (wasActivityDraggingRef.current) return;
+                        setSelectedActivity(item);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setMenuActivity(item);
+                      }}
+                      {...createHoldTouchHandler(() => setMenuActivity(item))}
+                      className={`table-row-hover draggable-card ${isPinned ? 'is-pinned' : ''} ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'drag-over' : ''}`}
                       style={{
                         borderBottom: index < filteredActivities.length - 1 ? '1px solid var(--glass-border, rgba(0, 0, 0, 0.05))' : 'none',
                         cursor: 'pointer',
-                        transition: 'background 0.15s ease'
+                        transition: 'background 0.15s ease',
+                        background: isPinned ? 'rgba(99, 102, 241, 0.05)' : (isDragOver ? 'rgba(99, 102, 241, 0.12)' : undefined),
+                        opacity: isDragging ? 0.4 : 1
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--glass-hover, rgba(255, 255, 255, 0.45))';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
+                      title="Click to view details, right-click or hold for actions, drag to reorder"
                     >
+                      {/* Drag Handle */}
+                      <td style={{ padding: '14px 8px', textAlign: 'center', width: '36px' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="item-drag-handle" title="Drag to reorder" style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Move size={14} color="var(--text-muted, #94a3b8)" />
+                        </div>
+                      </td>
+
                       {/* Status */}
                       <td style={{ padding: '14px 20px' }}>
                         <span
@@ -1425,6 +1711,11 @@ export const ActivityManager = ({
                           <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-dark, #0f172a)' }}>
                             {item.customer || 'Direct Entry'}
                           </span>
+                          {isPinned && (
+                            <span className="item-pinned-tag" style={{ padding: '2px 6px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <Pin size={9} /> Pinned
+                            </span>
+                          )}
                           {item.channel === 'Mobile App' && (
                             <span
                               style={{
@@ -1441,6 +1732,24 @@ export const ActivityManager = ({
                               title="Synchronized from mobile application queue"
                             >
                               📱 Mobile App
+                            </span>
+                          )}
+                          {item.retry_count > 0 && (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                padding: '1px 7px',
+                                borderRadius: '6px',
+                                background: 'rgba(245, 158, 11, 0.12)',
+                                color: '#d97706',
+                                fontSize: '10px',
+                                fontWeight: 800
+                              }}
+                              title={`Retried ${item.retry_count} time(s)`}
+                            >
+                              <RotateCcw size={9} /> Retry #{item.retry_count}
                             </span>
                           )}
                         </div>
@@ -1468,6 +1777,32 @@ export const ActivityManager = ({
                       {/* Actions */}
                       <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          {canRetryItem(item) && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRetry(item);
+                              }}
+                              disabled={retryingId === item.id}
+                              className="btn-secondary"
+                              style={{
+                                padding: '5px 10px',
+                                borderRadius: '8px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                color: '#e11d48',
+                                background: 'rgba(225, 29, 72, 0.08)',
+                                border: '1px solid rgba(225, 29, 72, 0.25)'
+                              }}
+                              title="Retry transmission to Tally"
+                            >
+                              <RotateCcw size={12} className={retryingId === item.id ? 'spin-icon' : ''} /> Retry
+                            </button>
+                          )}
                           {(item.status === 'Waiting' || item.status === 'Not sent') && (
                             <button
                               type="button"
@@ -1510,6 +1845,26 @@ export const ActivityManager = ({
                           >
                             <Eye size={12} /> View
                           </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMenuActivity(item);
+                            }}
+                            style={{
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              color: 'var(--text-muted, #64748b)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              borderRadius: '6px'
+                            }}
+                            title="More options (right-click / hold)"
+                          >
+                            <MoreVertical size={14} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1534,23 +1889,41 @@ export const ActivityManager = ({
             const meta = getMeta(item.voucher_type);
             const statusBadge = getStatusBadge(item.status);
             const Icon = meta.icon;
+            const isPinned = isItemPinned(item);
+            const isDragging = draggedActivityKey === getActKey(item);
+            const isDragOver = dragOverActivityKey === getActKey(item);
 
             return (
               <div
                 key={item.id || index}
-                onClick={() => setSelectedActivity(item)}
-                className="glass-panel activity-card-item"
+                draggable
+                onDragStart={(e) => handleActivityDragStart(e, item)}
+                onDragOver={(e) => handleActivityDragOver(e, item)}
+                onDrop={(e) => handleActivityDrop(e, item, filteredActivities)}
+                onDragEnd={handleActivityDragEnd}
+                onClick={() => {
+                  if (wasActivityDraggingRef.current) return;
+                  setSelectedActivity(item);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setMenuActivity(item);
+                }}
+                {...createHoldTouchHandler(() => setMenuActivity(item))}
+                className={`glass-panel activity-card-item draggable-card ${isPinned ? 'is-pinned' : ''} ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'drag-over' : ''}`}
                 style={{
                   padding: '20px',
                   borderRadius: '20px',
-                  background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.8))',
-                  border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.9))',
+                  background: isPinned ? 'rgba(99, 102, 241, 0.05)' : 'var(--glass-card-bg, rgba(255, 255, 255, 0.8))',
+                  border: isPinned ? '1.5px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--glass-border, rgba(255, 255, 255, 0.9))',
                   boxShadow: 'var(--glass-shadow, 0 6px 20px rgba(15, 23, 42, 0.04))',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '14px'
+                  gap: '14px',
+                  opacity: isDragging ? 0.4 : 1,
+                  position: 'relative'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
@@ -1564,6 +1937,14 @@ export const ActivityManager = ({
                 {/* Card Top: Voucher Type & Status */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div
+                      className="item-drag-handle"
+                      title="Drag to reorder"
+                      style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Move size={14} color="var(--text-muted, #94a3b8)" />
+                    </div>
                     <div
                       style={{
                         width: '34px',
@@ -1580,32 +1961,58 @@ export const ActivityManager = ({
                       <Icon size={17} />
                     </div>
                     <div>
-                      <span style={{ fontSize: '13px', fontWeight: 800, color: meta.color }}>
-                        {item.voucher_type}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: meta.color }}>
+                          {item.voucher_type}
+                        </span>
+                        {isPinned && (
+                          <span className="item-pinned-tag" style={{ padding: '1px 5px', fontSize: '9px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                            <Pin size={8} /> Pinned
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>
                         {item.voucher_no}
                       </div>
                     </div>
                   </div>
 
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '3px 8px',
-                      borderRadius: '999px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      background: statusBadge.bg,
-                      color: statusBadge.color,
-                      border: `1px solid ${statusBadge.border}`
-                    }}
-                  >
-                    <statusBadge.icon size={11} />
-                    {statusBadge.label}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {item.retry_count > 0 && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '2px',
+                          padding: '2px 6px',
+                          borderRadius: '6px',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          background: 'rgba(245, 158, 11, 0.12)',
+                          color: '#d97706'
+                        }}
+                      >
+                        <RotateCcw size={9} /> #{item.retry_count}
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '3px 8px',
+                        borderRadius: '999px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: statusBadge.bg,
+                        color: statusBadge.color,
+                        border: `1px solid ${statusBadge.border}`
+                      }}
+                    >
+                      <statusBadge.icon size={11} />
+                      {statusBadge.label}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Card Middle: Customer Party */}
@@ -1636,7 +2043,33 @@ export const ActivityManager = ({
                       {formatInr(item.amount)}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {canRetryItem(item) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRetry(item);
+                        }}
+                        disabled={retryingId === item.id}
+                        className="btn-secondary"
+                        style={{
+                          padding: '5px 10px',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          color: '#e11d48',
+                          background: 'rgba(225, 29, 72, 0.08)',
+                          border: '1px solid rgba(225, 29, 72, 0.25)'
+                        }}
+                        title="Retry transmission to Tally"
+                      >
+                        <RotateCcw size={11} className={retryingId === item.id ? 'spin-icon' : ''} /> Retry
+                      </button>
+                    )}
                     {(item.status === 'Waiting' || item.status === 'Not sent') && (
                       <button
                         type="button"
@@ -1646,9 +2079,9 @@ export const ActivityManager = ({
                         }}
                         className="btn-secondary"
                         style={{
-                          padding: '5px 12px',
+                          padding: '5px 10px',
                           borderRadius: '8px',
-                          fontSize: '12px',
+                          fontSize: '11px',
                           fontWeight: 700,
                           display: 'flex',
                           alignItems: 'center',
@@ -1656,7 +2089,7 @@ export const ActivityManager = ({
                           color: '#2563eb'
                         }}
                       >
-                        <Edit3 size={12} /> Edit
+                        <Edit3 size={11} /> Edit
                       </button>
                     )}
                     <button
@@ -1666,9 +2099,29 @@ export const ActivityManager = ({
                         setSelectedActivity(item);
                       }}
                       className="btn-secondary"
-                      style={{ padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      style={{ padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
                     >
-                      <Eye size={12} /> View Details
+                      <Eye size={11} /> View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuActivity(item);
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        color: 'var(--text-muted, #64748b)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '6px'
+                      }}
+                      title="Options"
+                    >
+                      <MoreVertical size={13} />
                     </button>
                   </div>
                 </div>
@@ -1770,6 +2223,14 @@ export const ActivityManager = ({
 
             {/* Details List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '22px' }}>
+              {selectedActivity.error && (
+                <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(225, 29, 72, 0.08)', border: '1px solid rgba(225, 29, 72, 0.25)', color: '#be123c', fontSize: '13px' }}>
+                  <div style={{ fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertCircle size={14} /> Transmission Error
+                  </div>
+                  <div style={{ wordBreak: 'break-word', lineHeight: 1.4 }}>{selectedActivity.error}</div>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '12px', background: 'rgba(0, 0, 0, 0.03)' }}>
                 <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Customer</span>
                 <span style={{ fontSize: '14px', color: '#0f172a', fontWeight: 700 }}>{selectedActivity.customer}</span>
@@ -1800,13 +2261,49 @@ export const ActivityManager = ({
                   {getStatusBadge(selectedActivity.status).label}
                 </span>
               </div>
+              {selectedActivity.retry_count > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '12px', background: 'rgba(0, 0, 0, 0.03)' }}>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Retry Count</span>
+                  <span style={{ fontSize: '13px', color: '#d97706', fontWeight: 700 }}>{selectedActivity.retry_count} attempt(s)</span>
+                </div>
+              )}
+              {(selectedActivity.target_guid || selectedActivity.tally_guid) && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '12px', background: 'rgba(0, 0, 0, 0.03)' }}>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Tally GUID</span>
+                  <span style={{ fontSize: '12px', fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{selectedActivity.target_guid || selectedActivity.tally_guid}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '12px', background: 'rgba(0, 0, 0, 0.03)' }}>
                 <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Created by</span>
                 <span style={{ fontSize: '13px', color: '#0f172a', fontWeight: 600 }}>{currentUser.name || currentUser.email || 'Current User'}</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '4px', flexWrap: 'wrap' }}>
+              {canRetryItem(selectedActivity) && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={retryingId === selectedActivity.id}
+                  onClick={() => handleRetry(selectedActivity)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '14px',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    color: '#e11d48',
+                    background: 'rgba(225, 29, 72, 0.08)',
+                    border: '1px solid rgba(225, 29, 72, 0.25)'
+                  }}
+                >
+                  <RotateCcw size={15} className={retryingId === selectedActivity.id ? 'spin-icon' : ''} />
+                  <span>{retryingId === selectedActivity.id ? 'Retrying...' : 'Retry Transmission'}</span>
+                </button>
+              )}
               {(selectedActivity.status === 'Waiting' || selectedActivity.status === 'Not sent') && (
                 <button
                   type="button"
@@ -1844,6 +2341,147 @@ export const ActivityManager = ({
         document.body
       )}
 
+      {/* Context Menu for Individual Activity Item (Right-Click & Touch Hold) */}
+      {menuActivity && createPortal(
+        <div className="item-popover-overlay" onClick={() => setMenuActivity(null)}>
+          <div className="item-popover-box" onClick={(e) => e.stopPropagation()}>
+            <div className="item-popover-header-row">
+              <div
+                className="item-popover-icon-badge"
+                style={{
+                  color: getMeta(menuActivity.voucher_type).color,
+                  background: getMeta(menuActivity.voucher_type).bg
+                }}
+              >
+                {React.createElement(getMeta(menuActivity.voucher_type).icon, { size: 18 })}
+              </div>
+              <div style={{ overflow: 'hidden' }}>
+                <div className="item-popover-item-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {menuActivity.voucher_no || menuActivity.voucher_type || 'Activity Entry'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {menuActivity.customer || formatInr(menuActivity.amount)}
+                </div>
+              </div>
+            </div>
+
+            {/* Pin / Unpin */}
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => handleTogglePin(menuActivity)}
+            >
+              <Pin size={18} style={{ color: '#4f46e5' }} />
+              <span>{isItemPinned(menuActivity) ? 'Unpin' : 'Pin to Top'}</span>
+            </button>
+
+            {/* Edit Entry */}
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => {
+                const target = menuActivity;
+                setMenuActivity(null);
+                setEditingVoucher(target);
+              }}
+            >
+              <Edit3 size={18} style={{ color: '#2563eb' }} />
+              <span>Edit Entry</span>
+            </button>
+
+            {/* Retry transmission if failed / stuck */}
+            {canRetryItem(menuActivity) && (
+              <button
+                type="button"
+                className="item-popover-action-btn"
+                onClick={() => handleRetry(menuActivity)}
+                disabled={retryingId === menuActivity.id}
+              >
+                <RotateCcw size={18} className={retryingId === menuActivity.id ? 'spin-icon' : ''} style={{ color: '#e11d48' }} />
+                <span>Retry Transmission</span>
+              </button>
+            )}
+
+            {/* View Details */}
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => {
+                const target = menuActivity;
+                setMenuActivity(null);
+                setSelectedActivity(target);
+              }}
+            >
+              <Eye size={18} style={{ color: '#0ea5e9' }} />
+              <span>View Details</span>
+            </button>
+
+            {/* Drag to reorder */}
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => {
+                setMenuActivity(null);
+                showToast('Entry ready: Drag and drop anywhere to reorder');
+              }}
+            >
+              <Move size={18} style={{ color: '#64748b' }} />
+              <span>Drag</span>
+            </button>
+
+            {/* Hide Entry */}
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => handleHideActivity(menuActivity)}
+            >
+              <EyeOff size={18} style={{ color: '#64748b' }} />
+              <span>Hide</span>
+            </button>
+
+            {/* Share / Copy Details */}
+            <button
+              type="button"
+              className="item-popover-action-btn share-action"
+              onClick={() => {
+                const target = menuActivity;
+                setMenuActivity(null);
+                const txt = `🧾 ${target.voucher_type} #${target.voucher_no}\nParty: ${target.customer}\nAmount: ${formatInr(target.amount)}\nStatus: ${target.status}\nDate: ${formatDateDisplay(target.date)}\nCompany: ${activeCompanyName}`;
+                if (navigator.share) {
+                  navigator.share({ title: target.voucher_no, text: txt }).catch(() => { });
+                } else if (navigator.clipboard) {
+                  navigator.clipboard.writeText(txt);
+                  showToast('Entry details copied to clipboard!');
+                }
+              }}
+            >
+              <Share2 size={18} />
+              <span>Share</span>
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="dashboard-toast">
+          <CheckCircle2 size={16} style={{ color: '#10b981' }} />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Unhide Modal for Activities */}
+      <UnhideModal
+        isOpen={showUnhideModal}
+        onClose={() => setShowUnhideModal(false)}
+        title="Hidden Activity Entries"
+        description="Select entries to restore to your queue view."
+        hiddenItems={hiddenActivitiesList}
+        onUnhideOne={handleUnhideOneActivity}
+        onUnhideAll={handleUnhideAllActivities}
+      />
+
       {/* Edit Queued Voucher Wizard Modal (Feature 6) */}
       {editingVoucher && (
         <CreateVoucherWizard
@@ -1854,9 +2492,11 @@ export const ActivityManager = ({
           onSuccess={() => {
             setEditingVoucher(null);
             fetchActivityData(true);
+            showToast('Entry updated successfully');
           }}
           companyGuid={companyGuid}
           activeCompanyName={activeCompanyName}
+          showToast={showToast}
         />
       )}
 

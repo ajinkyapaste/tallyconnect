@@ -15,7 +15,8 @@ import {
   createCustomEntryField,
   updateCustomEntryField,
   deleteCustomEntryField,
-  createMobileContra
+  createMobileContra,
+  editMobileVoucher
 } from './api';
 
 /* ------------------------------------------------------------------
@@ -733,21 +734,22 @@ export const CreateVoucherWizard = ({
         custom_fields: customFieldValues
       };
 
-      // Call existing backend API (Supports both web and mobile command endpoints)
+      // Call backend API (Supports edit / alter via /api/mobile-voucher-command/edit as well as standard create)
       let res = null;
       try {
-        if (initialVoucher?.voucher_guid && (voucherType === 'Sales' || voucherType === 'Purchase')) {
-          try {
-            res = await api.post('/voucher-command/alter', {
-              ...payload,
-              voucher_guid: initialVoucher.voucher_guid
-            });
-          } catch {
-            // fallback to standard creation endpoint
-          }
-        }
+        const rawQueueId = initialVoucher?.queue_id ?? (
+          typeof initialVoucher?.id === 'number'
+            ? initialVoucher.id
+            : (typeof initialVoucher?.id === 'string' && initialVoucher.id.startsWith('queue-')
+              ? Number.parseInt(initialVoucher.id.split('-').pop(), 10)
+              : null)
+        );
+        const queueId = Number.isInteger(rawQueueId) && rawQueueId > 0 ? rawQueueId : null;
+        const voucherGuid = initialVoucher?.voucher_guid || initialVoucher?.tally_guid || initialVoucher?.target_guid || null;
+        const isEdit = Boolean(initialVoucher && (queueId || voucherGuid));
+        const editType = (voucherType === 'Delivery Challan' ? 'sales' : voucherType).toLowerCase();
 
-        if (!res && voucherType === 'Receipt') {
+        if (voucherType === 'Receipt') {
           const receiptPayload = {
             voucher_date: voucherDate,
             voucher_no: billNo,
@@ -761,10 +763,23 @@ export const CreateVoucherWizard = ({
               deposit_account: paymentMode === 'BANK' ? bankLedger : 'Cash'
             }
           };
-          try {
-            res = await api.post('/api/mobile-voucher-command/receipt/create', receiptPayload);
-          } catch {
-            res = await api.post('/voucher-command/create', payload);
+          if (isEdit) {
+            try {
+              res = await editMobileVoucher({
+                ...receiptPayload,
+                type: 'receipt',
+                ...(queueId ? { queue_id: queueId } : { voucher_guid: voucherGuid })
+              });
+            } catch (editErr) {
+              console.warn('Mobile edit error, falling back:', editErr?.message);
+            }
+          }
+          if (!res) {
+            try {
+              res = await api.post('/api/mobile-voucher-command/receipt/create', receiptPayload);
+            } catch {
+              res = await api.post('/voucher-command/create', payload);
+            }
           }
         } else if (voucherType === 'Payment') {
           const paymentPayload = {
@@ -780,10 +795,23 @@ export const CreateVoucherWizard = ({
               remarks: paymentRef || null
             }
           };
-          try {
-            res = await api.post('/api/mobile-voucher-command/payment/create', paymentPayload);
-          } catch {
-            res = await api.post('/voucher-command/create', payload);
+          if (isEdit) {
+            try {
+              res = await editMobileVoucher({
+                ...paymentPayload,
+                type: 'payment',
+                ...(queueId ? { queue_id: queueId } : { voucher_guid: voucherGuid })
+              });
+            } catch (editErr) {
+              console.warn('Mobile edit error, falling back:', editErr?.message);
+            }
+          }
+          if (!res) {
+            try {
+              res = await api.post('/api/mobile-voucher-command/payment/create', paymentPayload);
+            } catch {
+              res = await api.post('/voucher-command/create', payload);
+            }
           }
         } else if (voucherType === 'Journal') {
           const journalPayload = {
@@ -793,10 +821,23 @@ export const CreateVoucherWizard = ({
             narration: note || '',
             ledger_entries: ledgerEntries
           };
-          try {
-            res = await api.post('/api/mobile-voucher-command/journal/create', journalPayload);
-          } catch {
-            res = await api.post('/voucher-command/create', payload);
+          if (isEdit) {
+            try {
+              res = await editMobileVoucher({
+                ...journalPayload,
+                type: 'journal',
+                ...(queueId ? { queue_id: queueId } : { voucher_guid: voucherGuid })
+              });
+            } catch (editErr) {
+              console.warn('Mobile edit error, falling back:', editErr?.message);
+            }
+          }
+          if (!res) {
+            try {
+              res = await api.post('/api/mobile-voucher-command/journal/create', journalPayload);
+            } catch {
+              res = await api.post('/voucher-command/create', payload);
+            }
           }
         } else if (voucherType === 'Contra') {
           const amt = Math.round((Number(contraAmount) || Number(amountReceived) || 0) * 100) / 100;
@@ -809,25 +850,59 @@ export const CreateVoucherWizard = ({
             narration: note || '',
             instrument_no: instrumentNo || undefined
           };
-          try {
-            res = await createMobileContra(contraPayload);
-          } catch (cErr) {
-            console.warn('createMobileContra failed, trying fallback:', cErr?.message);
-            res = await api.post('/voucher-command/create', {
-              ...payload,
-              voucher_type: 'Contra',
-              ledger_entries: [
-                { ledger_name: toAccount, amount: amt, is_debit: true },
-                { ledger_name: selectedParty, amount: amt, is_debit: false }
-              ]
-            });
+          if (isEdit) {
+            try {
+              res = await editMobileVoucher({
+                ...contraPayload,
+                type: 'contra',
+                ...(queueId ? { queue_id: queueId } : { voucher_guid: voucherGuid })
+              });
+            } catch (editErr) {
+              console.warn('Mobile edit error, falling back:', editErr?.message);
+            }
+          }
+          if (!res) {
+            try {
+              res = await createMobileContra(contraPayload);
+            } catch (cErr) {
+              console.warn('createMobileContra failed, trying fallback:', cErr?.message);
+              res = await api.post('/voucher-command/create', {
+                ...payload,
+                voucher_type: 'Contra',
+                ledger_entries: [
+                  { ledger_name: toAccount, amount: amt, is_debit: true },
+                  { ledger_name: selectedParty, amount: amt, is_debit: false }
+                ]
+              });
+            }
           }
         } else {
           // Sales, Purchase, Delivery Challan
-          try {
-            res = await api.post('/voucher-command/create', payload);
-          } catch {
-            res = await api.post('/api/mobile-voucher-command/create', payload);
+          if (isEdit) {
+            try {
+              res = await editMobileVoucher({
+                ...payload,
+                type: editType,
+                ...(queueId ? { queue_id: queueId } : { voucher_guid: voucherGuid })
+              });
+            } catch (editErr) {
+              console.warn('Mobile edit error, trying alter fallback:', editErr?.message);
+              if (voucherGuid) {
+                try {
+                  res = await api.post('/voucher-command/alter', {
+                    ...payload,
+                    voucher_guid: voucherGuid
+                  });
+                } catch { }
+              }
+            }
+          }
+          if (!res) {
+            try {
+              res = await api.post('/voucher-command/create', payload);
+            } catch {
+              res = await api.post('/api/mobile-voucher-command/create', payload);
+            }
           }
         }
       } catch (postErr) {

@@ -1,60 +1,64 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="TallyConnect — Real-time Financial Accounting, Reports, Ledgers and Inventory Synchronization with Tally Prime" />
-    <title>TallyConnect</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <script>
-      (function() {
-        try {
-          var color = localStorage.getItem('tc_color') || '#007aff';
-          var dark = localStorage.getItem('tc_dark') === '1';
-          var bg = localStorage.getItem('tc_bg');
-          var r = 0, g = 122, b = 255;
-          if (color && color.charAt(0) === '#') {
-            var hex = color.slice(1);
-            if (hex.length === 3) {
-              r = parseInt(hex.charAt(0) + hex.charAt(0), 16) || 0;
-              g = parseInt(hex.charAt(1) + hex.charAt(1), 16) || 0;
-              b = parseInt(hex.charAt(2) + hex.charAt(2), 16) || 0;
-            } else if (hex.length >= 6) {
-              r = parseInt(hex.substring(0, 2), 16) || 0;
-              g = parseInt(hex.substring(2, 4), 16) || 0;
-              b = parseInt(hex.substring(4, 6), 16) || 0;
-            }
-          }
-          document.documentElement.style.setProperty('--primary-color', color);
-          document.documentElement.style.setProperty('--primary-hover', 'rgb(' + Math.max(0, r - 22) + ', ' + Math.max(0, g - 22) + ', ' + Math.max(0, b - 22) + ')');
-          document.documentElement.style.setProperty('--primary-light', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.14)');
-          document.documentElement.style.setProperty('--primary-border', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.28)');
-          document.documentElement.style.setProperty('--primary-glow', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.35)');
-          if (bg) document.documentElement.style.setProperty('--bg-image', 'url(' + JSON.stringify(bg) + ')');
-          document.documentElement.style.setProperty('--bg-tint', dark ? 'rgba(15, 18, 25, 0.65)' : 'rgba(255, 255, 255, 0)');
-          document.documentElement.style.setProperty('--text-dark', dark ? '#ffffff' : '#0f172a');
-          document.documentElement.style.setProperty('--text-muted', dark ? '#e2e8f0' : '#1e293b');
-          document.documentElement.style.setProperty('--glass-hover', dark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)');
-        } catch (e) {}
-      })();
-    </script>
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        background-color: #02050e;
-        color: #f8fafc;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
 
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="TallyConnect — Real-time Financial Accounting, Reports, Ledgers and Inventory Synchronization with Tally Prime" />
+  <title>TallyConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var color = localStorage.getItem('tc_color') || '#007aff';
+        var dark = localStorage.getItem('tc_dark') === '1';
+        var bg = localStorage.getItem('tc_bg');
+        var r = 0, g = 122, b = 255;
+        if (color && color.charAt(0) === '#') {
+          var hex = color.slice(1);
+          if (hex.length === 3) {
+            r = parseInt(hex.charAt(0) + hex.charAt(0), 16) || 0;
+            g = parseInt(hex.charAt(1) + hex.charAt(1), 16) || 0;
+            b = parseInt(hex.charAt(2) + hex.charAt(2), 16) || 0;
+          } else if (hex.length >= 6) {
+            r = parseInt(hex.substring(0, 2), 16) || 0;
+            g = parseInt(hex.substring(2, 4), 16) || 0;
+            b = parseInt(hex.substring(4, 6), 16) || 0;
+          }
+        }
+        document.documentElement.style.setProperty('--primary-color', color);
+        document.documentElement.style.setProperty('--primary-hover', 'rgb(' + Math.max(0, r - 22) + ', ' + Math.max(0, g - 22) + ', ' + Math.max(0, b - 22) + ')');
+        document.documentElement.style.setProperty('--primary-light', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.14)');
+        document.documentElement.style.setProperty('--primary-border', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.28)');
+        document.documentElement.style.setProperty('--primary-glow', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.35)');
+        if (bg) document.documentElement.style.setProperty('--bg-image', 'url(' + JSON.stringify(bg) + ')');
+        document.documentElement.style.setProperty('--bg-tint', dark ? 'rgba(15, 18, 25, 0.65)' : 'rgba(255, 255, 255, 0)');
+        document.documentElement.style.setProperty('--text-dark', dark ? '#ffffff' : '#0f172a');
+        document.documentElement.style.setProperty('--text-muted', dark ? '#e2e8f0' : '#1e293b');
+        document.documentElement.style.setProperty('--glass-hover', dark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)');
+      } catch (e) { }
+    })();
+  </script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #02050e;
+      color: #f8fafc;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

@@ -4,6 +4,8 @@ import requireAuth from "../../middleware/requireAuth.js";
 import { createNotification } from "../../utils/notification.js";
 import { createMobileNotificationForAdmin } from "../../utils/mobileNotification.js";
 import crypto from "crypto";
+import { queueContra } from "../../utils/contraCore.js";
+import { EditError, editTarget, finishMobileEdit, hasEditColumns } from "../../utils/mobileEdits.js";
 
 const router = express.Router();
 
@@ -21,6 +23,53 @@ function hashPayload(payload) {
     .update(JSON.stringify(payload))
     .digest("hex");
 }
+
+/** The login that made a new entry (team members edit / retry only theirs). */
+async function noteCreator(id, user) {
+  try {
+    if (id && user?.id && (await hasEditColumns(pool))) {
+      await pool.query(`UPDATE mobile_sync_queue SET created_by = $2 WHERE id = $1`, [id, user.id]);
+    }
+  } catch (e) {
+    console.error("mobile entry created_by:", e.message);
+  }
+}
+
+// =========================================
+// EDIT AN ENTRY (mobile entry or synced voucher)
+// POST /edit  { type, queue_id | voucher_guid, ...the same fields as create }
+// The entry type's own create handler runs (same checks and payload) and
+// saves it as an edit: over the waiting entry, or as an ALTER of the Tally
+// voucher (utils/mobileEdits.js).
+// =========================================
+router.post("/edit", requireAuth, async (req, res, next) => {
+  try {
+    const edit = await editTarget(pool, req.user, req.body || {});
+    if (edit.type === "contra") {
+      const r = await queueContra({
+        db: pool,
+        adminId: req.user.adminId,
+        body: req.body,
+        edit: (payload, payload_hash, company_guid) =>
+          finishMobileEdit(pool, edit, { adminId: req.user.adminId, company_guid, payload, payload_hash }),
+      });
+      return res.status(r.status).json(r.json);
+    }
+    // Sales / Purchase: the type comes from the body as on create.
+    if (edit.type === "sales" || edit.type === "purchase") {
+      req.body.voucher_type = edit.type === "sales" ? "Sales" : "Purchase";
+    }
+    req.tcEdit = edit;
+    req.url = edit.path;
+    return router.handle(req, res, next);
+  } catch (err) {
+    if (err instanceof EditError) {
+      return res.status(err.status).json({ success: false, code: err.code, message: err.message });
+    }
+    console.error("Mobile entry edit error:", err);
+    return res.status(500).json({ success: false, message: "Could not save the change." });
+  }
+});
 
 router.post("/create", requireAuth, async (req, res) => {
   try {
@@ -149,6 +198,13 @@ due_date: due_date || null,
 
     const payload_hash = hashPayload(payload);
 
+    // Edit (POST /edit): saved over the queued entry, or sent to Tally as
+    // an alteration of its voucher (utils/mobileEdits.js).
+    if (req.tcEdit) {
+      const edited = await finishMobileEdit(pool, req.tcEdit, { adminId, company_guid, payload, payload_hash });
+      return res.status(edited.status).json(edited.json);
+    }
+
     // -----------------------------------------
     // DUPLICATE PROTECTION
     // -----------------------------------------
@@ -218,6 +274,8 @@ due_date: due_date || null,
         payload_hash
       ]
     );
+
+    await noteCreator(result.rows[0]?.id, req.user);
 
     await createNotification({
       type: "VOUCHER_CREATED",
@@ -428,6 +486,13 @@ const deposit_account =
     const payload_hash =
       hashPayload(payload);
 
+    // Edit (POST /edit): saved over the queued entry, or sent to Tally as
+    // an alteration of its voucher (utils/mobileEdits.js).
+    if (req.tcEdit) {
+      const edited = await finishMobileEdit(pool, req.tcEdit, { adminId, company_guid, payload, payload_hash });
+      return res.status(edited.status).json(edited.json);
+    }
+
     // -----------------------------------------
     // DUPLICATE PROTECTION
     // -----------------------------------------
@@ -504,6 +569,8 @@ const deposit_account =
         payload_hash
       ]
     );
+
+    await noteCreator(result.rows[0]?.id, req.user);
 
     // -----------------------------------------
     // NOTIFICATION
@@ -707,6 +774,13 @@ router.post("/payment/create", requireAuth, async (req, res) => {
     const payload_hash =
       hashPayload(payload);
 
+    // Edit (POST /edit): saved over the queued entry, or sent to Tally as
+    // an alteration of its voucher (utils/mobileEdits.js).
+    if (req.tcEdit) {
+      const edited = await finishMobileEdit(pool, req.tcEdit, { adminId, company_guid, payload, payload_hash });
+      return res.status(edited.status).json(edited.json);
+    }
+
     // -----------------------------------------
     // DUPLICATE PROTECTION
     // -----------------------------------------
@@ -783,6 +857,8 @@ router.post("/payment/create", requireAuth, async (req, res) => {
         payload_hash
       ]
     );
+
+    await noteCreator(result.rows[0]?.id, req.user);
 
     // -----------------------------------------
     // NOTIFICATION
@@ -1030,6 +1106,13 @@ router.post("/journal/create", requireAuth, async (req, res) => {
     const payload_hash =
       hashPayload(payload);
 
+    // Edit (POST /edit): saved over the queued entry, or sent to Tally as
+    // an alteration of its voucher (utils/mobileEdits.js).
+    if (req.tcEdit) {
+      const edited = await finishMobileEdit(pool, req.tcEdit, { adminId, company_guid, payload, payload_hash });
+      return res.status(edited.status).json(edited.json);
+    }
+
     // -----------------------------------------
     // DUPLICATE PROTECTION
     // -----------------------------------------
@@ -1106,6 +1189,8 @@ router.post("/journal/create", requireAuth, async (req, res) => {
         payload_hash
       ]
     );
+
+    await noteCreator(result.rows[0]?.id, req.user);
 
     // -----------------------------------------
     // NOTIFICATION

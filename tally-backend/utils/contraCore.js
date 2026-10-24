@@ -116,6 +116,9 @@ export function hashPayload(payload) {
  * @param {(n: object) => Promise<void>} [deps.notifyMobile]  createMobileNotificationForAdmin
  * @param {() => string} [deps.newGuid]
  * @param {() => Date} [deps.now]
+ * @param {(payload: object, hash: string, company: string) => Promise<{status: number, json: object}>} [deps.edit]
+ *   an edit (POST /api/mobile-voucher-command/edit): the payload is saved by
+ *   it (over the waiting entry, or as an ALTER) instead of a new entry.
  * @returns {Promise<{ status: number, json: object }>}
  */
 export async function queueContra({
@@ -127,6 +130,7 @@ export async function queueContra({
   newGuid = () => crypto.randomUUID(),
   now = () => new Date(),
   log = console,
+  edit = null,
 }) {
   const checked = validateContra(body);
   if (checked.error) return { status: 400, json: { success: false, message: checked.error } };
@@ -138,6 +142,9 @@ export async function queueContra({
 
   const payload = buildContraPayload(v, { guid: newGuid(), now: now() });
   const payload_hash = hashPayload(payload);
+
+  // An edit: saved over the waiting entry or as an ALTER (mobileEdits.js).
+  if (edit) return edit(payload, payload_hash, company_guid);
 
   // Same duplicate protection as the other mobile entries.
   const duplicate = await db.query(

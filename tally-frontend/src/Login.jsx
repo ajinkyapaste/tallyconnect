@@ -3,6 +3,7 @@ import { LogIn, UserPlus, X, KeyRound, CheckCircle2, ArrowLeft } from 'lucide-re
 import { login, register, sendResetOtp, verifyResetOtp } from './api';
 import { TallyConnectLogo } from './TallyConnectLogo';
 import loginBrand from './assets/login-brand.png';
+import tallyWallpaper from './assets/tally-wallpaper-v2.jpg';
 import './index.css';
 
 /**
@@ -135,14 +136,16 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="fade-in auth-shell">
-      <aside
-        className="auth-brand-panel"
-        style={{ backgroundImage: `url(${loginBrand})` }}
-        aria-hidden="true"
-      />
-
-      <main className="auth-form-panel auth-form-panel-legacy">
+    <div
+      className="fade-in auth-shell"
+      style={{
+        backgroundImage: `radial-gradient(ellipse 80% 80% at 50% 50%, rgba(4, 9, 20, 0.05) 0%, rgba(4, 9, 20, 0.25) 100%), url(${tallyWallpaper})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <main className="auth-form-panel auth-form-panel-centered">
         <div className="glass-panel login-card">
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '22px' }}>
             <TallyConnectLogo height={52} />

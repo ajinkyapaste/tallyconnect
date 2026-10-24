@@ -10,6 +10,7 @@ import requireAuth from "../../middleware/requireAuth.js";
 import { createNotification } from "../../utils/notification.js";
 import { createMobileNotificationForAdmin } from "../../utils/mobileNotification.js";
 import { queueContra } from "../../utils/contraCore.js";
+import { hasEditColumns } from "../../utils/mobileEdits.js";
 
 const router = express.Router();
 
@@ -22,6 +23,12 @@ router.post("/contra/create", requireAuth, async (req, res) => {
       notify: createNotification,
       notifyMobile: createMobileNotificationForAdmin,
     });
+    // The login that made it (team members edit / retry only theirs).
+    if (r.json?.command_id && !r.json.duplicate && (await hasEditColumns(pool))) {
+      await pool
+        .query(`UPDATE mobile_sync_queue SET created_by = $2 WHERE id = $1`, [r.json.command_id, req.user.id])
+        .catch((e) => console.error("contra created_by:", e.message));
+    }
     return res.status(r.status).json(r.json);
   } catch (err) {
     console.error("Mobile Contra create error:", err);
