@@ -15,6 +15,7 @@ import { CreateVoucherWizard } from './CreateVoucherWizard';
 import StandardDateFilter, { isWithinStandardDateRange, getStandardDateRangeLabel } from './StandardDateFilter';
 import StandardPagination from './StandardPagination';
 import DisplayPreferencesBar from './DisplayPreferencesBar';
+import BitrixFilterBar from './BitrixFilterBar';
 
 
 /* ------------------------------------------------------------------
@@ -383,6 +384,8 @@ export const VoucherManager = ({
 
   // Search & Sorting
   const [searchQuery, setSearchQuery] = useState('');
+  const [voucherFilters, setVoucherFilters] = useState({});
+  const [activeVoucherPreset, setActiveVoucherPreset] = useState(null);
   const effectiveSearch = searchQuery || externalQuery || '';
   const [sortBy, setSortBy] = useState('date_desc');
   const [page, setPage] = useState(1);
@@ -776,6 +779,42 @@ export const VoucherManager = ({
       });
     }
 
+    // Filter by Bitrix custom fields
+    if (voucherFilters.voucher_type) {
+      list = list.filter((v) => String(v.voucher_type || '').toLowerCase() === String(voucherFilters.voucher_type).toLowerCase());
+    }
+    if (voucherFilters.amount) {
+      const targetAmt = parseFloat(voucherFilters.amount);
+      const op = voucherFilters.amount_op || 'exact';
+      if (!isNaN(targetAmt)) {
+        list = list.filter((v) => {
+          const amt = Math.abs(Number(v.amount) || 0);
+          if (op === 'gte') return amt >= targetAmt;
+          if (op === 'lte') return amt <= targetAmt;
+          return Math.abs(amt - targetAmt) < 0.01;
+        });
+      }
+    }
+    if (voucherFilters.amount_op === 'range') {
+      const from = parseFloat(voucherFilters.amount_from);
+      const to = parseFloat(voucherFilters.amount_to);
+      if (!isNaN(from) || !isNaN(to)) {
+        list = list.filter((v) => {
+          const amt = Math.abs(Number(v.amount) || 0);
+          if (!isNaN(from) && amt < from) return false;
+          if (!isNaN(to) && amt > to) return false;
+          return true;
+        });
+      }
+    }
+    if (voucherFilters.status) {
+      list = list.filter((v) => String(v.status || 'Active').toLowerCase() === String(voucherFilters.status).toLowerCase());
+    }
+    if (voucherFilters.narration) {
+      const nTerm = String(voucherFilters.narration).toLowerCase();
+      list = list.filter((v) => String(v.narration || '').toLowerCase().includes(nTerm));
+    }
+
     // Sort list
     list.sort((a, b) => {
       if (sortBy === 'date_asc') return new Date(a.voucher_date) - new Date(b.voucher_date);
@@ -802,7 +841,7 @@ export const VoucherManager = ({
     });
 
     return list;
-  }, [dateFilteredVouchers, selectedCategory, effectiveSearch, sortBy, categoryTiles, voucherPinned, voucherOrder]);
+  }, [dateFilteredVouchers, selectedCategory, effectiveSearch, sortBy, categoryTiles, voucherPinned, voucherOrder, voucherFilters]);
 
   // Aggregate stats for currently viewed category list (Screenshot 3 header card)
   const listCategorySummary = useMemo(() => {
@@ -1606,29 +1645,55 @@ export const VoucherManager = ({
 
             {/* Search & Sort */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                className="header-search glass-panel"
-                style={{
-                  width: '240px',
-                  background: 'var(--glass-bg, rgba(255, 255, 255, 0.7))',
-                  border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.8))',
-                  backdropFilter: 'blur(var(--glass-blur, 24px))',
-                  WebkitBackdropFilter: 'blur(var(--glass-blur, 24px))'
+              <BitrixFilterBar
+                storageKey="tc_vouchers_filter"
+                searchQuery={searchQuery}
+                onSearchChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(1);
                 }}
-              >
-                <Search size={16} color="var(--text-muted)" />
-                <input
-                  type="text"
-                  placeholder="Search party, voucher #..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}>
-                    <X size={14} color="#64748b" />
-                  </button>
-                )}
-              </div>
+                placeholder="Search party, voucher #..."
+                availableFields={[
+                  { id: 'search', label: 'Party / Voucher #', type: 'text', category: 'General' },
+                  { id: 'voucher_type', label: 'Voucher Type', type: 'select', category: 'General', options: [
+                    'Sales', 'Purchase', 'Payment', 'Receipt', 'Journal', 'Contra', 'Debit Note', 'Credit Note'
+                  ]},
+                  { id: 'amount', label: 'Total', type: 'number', category: 'Financial' },
+                  { id: 'date', label: 'Created on', type: 'date', category: 'Date' },
+                  { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Cancelled'] },
+                  { id: 'narration', label: 'Narration', type: 'text', category: 'General' }
+                ]}
+                defaultVisibleFieldIds={['search', 'voucher_type', 'amount', 'date', 'status']}
+                presets={[
+                  { id: 'all_vouchers', label: 'All vouchers', filters: {} },
+                  { id: 'sales_vouchers', label: 'Sales vouchers', filters: { voucher_type: 'Sales' } },
+                  { id: 'purchase_vouchers', label: 'Purchase vouchers', filters: { voucher_type: 'Purchase' } },
+                  { id: 'receipt_vouchers', label: 'Receipts & Payments', filters: { voucher_type: 'Receipt' } }
+                ]}
+                activePresetId={activeVoucherPreset}
+                onPresetSelect={(pId) => {
+                  setActiveVoucherPreset(pId);
+                  setPage(1);
+                }}
+                filters={voucherFilters}
+                onFilterChange={(next) => {
+                  setVoucherFilters(next);
+                  setPage(1);
+                }}
+                onReset={() => {
+                  setSearchQuery('');
+                  setVoucherFilters({});
+                  setActiveVoucherPreset(null);
+                  setPage(1);
+                }}
+                categoryTabs={[
+                  { id: 'General', label: 'General' },
+                  { id: 'Financial', label: 'Financial' },
+                  { id: 'Date', label: 'Date' },
+                  { id: 'Status', label: 'Status' }
+                ]}
+                style={{ width: '280px', maxWidth: '100%' }}
+              />
 
               {/* Custom Liquid Glass Sort Dropdown (Image 2) */}
               <LiquidGlassSortDropdown value={sortBy} onChange={setSortBy} />

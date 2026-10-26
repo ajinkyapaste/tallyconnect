@@ -14,7 +14,7 @@ export default function AiChatbotIcon({ size = 24, className = '', color = 'curr
       xmlns="http://www.w3.org/2000/svg"
       className={`tc-ai-chatbot-icon ${className}`}
       style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
-      aria-label="AI Chatbot Assistant"
+      aria-label="TallyConnect AI Chatbot"
     >
       <defs>
         <linearGradient id="tcAiBotGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">

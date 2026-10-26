@@ -8517,6 +8517,34 @@ textarea:focus {
   display: inline-block;
 }
 
+.ai-fab-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.ai-fab-container:hover .ai-fab-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .ai-fab-container {
     bottom: 74px;

@@ -50,6 +50,7 @@ import EinvoiceManager from './EinvoiceManager';
 import EarthLoader from './EarthLoader';
 import VideoLoader from './VideoLoader';
 import WorkingTimeClock from './WorkingTimeClock';
+import BitrixFilterBar from './BitrixFilterBar';
 import AppearanceSettings, { ALL_THEMES_PRESETS } from './AppearanceSettings';
 import AiChatbotIcon from './AiChatbotIcon';
 import BitrixContextMenu from './BitrixContextMenu';
@@ -2512,13 +2513,14 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
   return (
     <>
       {/* Floating Action Button with Beta Badge Underneath */}
-      <div className="ai-fab-container">
+      <div className="ai-fab-container" title="TallyConnect AI Chatbot">
+        <div className="ai-fab-tooltip" role="tooltip">TallyConnect AI Chatbot</div>
         <button
           type="button"
           className={`ai-assistant-fab ${isOpen ? 'active' : ''}`}
           onClick={() => setIsOpen((prev) => !prev)}
-          title="Lumilo AI Assistant (Beta)"
-          aria-label="Open AI Assistant"
+          title="TallyConnect AI Chatbot (Beta)"
+          aria-label="TallyConnect AI Chatbot"
         >
           <span className="ai-fab-icon">
             {isOpen ? <X size={24} /> : <AiChatbotIcon size={26} color="#ffffff" glow={true} />}
@@ -2527,9 +2529,9 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
         </button>
         <div
           className="ai-fab-beta-badge"
-          aria-label="Beta Version"
+          aria-label="TallyConnect AI Chatbot Beta"
           onClick={() => setIsOpen((prev) => !prev)}
-          title="AI Assistant (Beta)"
+          title="TallyConnect AI Chatbot (Beta)"
         >
           <span className="beta-dot" />
           <span>Beta</span>
@@ -2546,8 +2548,8 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
             {/* Header */}
             <div className="ai-dialog-header">
               <div>
-                <h3 className="ai-dialog-title">AI Assistant</h3>
-                <p className="ai-dialog-sub">Answers from Lumilo · {aiKey ? (selectedProviderMeta.label || 'Connected') : 'Live Tally Analytics'}</p>
+                <h3 className="ai-dialog-title">TallyConnect AI Chatbot</h3>
+                <p className="ai-dialog-sub">Answers from TallyConnect AI · {aiKey ? (selectedProviderMeta.label || 'Connected') : 'Live Tally Analytics'}</p>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
@@ -2950,7 +2952,7 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
                   <div className="ai-msg-card-assistant fade-in" style={{ padding: '14px 18px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-color)', fontSize: '13px', fontWeight: 600 }}>
                       <RefreshCw size={15} className="spin" />
-                      <span>Lumilo is analyzing your financial data...</span>
+                      <span>TallyConnect AI is analyzing your financial data...</span>
                     </div>
                   </div>
                 )}
@@ -3880,6 +3882,8 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [query, setQuery] = useState('');
+  const [ledgerFilters, setLedgerFilters] = useState({});
+  const [activeLedgerPreset, setActiveLedgerPreset] = useState(null);
   const [filter, setFilter] = useState('all'); // all | customers | suppliers
   const [sort, setSort] = useState('balance_desc');
   const [page, setPage] = useState(1);
@@ -4023,6 +4027,34 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
         [l.name, l.parent_group, l.type, l.email, l.phone, l.state, l.pincode, l.country, l.address].some((v) => String(v || '').toLowerCase().includes(q))
       );
     }
+    if (ledgerFilters.parent_group) {
+      out = out.filter((l) => String(l.parent_group || '').toLowerCase() === String(ledgerFilters.parent_group).toLowerCase());
+    }
+    if (ledgerFilters.closing_balance) {
+      const targetBal = parseFloat(ledgerFilters.closing_balance);
+      const op = ledgerFilters.closing_balance_op || 'exact';
+      if (!isNaN(targetBal)) {
+        out = out.filter((l) => {
+          const bal = Math.abs(Number(l.balance) || 0);
+          if (op === 'gte') return bal >= targetBal;
+          if (op === 'lte') return bal <= targetBal;
+          return Math.abs(bal - targetBal) < 0.01;
+        });
+      }
+    }
+    if (ledgerFilters.location) {
+      const locTerm = String(ledgerFilters.location).toLowerCase();
+      out = out.filter((l) => [l.state, l.city, l.address, l.pincode].some((v) => String(v || '').toLowerCase().includes(locTerm)));
+    }
+    if (ledgerFilters.email) {
+      const eTerm = String(ledgerFilters.email).toLowerCase();
+      out = out.filter((l) => String(l.email || '').toLowerCase().includes(eTerm));
+    }
+    if (ledgerFilters.status) {
+      if (ledgerFilters.status.toLowerCase() === 'overdue') {
+        out = out.filter((l) => (Number(l.balance) || 0) > 0);
+      }
+    }
     out = [...out];
     if (sort === 'balance_desc') out.sort((a, b) => b.balance - a.balance);
     else if (sort === 'balance_asc') out.sort((a, b) => a.balance - b.balance);
@@ -4048,7 +4080,7 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
     });
 
     return out;
-  }, [enriched, filter, q, sort, ledgerHidden, ledgerPinned, ledgerOrder]);
+  }, [enriched, filter, q, sort, ledgerHidden, ledgerPinned, ledgerOrder, ledgerFilters]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -4890,23 +4922,57 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
           })}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1', minWidth: '200px', maxWidth: '380px', background: 'var(--glass-bg, rgba(255,255,255,0.7))', border: '1px solid var(--glass-border, rgba(0,0,0,0.08))', borderRadius: '14px', padding: '0 12px' }}>
-          <Search size={17} color="var(--text-muted)" />
-          <input
-            id="ledger-search-input"
-            name="ledger_search"
-            type="text"
-            placeholder="Search name, group, email, location..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', fontWeight: 600, color: 'var(--text-dark)', padding: '11px 0', minWidth: 0 }}
-          />
-          {query && (
-            <button onClick={() => setQuery('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 0 }} title="Clear search">
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <BitrixFilterBar
+          storageKey="tc_ledgers_filter"
+          id="ledger-search-input"
+          name="ledger_search"
+          searchQuery={query}
+          onSearchChange={(val) => {
+            setQuery(val);
+            setPage(1);
+          }}
+          placeholder="Search name, group, email, location..."
+          availableFields={[
+            { id: 'search', label: 'Customer / Party Name', type: 'text', category: 'General' },
+            { id: 'parent_group', label: 'Parent Group', type: 'select', category: 'General', options: [
+              'Sundry Debtors', 'Sundry Creditors', 'Bank Accounts', 'Cash-in-hand', 'Direct Expenses', 'Indirect Expenses'
+            ]},
+            { id: 'location', label: 'Location / State', type: 'text', category: 'General' },
+            { id: 'email', label: 'Email', type: 'text', category: 'Contact' },
+            { id: 'closing_balance', label: 'Closing Balance', type: 'number', category: 'Financial' },
+            { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Inactive', 'Overdue'] }
+          ]}
+          defaultVisibleFieldIds={['search', 'parent_group', 'location', 'closing_balance', 'status']}
+          presets={[
+            { id: 'all_ledgers', label: 'All accounts', filters: {} },
+            { id: 'sundry_debtors', label: 'Sundry Debtors', filters: { parent_group: 'Sundry Debtors' } },
+            { id: 'sundry_creditors', label: 'Sundry Creditors', filters: { parent_group: 'Sundry Creditors' } },
+            { id: 'overdue_ledgers', label: 'Overdue Balances', filters: { status: 'Overdue' } }
+          ]}
+          activePresetId={activeLedgerPreset}
+          onPresetSelect={(pId) => {
+            setActiveLedgerPreset(pId);
+            setPage(1);
+          }}
+          filters={ledgerFilters}
+          onFilterChange={(next) => {
+            setLedgerFilters(next);
+            setPage(1);
+          }}
+          onReset={() => {
+            setQuery('');
+            setLedgerFilters({});
+            setActiveLedgerPreset(null);
+            setPage(1);
+          }}
+          categoryTabs={[
+            { id: 'General', label: 'General' },
+            { id: 'Financial', label: 'Financial' },
+            { id: 'Contact', label: 'Contact' },
+            { id: 'Status', label: 'Status' }
+          ]}
+          style={{ flex: '1', minWidth: '220px', maxWidth: '380px' }}
+        />
 
         <SortDropdown
           value={sort}
@@ -7651,6 +7717,8 @@ const Orders = ({ companyGuid, externalQuery, setCurrentTab, user: propUser }) =
 
   const [rows, setRows] = useState([]);
   const [query, setQuery] = useState('');
+  const [ordersFilters, setOrdersFilters] = useState({});
+  const [activeOrdersPreset, setActiveOrdersPreset] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => {
     try { return Number(localStorage.getItem('tc_pref_orders_size')) || 8; } catch { return 8; }
@@ -7838,6 +7906,28 @@ const Orders = ({ companyGuid, externalQuery, setCurrentTab, user: propUser }) =
       );
     });
 
+    if (ordersFilters.order_type) {
+      list = list.filter((o) => String(o.type || '').toLowerCase() === String(ordersFilters.order_type).toLowerCase());
+    }
+    if (ordersFilters.status) {
+      list = list.filter((o) => String(o.status || '').toLowerCase() === String(ordersFilters.status).toLowerCase());
+    }
+    if (ordersFilters.party_name) {
+      list = list.filter((o) => String(o.customer || '').toLowerCase().includes(String(ordersFilters.party_name).toLowerCase()));
+    }
+    if (ordersFilters.total_amount) {
+      const targetAmt = parseFloat(ordersFilters.total_amount);
+      const op = ordersFilters.total_amount_op || 'exact';
+      if (!isNaN(targetAmt)) {
+        list = list.filter((o) => {
+          const amt = Math.abs(Number(o.amount || o.value) || 0);
+          if (op === 'gte') return amt >= targetAmt;
+          if (op === 'lte') return amt <= targetAmt;
+          return Math.abs(amt - targetAmt) < 0.01;
+        });
+      }
+    }
+
     return list.sort((a, b) => {
       const keyA = getOrderKey(a);
       const keyB = getOrderKey(b);
@@ -7856,7 +7946,7 @@ const Orders = ({ companyGuid, externalQuery, setCurrentTab, user: propUser }) =
       const dateB = new Date(b.date || 0).getTime();
       return dateB - dateA;
     });
-  }, [rows, hiddenKeys, q, pinnedKeys, orderKeys]);
+  }, [rows, hiddenKeys, q, pinnedKeys, orderKeys, ordersFilters]);
 
   const pages = Math.max(1, Math.ceil(sortedAndFiltered.length / pageSize));
   const pageRows = sortedAndFiltered.slice((page - 1) * pageSize, page * pageSize);
@@ -7942,22 +8032,54 @@ const Orders = ({ companyGuid, externalQuery, setCurrentTab, user: propUser }) =
       )}
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-        <div className="header-search" style={{ width: '100%', maxWidth: '400px', background: 'rgba(255,255,255,0.6)' }}>
-          <Search size={18} color="var(--text-muted)" />
-          <input
-            id="orders-search-input"
-            name="orders_search"
-            type="text"
-            placeholder="Search orders..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {query && (
-            <button onClick={() => setQuery('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Clear search">
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <BitrixFilterBar
+          storageKey="tc_orders_filter"
+          id="orders-search-input"
+          name="orders_search"
+          searchQuery={query}
+          onSearchChange={(val) => {
+            setQuery(val);
+            setPage(1);
+          }}
+          placeholder="Search orders..."
+          availableFields={[
+            { id: 'search', label: 'Order # or Party', type: 'text', category: 'General' },
+            { id: 'party_name', label: 'Customer Name', type: 'text', category: 'General' },
+            { id: 'order_type', label: 'Order Type', type: 'select', category: 'General', options: ['Sales Order', 'Purchase Order'] },
+            { id: 'total_amount', label: 'Total Amount', type: 'number', category: 'Financial' },
+            { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Pending', 'Completed', 'Cancelled'] },
+            { id: 'date', label: 'Order Date', type: 'date', category: 'Date' }
+          ]}
+          defaultVisibleFieldIds={['search', 'party_name', 'order_type', 'total_amount', 'status']}
+          presets={[
+            { id: 'all_orders', label: 'All orders', filters: {} },
+            { id: 'pending_orders', label: 'Pending orders', filters: { status: 'Pending' } },
+            { id: 'completed_orders', label: 'Completed orders', filters: { status: 'Completed' } }
+          ]}
+          activePresetId={activeOrdersPreset}
+          onPresetSelect={(pId) => {
+            setActiveOrdersPreset(pId);
+            setPage(1);
+          }}
+          filters={ordersFilters}
+          onFilterChange={(next) => {
+            setOrdersFilters(next);
+            setPage(1);
+          }}
+          onReset={() => {
+            setQuery('');
+            setOrdersFilters({});
+            setActiveOrdersPreset(null);
+            setPage(1);
+          }}
+          categoryTabs={[
+            { id: 'General', label: 'General' },
+            { id: 'Financial', label: 'Financial' },
+            { id: 'Date', label: 'Date' },
+            { id: 'Status', label: 'Status' }
+          ]}
+          style={{ width: '100%', maxWidth: '400px' }}
+        />
       </div>
 
       {!loaded && (
@@ -16325,6 +16447,8 @@ const InvoicesManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
   const [detail, setDetail] = useState(null);
   const [ledgers, setLedgers] = useState([]);
   const [search, setSearch] = useState('');
+  const [invoiceFilters, setInvoiceFilters] = useState({});
+  const [activeInvoicePreset, setActiveInvoicePreset] = useState(null);
 
   // Seed the visible search box from a global-search redirect so the user can
   // see (and clear) the filter that brought them here.
@@ -16333,12 +16457,34 @@ const InvoicesManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
   }, [externalQuery]);
 
   const invQuery = (search || externalQuery || '').trim().toLowerCase();
-  const filteredInvoices = invQuery
-    ? invoices.filter((inv) =>
-      [inv.invoice_no, inv.party_name, inv.invoice_type]
-        .some((v) => String(v || '').toLowerCase().includes(invQuery))
-    )
-    : invoices;
+  const filteredInvoices = useMemo(() => {
+    let list = invoices;
+    if (invQuery) {
+      list = list.filter((inv) =>
+        [inv.invoice_no, inv.party_name, inv.invoice_type]
+          .some((v) => String(v || '').toLowerCase().includes(invQuery))
+      );
+    }
+    if (invoiceFilters.party_name) {
+      list = list.filter((inv) => String(inv.party_name || '').toLowerCase().includes(String(invoiceFilters.party_name).toLowerCase()));
+    }
+    if (invoiceFilters.status) {
+      list = list.filter((inv) => String(inv.invoice_type || inv.status || '').toLowerCase().includes(String(invoiceFilters.status).toLowerCase()));
+    }
+    if (invoiceFilters.amount) {
+      const targetAmt = parseFloat(invoiceFilters.amount);
+      const op = invoiceFilters.amount_op || 'exact';
+      if (!isNaN(targetAmt)) {
+        list = list.filter((inv) => {
+          const amt = Math.abs(Number(inv.total_amount || inv.amount) || 0);
+          if (op === 'gte') return amt >= targetAmt;
+          if (op === 'lte') return amt <= targetAmt;
+          return Math.abs(amt - targetAmt) < 0.01;
+        });
+      }
+    }
+    return list;
+  }, [invoices, invQuery, invoiceFilters]);
 
   const fetchInvoices = async () => {
     setLoading(true);
@@ -16437,22 +16583,43 @@ const InvoicesManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
             <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800' }}>
               All Invoices ({filteredInvoices.length}{invQuery ? ` of ${invoices.length}` : ''})
             </h3>
-            <div className="header-search" style={{ width: '240px', maxWidth: '100%', background: 'var(--glass-bg)' }}>
-              <Search size={16} color="var(--text-muted)" />
-              <input
-                id="invoices-search-input"
-                name="invoices_search"
-                type="text"
-                placeholder="Search invoice or party..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button onClick={() => setSearch('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 0 }} title="Clear search">
-                  <X size={15} />
-                </button>
-              )}
-            </div>
+            <BitrixFilterBar
+              storageKey="tc_invoices_filter"
+              id="invoices-search-input"
+              name="invoices_search"
+              searchQuery={search}
+              onSearchChange={(val) => setSearch(val)}
+              placeholder="Search invoice or party..."
+              availableFields={[
+                { id: 'search', label: 'Invoice # or Party', type: 'text', category: 'General' },
+                { id: 'party_name', label: 'Party Name', type: 'text', category: 'General' },
+                { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Paid', 'Unpaid', 'Overdue'] },
+                { id: 'amount', label: 'Total', type: 'number', category: 'Financial' },
+                { id: 'due_date', label: 'Due Date', type: 'date', category: 'Date' }
+              ]}
+              defaultVisibleFieldIds={['search', 'party_name', 'status', 'amount']}
+              presets={[
+                { id: 'all_invoices', label: 'All invoices', filters: {} },
+                { id: 'unpaid_invoices', label: 'Unpaid invoices', filters: { status: 'Unpaid' } },
+                { id: 'overdue_invoices', label: 'Overdue invoices', filters: { status: 'Overdue' } }
+              ]}
+              activePresetId={activeInvoicePreset}
+              onPresetSelect={(pId) => setActiveInvoicePreset(pId)}
+              filters={invoiceFilters}
+              onFilterChange={(next) => setInvoiceFilters(next)}
+              onReset={() => {
+                setSearch('');
+                setInvoiceFilters({});
+                setActiveInvoicePreset(null);
+              }}
+              categoryTabs={[
+                { id: 'General', label: 'General' },
+                { id: 'Financial', label: 'Financial' },
+                { id: 'Status', label: 'Status' },
+                { id: 'Date', label: 'Date' }
+              ]}
+              style={{ width: '280px', maxWidth: '100%' }}
+            />
           </div>
           {loading && <div style={{ padding: '24px', textAlign: 'center' }}>Loading invoices...</div>}
           {error && <div style={{ padding: '24px', textAlign: 'center', color: 'var(--danger)' }}>{error}</div>}
