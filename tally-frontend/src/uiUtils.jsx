@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Download, FileText, ChevronDown, Eye, X, RotateCcw, Grid, CheckCircle2,
   Package, Landmark, Receipt, TrendingUp, BarChart3, Layers, Search, ShoppingCart,
-  Building2, User
+  Building2, User, Clock
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------
@@ -82,11 +82,25 @@ export const ExportDropdown = ({ onExportCSV, onExportPDF, label = 'Export', ali
         type="button"
         className="btn-secondary export-trigger-btn"
         onClick={() => setOpen((prev) => !prev)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          height: '36px',
+          padding: '0 14px',
+          fontSize: '13px',
+          fontWeight: 650,
+          borderRadius: '10px',
+          cursor: 'pointer',
+          background: 'var(--glass-bg, rgba(255, 255, 255, 0.75))',
+          border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.8))',
+          color: 'var(--text-dark, #0f172a)',
+          transition: 'all 0.15s ease'
+        }}
         title="Export data (CSV or PDF)"
         aria-expanded={open}
       >
-        <Download size={16} />
+        <Download size={15} />
         <span>{label}</span>
         <ChevronDown size={14} style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
@@ -175,6 +189,40 @@ export const ExportDropdown = ({ onExportCSV, onExportPDF, label = 'Export', ali
         </div>
       )}
     </div>
+  );
+};
+
+/* ------------------------------------------------------------------
+   Standardized Schedule Button
+   Consistent 36px height, spacing, and styling to pair with ExportDropdown
+   ------------------------------------------------------------------ */
+export const ScheduleButton = ({ onClick, label = 'Schedule', title = 'Schedule Automated Report Emails', style = {} }) => {
+  return (
+    <button
+      type="button"
+      className="btn-secondary schedule-trigger-btn"
+      onClick={onClick}
+      title={title}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        height: '36px',
+        padding: '0 14px',
+        fontSize: '13px',
+        fontWeight: 650,
+        borderRadius: '10px',
+        cursor: 'pointer',
+        background: 'var(--glass-bg, rgba(255, 255, 255, 0.75))',
+        border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.8))',
+        color: 'var(--text-dark, #0f172a)',
+        transition: 'all 0.15s ease',
+        ...style
+      }}
+    >
+      <Clock size={15} color="var(--primary-color, #4f46e5)" />
+      <span>{label}</span>
+    </button>
   );
 };
 

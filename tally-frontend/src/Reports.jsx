@@ -22,7 +22,8 @@ import {
   getBalanceSheet,
   getExpenseReport
 } from './api';
-import { ExportDropdown, createHoldTouchHandler, UnhideModal } from './uiUtils';
+import { ExportDropdown, createHoldTouchHandler, UnhideModal, ScheduleButton } from './uiUtils';
+import BitrixFilterBar from './BitrixFilterBar';
 import { ProfitLossView, BalanceSheetView, TrialBalanceView, ExpensesDetailedView, CashFlowView } from './FinancialStatements';
 import { LedgerVouchersModal, StockValueModal } from './FinancialModals';
 import CashFlowForecast from './CashFlowForecast';
@@ -764,6 +765,7 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
     } catch { }
   }, []);
   const [categoryFilter, setCategoryFilter] = useState('all'); // 'all' | 'sales' | 'party' | 'stock' | 'accounts'
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Drag-and-drop, pin, hide & touch-hold context menu state
   const [reportCardsOrder, setReportCardsOrder] = useState(() => {
@@ -803,6 +805,21 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
   const [showUnhideModal, setShowUnhideModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [reportsActivePreset, setReportsActivePreset] = useState(null);
+  const [reportFilterValues, setReportFilterValues] = useState({});
+  const [reportCardSizes, setReportCardSizes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tc_reports_sizes');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+  const setCardSize = (id, size) => {
+    setReportCardSizes(prev => {
+      const next = { ...prev, [id]: size };
+      try { localStorage.setItem('tc_reports_sizes', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
   const [draggedCardIdx, setDraggedCardIdx] = useState(null);
   const [dragOverCardIdx, setDragOverCardIdx] = useState(null);
   const [draggedSummaryIdx, setDraggedSummaryIdx] = useState(null);
@@ -2513,8 +2530,15 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
     return orderedReportCards
       .filter(c => isVisibleToUser(user, 'reportSections', c.id))
       .filter(c => categoryFilter === 'all' || c.category === categoryFilter)
-      .filter(c => !reportCardsHidden.includes(c.id));
-  }, [orderedReportCards, categoryFilter, reportCardsHidden, user]);
+      .filter(c => !reportCardsHidden.includes(c.id))
+      .filter(c => {
+        if (!searchQuery || !searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase().trim();
+        return (c.title && c.title.toLowerCase().includes(q)) ||
+               (c.description && c.description.toLowerCase().includes(q)) ||
+               (c.metricLabel && c.metricLabel.toLowerCase().includes(q));
+      });
+  }, [orderedReportCards, categoryFilter, reportCardsHidden, searchQuery, user]);
 
   // Drag and drop handlers for report cards
   const handleCardDragStart = (e, index) => {
@@ -2731,8 +2755,64 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
             </div>
           </div>
 
-          {/* Header Actions: Date Filters + Export */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', maxWidth: '100%', minWidth: 0 }}>
+          {/* Header Actions: Bitrix Filter + Date Filters + Export + Schedule */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', maxWidth: '100%', minWidth: 0 }}>
+            <BitrixFilterBar
+              storageKey="tc_reports_filters"
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder="Search reports..."
+              availableFields={[
+                { id: 'search', label: 'Report Name', type: 'text', category: 'General' },
+                { id: 'category', label: 'Category', type: 'select', category: 'General', options: [
+                  { value: 'all', label: 'All Categories' },
+                  { value: 'sales', label: 'Sales & Purchases' },
+                  { value: 'accounts', label: 'Accounts & Statements' },
+                  { value: 'party', label: 'Parties & Customers' },
+                  { value: 'stock', label: 'Stock & Inventory' }
+                ]},
+                { id: 'date', label: 'Period Filter', type: 'date', category: 'Date' },
+                { id: 'status', label: 'Report Group', type: 'select', category: 'Type', options: [
+                  { value: 'statements', label: 'Financial Statements' },
+                  { value: 'registers', label: 'Business Registers' },
+                  { value: 'spotlight', label: 'Spotlight Analytics' }
+                ]}
+              ]}
+              defaultVisibleFieldIds={['search', 'category', 'date', 'status']}
+              presets={[
+                { id: 'all_reports', label: 'All reports', filters: { category: 'all' } },
+                { id: 'financial_statements', label: 'Financial statements', filters: { category: 'accounts' } },
+                { id: 'sales_registers', label: 'Sales & registers', filters: { category: 'sales' } },
+                { id: 'party_customers', label: 'Parties & customers', filters: { category: 'party' } }
+              ]}
+              activePresetId={reportsActivePreset}
+              onPresetSelect={(pId) => {
+                setReportsActivePreset(pId);
+                if (pId === 'financial_statements') setCategoryFilter('accounts');
+                else if (pId === 'sales_registers') setCategoryFilter('sales');
+                else if (pId === 'party_customers') setCategoryFilter('party');
+                else if (pId === 'all_reports') setCategoryFilter('all');
+                else if (!pId) setCategoryFilter('all');
+              }}
+              filters={reportFilterValues}
+              onFilterChange={(next) => {
+                setReportFilterValues(next);
+                if (next.category) setCategoryFilter(next.category);
+                if (next.search !== undefined) setSearchQuery(next.search);
+              }}
+              onReset={() => {
+                setCategoryFilter('all');
+                setSearchQuery('');
+                setReportFilterValues({});
+                setReportsActivePreset(null);
+              }}
+              categoryTabs={[
+                { id: 'General', label: 'General' },
+                { id: 'Date', label: 'Date' },
+                { id: 'Type', label: 'Type' }
+              ]}
+            />
+
             <StandardDateFilter
               value={dateFilter}
               onChange={setDateFilter}
@@ -2743,22 +2823,7 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
             />
 
             <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />
-            <button
-              className="btn-secondary"
-              onClick={() => setShowScheduleModal(true)}
-              title="Schedule Automated Monthly Report Emails"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                borderRadius: '12px'
-              }}
-            >
-              <Clock size={15} color="var(--primary-color)" /> Schedule
-            </button>
+            <ScheduleButton onClick={() => setShowScheduleModal(true)} />
           </div>
         </div>
       )}
@@ -3342,6 +3407,133 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                 </div>
               )}
 
+              {/* PINNED & TOP PRIORITY CARDS (Strictly at the top of the reports grid) */}
+              {visibleCards.some(c => reportCardsPinned.includes(c.id)) && (
+                <div style={{ marginBottom: '28px' }}>
+                  <div style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                    color: '#e11d48',
+                    margin: '0 0 14px 4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <Pin size={13} />
+                    <span>PINNED &amp; TOP PRIORITY</span>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(225, 29, 72, 0.3)', opacity: 0.5 }} />
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
+                    gap: '16px'
+                  }}>
+                    {visibleCards.filter(c => reportCardsPinned.includes(c.id)).map((card) => {
+                      const sz = reportCardSizes[card.id] || 'normal';
+                      return (
+                        <div
+                          key={`pinned-${card.id}`}
+                          className="glass-panel is-pinned"
+                          onClick={() => setActiveReport(card.id)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setCardContextMenu({ x: e.clientX, y: e.clientY, card, isSummary: false });
+                          }}
+                          {...createHoldTouchHandler((pos) => setCardContextMenu({ x: pos.x, y: pos.y, card, isSummary: false }))}
+                          style={{
+                            padding: sz === 'compact' ? '14px 18px' : '22px 20px',
+                            borderRadius: '20px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                            position: 'relative',
+                            border: '1.5px solid rgba(225, 29, 72, 0.4)',
+                            background: 'rgba(255, 255, 255, 0.85)',
+                            boxShadow: '0 8px 24px rgba(225, 29, 72, 0.12)',
+                            gridColumn: sz === 'wide' ? 'span 2' : 'span 1'
+                          }}
+                          title="Pinned card · Right-click for options"
+                        >
+                          <span className="pinned-badge" title="Pinned to top">
+                            <Pin size={11} />
+                          </span>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                              <div style={{
+                                width: '44px', height: '44px', borderRadius: '14px',
+                                background: `${card.color || '#e11d48'}15`, color: card.color || '#e11d48',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                              }}>
+                                {card.icon}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{
+                                  fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase',
+                                  padding: '3px 8px', borderRadius: '6px',
+                                  background: 'rgba(225, 29, 72, 0.1)', color: '#e11d48'
+                                }}>
+                                  PINNED
+                                </span>
+                                <button
+                                  type="button"
+                                  className="tile-menu-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setCardContextMenu({ x: rect.left, y: rect.bottom + 4, card, isSummary: false });
+                                  }}
+                                  style={{ background: 'transparent', border: 'none', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}
+                                >
+                                  <MoreVertical size={14} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <h3 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 2px', color: 'var(--text-dark)' }}>
+                              {card.title}
+                            </h3>
+                            {card.highlight && (
+                              <div style={{ fontSize: '13px', fontWeight: 700, color: '#be123c', margin: '2px 0 4px' }}>
+                                {card.highlight}
+                              </div>
+                            )}
+                            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 12px', fontWeight: 500 }}>
+                              {card.description}
+                            </p>
+                          </div>
+
+                          <div style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+                            borderTop: '1px solid var(--glass-border)', paddingTop: '12px'
+                          }}>
+                            <div>
+                              {card.metric && (
+                                <div style={{ fontSize: '19px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                                  {card.metric}
+                                </div>
+                              )}
+                              {card.metricLabel && (
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                  {card.metricLabel}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 700, color: card.color || '#e11d48' }}>
+                              View <ChevronRight size={16} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* FINANCIAL STATEMENTS SECTION (Matching Mobile App Reference) */}
               {(categoryFilter === 'all' || categoryFilter === 'accounts') && (
                 <div style={{ marginBottom: '28px' }}>
@@ -3365,62 +3557,85 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
                     gap: '16px'
                   }}>
-                    {financialStatementCards.map((card) => (
-                      <div
-                        key={card.id}
-                        className="glass-panel"
-                        onClick={() => setActiveReport(card.id)}
-                        style={{
-                          padding: '22px 20px',
-                          borderRadius: '20px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                          position: 'relative',
-                          minHeight: '128px',
-                          border: '1px solid var(--glass-border)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-3px)';
-                          e.currentTarget.style.boxShadow = '0 14px 32px rgba(225, 29, 72, 0.12)';
-                          e.currentTarget.style.borderColor = 'rgba(225, 29, 72, 0.35)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'none';
-                          e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
-                          e.currentTarget.style.borderColor = 'var(--glass-border)';
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div style={{
-                              width: '46px',
-                              height: '46px',
-                              borderRadius: '16px',
-                              background: 'rgba(225, 29, 72, 0.08)',
-                              border: '1px solid rgba(225, 29, 72, 0.18)',
-                              color: '#be123c',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              boxShadow: '0 2px 8px rgba(225, 29, 72, 0.08)'
-                            }}>
-                              {card.icon}
+                    {financialStatementCards.filter(c => !reportCardsHidden.includes(c.id) && !reportCardsPinned.includes(c.id)).map((card) => {
+                      const sz = reportCardSizes[card.id] || 'normal';
+                      return (
+                        <div
+                          key={card.id}
+                          className="glass-panel"
+                          onClick={() => setActiveReport(card.id)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setCardContextMenu({ x: e.clientX, y: e.clientY, card, isSummary: false });
+                          }}
+                          {...createHoldTouchHandler((pos) => setCardContextMenu({ x: pos.x, y: pos.y, card, isSummary: false }))}
+                          style={{
+                            padding: sz === 'compact' ? '14px 16px' : '22px 20px',
+                            borderRadius: '20px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                            position: 'relative',
+                            minHeight: sz === 'compact' ? '100px' : '128px',
+                            border: '1px solid var(--glass-border)',
+                            gridColumn: sz === 'wide' ? 'span 2' : 'span 1'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-3px)';
+                            e.currentTarget.style.boxShadow = '0 14px 32px rgba(225, 29, 72, 0.12)';
+                            e.currentTarget.style.borderColor = 'rgba(225, 29, 72, 0.35)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'none';
+                            e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
+                            e.currentTarget.style.borderColor = 'var(--glass-border)';
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div style={{
+                                width: '46px',
+                                height: '46px',
+                                borderRadius: '16px',
+                                background: 'rgba(225, 29, 72, 0.08)',
+                                border: '1px solid rgba(225, 29, 72, 0.18)',
+                                color: '#be123c',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 8px rgba(225, 29, 72, 0.08)'
+                              }}>
+                                {card.icon}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <button
+                                  type="button"
+                                  className="tile-menu-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setCardContextMenu({ x: rect.left, y: rect.bottom + 4, card, isSummary: false });
+                                  }}
+                                  style={{ background: 'transparent', border: 'none', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}
+                                >
+                                  <MoreVertical size={14} />
+                                </button>
+                                <ChevronRight size={16} color="var(--text-muted)" style={{ opacity: 0.6 }} />
+                              </div>
                             </div>
-                            <ChevronRight size={16} color="var(--text-muted)" style={{ opacity: 0.6 }} />
-                          </div>
 
-                          <h3 style={{ fontSize: '17px', fontWeight: 800, margin: '14px 0 4px', color: 'var(--text-dark)' }}>
-                            {card.title}
-                          </h3>
-                          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, fontWeight: 500, lineHeight: '1.4' }}>
-                            {card.description}
-                          </p>
+                            <h3 style={{ fontSize: '17px', fontWeight: 800, margin: '14px 0 4px', color: 'var(--text-dark)' }}>
+                              {card.title}
+                            </h3>
+                            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, fontWeight: 500, lineHeight: '1.4' }}>
+                              {card.description}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -3450,7 +3665,7 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                 gap: '16px',
                 marginBottom: '32px'
               }}>
-                {visibleCards.filter(c => !financialStatementCards.some(fc => fc.id === c.id)).map((card, index) => {
+                {visibleCards.filter(c => !reportCardsPinned.includes(c.id) && !financialStatementCards.some(fc => fc.id === c.id)).map((card, index) => {
                   const isPinned = reportCardsPinned.includes(card.id);
                   const isDragging = draggedCardIdx === index;
                   const isDragOver = dragOverCardIdx === index;
@@ -3599,12 +3814,10 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     <div style={{ padding: '6px 12px 4px', borderBottom: '1px solid var(--glass-border)', fontSize: '11px', fontWeight: 700, color: 'var(--text-dim)' }}>
                       {cardContextMenu.card.title}
                     </div>
-                    {!cardContextMenu.isSummary && (
-                      <button type="button" onClick={() => toggleReportPin(cardContextMenu.card.id)}>
-                        <Pin size={14} />
-                        <span>{reportCardsPinned.includes(cardContextMenu.card.id) ? 'Unpin' : 'Pin'}</span>
-                      </button>
-                    )}
+                    <button type="button" onClick={() => toggleReportPin(cardContextMenu.card.reportId || cardContextMenu.card.id)}>
+                      <Pin size={14} />
+                      <span>{reportCardsPinned.includes(cardContextMenu.card.reportId || cardContextMenu.card.id) ? 'Unpin from Top' : 'Pin to Top'}</span>
+                    </button>
                     <button type="button" onClick={() => {
                       const rep = cardContextMenu.card.reportId || cardContextMenu.card.id;
                       setCardContextMenu(null);

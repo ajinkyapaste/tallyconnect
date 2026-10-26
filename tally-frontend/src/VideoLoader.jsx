@@ -151,28 +151,30 @@ export const VideoLoader = ({
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      {/* Video Viewport: Clean Rotating Earth Animation without any white rectangle */}
+      {/* Video Viewport: Clean Rotating Earth Animation scaling across all devices */}
       <div className="tc-video-viewport">
-        <video
-          ref={videoRef}
-          className="tc-video-element"
-          src={videoSrc}
-          autoPlay
-          muted
-          playsInline
-          loop
-          preload="auto"
-          onError={() => {
-            console.warn('Video playback fallback active.');
-          }}
-        />
-        <div className="tc-video-vignette" />
-      </div>
+        <div className="tc-video-stage">
+          <video
+            ref={videoRef}
+            className="tc-video-element"
+            src={videoSrc}
+            autoPlay
+            muted
+            playsInline
+            loop
+            preload="auto"
+            onError={() => {
+              console.warn('Video playback fallback active.');
+            }}
+          />
+          <div className="tc-video-vignette" />
 
-      {/* Pristine Floating Official TallyConnect Branding (100% Transparent, No White Box) */}
-      <div className="tc-logo-floating-brand tc-logo-blend-shield" aria-hidden="true">
-        <div className="tc-logo-brand-inner">
-          <TallyConnectLogo height={48} isDarkMode={true} />
+          {/* Pristine Floating Official TallyConnect Branding: Anchored to 16:9 stage for seamless scaling */}
+          <div className="tc-logo-floating-brand tc-logo-blend-shield" aria-hidden="true">
+            <div className="tc-logo-brand-inner">
+              <TallyConnectLogo height={48} isDarkMode={true} />
+            </div>
+          </div>
         </div>
       </div>
 

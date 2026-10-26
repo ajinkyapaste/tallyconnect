@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Eye, EyeOff, Pin, RotateCcw, X, Move, ChevronRight, Share2, Maximize2, Minimize2 } from 'lucide-react';
+import { Eye, EyeOff, Pin, RotateCcw, X, Move, ChevronRight, Share2, Maximize2, Minimize2, ArrowUp, ArrowDown } from 'lucide-react';
 
 function readJSON(key, def) {
   try {
@@ -43,12 +43,10 @@ export function useCardGridPreferences(prefix, cards) {
         return ia - ib;
       });
     }
-    list.sort((a, b) => {
-      const pa = pinned.includes(a.id) ? 1 : 0;
-      const pb = pinned.includes(b.id) ? 1 : 0;
-      return pb - pa;
-    });
-    return list;
+    // Strict priority: pinned items bubble to top
+    const pinnedList = list.filter((c) => pinned.includes(c.id));
+    const unpinnedList = list.filter((c) => !pinned.includes(c.id));
+    return [...pinnedList, ...unpinnedList];
   }, [defs, hidden, order, pinned]);
 
   const hiddenCards = useMemo(() => defs.filter((c) => hidden.includes(c.id)), [defs, hidden]);
@@ -163,6 +161,26 @@ export function useCardGridPreferences(prefix, cards) {
     persistOrder(next);
   };
 
+  const moveUp = (id) => {
+    const list = visibleCards.map((c) => c.id);
+    const i = list.indexOf(id);
+    if (i <= 0) return;
+    const next = [...list];
+    const [m] = next.splice(i, 1);
+    next.splice(i - 1, 0, m);
+    persistOrder(next);
+  };
+
+  const moveDown = (id) => {
+    const list = visibleCards.map((c) => c.id);
+    const i = list.indexOf(id);
+    if (i < 0 || i >= list.length - 1) return;
+    const next = [...list];
+    const [m] = next.splice(i, 1);
+    next.splice(i + 1, 0, m);
+    persistOrder(next);
+  };
+
   const openMenu = (e, card) => {
     if (e?.preventDefault) e.preventDefault();
     const x = e?.clientX ?? (window.innerWidth / 2);
@@ -183,6 +201,8 @@ export function useCardGridPreferences(prefix, cards) {
     menu,
     setMenu,
     togglePin,
+    moveUp,
+    moveDown,
     hide,
     unhide,
     unhideAll,
@@ -201,6 +221,8 @@ export function CardContextMenu({
   onClose,
   pinned = [],
   onTogglePin,
+  onMoveUp,
+  onMoveDown,
   onHide,
   onReset,
   onUnhideAll,
@@ -347,6 +369,20 @@ export function CardContextMenu({
           <span>Drag to Reorder</span>
         </button>
 
+        {onMoveUp && (
+          <button type="button" onClick={() => { onMoveUp(cardId); onClose(); }}>
+            <ArrowUp size={14} />
+            <span>Move Up</span>
+          </button>
+        )}
+
+        {onMoveDown && (
+          <button type="button" onClick={() => { onMoveDown(cardId); onClose(); }}>
+            <ArrowDown size={14} />
+            <span>Move Down</span>
+          </button>
+        )}
+
         {onHide && (
           <button type="button" onClick={() => { onHide(cardId); onClose(); }}>
             <EyeOff size={14} />
@@ -410,3 +446,24 @@ export function HiddenCardsChip({ hiddenCards = [], onUnhide }) {
     </div>
   );
 }
+
+export function getCardSizeProps(cardId, cardSizes = {}) {
+  const size = cardSizes[cardId] || 'normal';
+  if (size === 'wide') {
+    return {
+      className: 'card-size-wide',
+      style: { gridColumn: 'span 2' }
+    };
+  }
+  if (size === 'compact') {
+    return {
+      className: 'card-size-compact',
+      style: { padding: '14px 16px' }
+    };
+  }
+  return {
+    className: 'card-size-normal',
+    style: {}
+  };
+}
+

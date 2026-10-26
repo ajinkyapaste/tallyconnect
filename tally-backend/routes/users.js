@@ -214,8 +214,13 @@ router.post(
   uploadAvatar.single("avatar"),
   async (req, res) => {
     try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file provided or format not supported." });
+      }
       const userId = req.user.id;
-      const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      const avatarUrl = req.file.path && req.file.path.startsWith("http")
+        ? req.file.path
+        : `/uploads/avatars/${req.file.filename}`;
 
       await pool.query(
         `UPDATE users
@@ -227,7 +232,7 @@ router.post(
       res.json({ avatar_url: avatarUrl });
     } catch (err) {
       console.error("Avatar upload failed", err);
-      res.status(500).json({ message: "Avatar upload failed" });
+      res.status(500).json({ message: err.message || "Avatar upload failed" });
     }
   }
 );

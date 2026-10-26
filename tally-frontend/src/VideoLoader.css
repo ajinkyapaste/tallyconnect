@@ -1,5 +1,6 @@
 /* ==========================================================================
    VideoLoader.css — Premium Cinematic TallyConnect Loading Experience
+   Mobile-Responsive & Cross-Device Optimized (Maintains 100% Visual Fidelity)
    ========================================================================== */
 
 .tc-video-loader-overlay {
@@ -32,6 +33,39 @@
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 50% 45%, #071126 0%, #030712 70%);
+  overflow: hidden;
+}
+
+/* 16:9 Stage:
+   Maintains the video's natural 16:9 aspect ratio across Mobile, Tablet, Desktop,
+   ensuring the video, Earth, and logo shield scale synchronously without detaching,
+   cropping, or overlapping. */
+.tc-video-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-aspect-ratio: 16/9) {
+  .tc-video-stage {
+    width: auto;
+    height: 100vh;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-aspect-ratio: 16/9) {
+  .tc-video-stage {
+    width: 100vw;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
 }
 
 .tc-video-element {
@@ -53,7 +87,7 @@
 /* ==========================================================================
    Seamless Logo Blending Shield
    Dissolves the video's harsh rectangular logo background and renders the
-   pristine transparent official TallyConnect branding.
+   pristine transparent official TallyConnect branding, locked to the stage.
    ========================================================================== */
 
 .tc-logo-floating-brand,
@@ -82,7 +116,8 @@
 }
 
 .tc-logo-brand-inner img {
-  height: clamp(34px, 4.5vh, 52px);
+  height: clamp(24px, 4.5vh, 52px);
+  max-height: 8vw;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 0 16px rgba(225, 29, 72, 0.45)) drop-shadow(0 0 32px rgba(56, 189, 248, 0.35));
@@ -132,6 +167,7 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   color: #f1f5f9;
+  white-space: nowrap;
 }
 
 .tc-status-beacon {
@@ -189,6 +225,38 @@
 .tc-loader-skip-btn:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   Mobile & Tablet Responsive Optimizations
+   ========================================================================== */
+@media (max-width: 768px) {
+  .tc-logo-brand-inner img {
+    height: clamp(20px, 6.2vw, 34px);
+    max-height: none;
+  }
+
+  .tc-loader-hud {
+    bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    gap: 10px;
+  }
+
+  .tc-status-pill {
+    padding: 6px 16px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    gap: 8px;
+  }
+
+  .tc-progress-track {
+    width: min(75vw, 240px);
+    height: 3.5px;
+  }
+
+  .tc-loader-skip-btn {
+    font-size: 10.5px;
+    padding: 6px 12px;
+  }
 }
 
 /* Accessibility: respect user motion preferences */

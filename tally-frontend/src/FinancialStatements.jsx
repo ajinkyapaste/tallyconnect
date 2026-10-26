@@ -7,7 +7,7 @@ import {
   FileText, Calendar, ArrowUpRight, ArrowDownRight, Layers, X,
   Pin, Sparkles
 } from 'lucide-react';
-import { ExportDropdown, createHoldTouchHandler } from './uiUtils';
+import { ExportDropdown, ScheduleButton, createHoldTouchHandler } from './uiUtils';
 import StandardDateFilter from './StandardDateFilter';
 import { useCardGridPreferences, CardContextMenu, HiddenCardsChip } from './CardGridPreferences';
 
@@ -105,6 +105,83 @@ export function ProfitLossView({
     });
   }, [filteredVouchers, searchQuery]);
 
+  const pnlCards = useMemo(() => [
+    {
+      id: 'pnl-sales',
+      key: 'sales',
+      label: 'Sales Revenue',
+      value: inr(sales),
+      note: `${financialSummary?.salesCount || 0} sales invoice(s)`,
+      icon: TrendingUp,
+      color: '#10b981',
+      tint: '16, 185, 129'
+    },
+    {
+      id: 'pnl-purchases',
+      key: 'purchases',
+      label: 'Cost of Sales (Purchases)',
+      value: inr(purchases),
+      note: `${financialSummary?.purchasesCount || 0} purchase bill(s)`,
+      icon: TrendingDown,
+      color: '#ef4444',
+      tint: '239, 68, 68'
+    },
+    {
+      id: 'pnl-gross-profit',
+      key: 'gross-profit',
+      label: 'Gross Profit',
+      value: inr(grossProfit),
+      note: `Margin: ${grossProfitMargin.toFixed(1)}% of sales`,
+      icon: BarChart2,
+      color: grossProfit >= 0 ? '#0ea5e9' : '#ef4444',
+      tint: '14, 165, 233'
+    },
+    {
+      id: 'pnl-operating-expenses',
+      key: 'operating-expenses',
+      label: 'Operating Expenses',
+      value: inr(indirectExpenses + directExpenses),
+      note: 'Operational payments & overheads',
+      icon: Upload,
+      color: '#f59e0b',
+      tint: '245, 158, 11'
+    },
+    {
+      id: 'pnl-net-profit',
+      key: 'net-profit',
+      label: 'Net Profit / (Loss)',
+      value: inr(netProfit),
+      note: `Net Margin: ${netProfitMargin.toFixed(1)}%`,
+      icon: isProfit ? TrendingUp : TrendingDown,
+      color: isProfit ? '#10b981' : '#ef4444',
+      tint: isProfit ? '16, 185, 129' : '239, 68, 68',
+      highlight: true
+    }
+  ], [sales, purchases, grossProfit, grossProfitMargin, indirectExpenses, directExpenses, netProfit, netProfitMargin, isProfit, financialSummary]);
+
+  const {
+    visibleCards: visiblePnlCards,
+    hiddenCards: hiddenPnlCards,
+    pinned: pinnedPnlCards,
+    cardSizes: pnlCardSizes,
+    setCardSize: setPnlCardSize,
+    menu: pnlMenu,
+    setMenu: setPnlMenu,
+    togglePin: togglePnlPin,
+    moveUp: moveUpPnlCard,
+    moveDown: moveDownPnlCard,
+    hide: hidePnlCard,
+    unhide: unhidePnlCard,
+    unhideAll: unhideAllPnlCards,
+    reset: resetPnlCards,
+    handleDragStart: onPnlDragStart,
+    handleDragOver: onPnlDragOver,
+    handleDrop: onPnlDrop,
+    handleDragEnd: onPnlDragEnd,
+    openMenu: openPnlMenu,
+    isPinned: isPnlPinned,
+  } = useCardGridPreferences('tc_pnl_kpi', pnlCards);
+
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {loading && (
@@ -169,111 +246,105 @@ export function ProfitLossView({
           />
 
           <ExportDropdown onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+          <ScheduleButton onClick={() => window.__tc_show_toast ? window.__tc_show_toast('Schedule email configured for Profit & Loss') : alert('Schedule email configured for Profit & Loss')} />
         </div>
       </div>
 
-      {/* KPI 5-Card Ribbon */}
+      {/* Draggable & Resizable Summary Cards */}
+      <HiddenCardsChip hiddenCards={hiddenPnlCards} onUnhide={unhidePnlCard} />
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
         gap: '14px'
       }}>
-        {/* Card 1: Revenue */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Sales Revenue
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <TrendingUp size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: '#10b981' }}>{inr(sales)}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            {financialSummary.salesCount} sales invoice(s)
-          </div>
-        </div>
+        {visiblePnlCards.map((c) => {
+          const Icon = c.icon || BarChart2;
+          const pinnedCard = isPnlPinned(c.id);
+          const size = pnlCardSizes[c.id] || 'normal';
+          const isWide = size === 'wide';
+          const isCompact = size === 'compact';
 
-        {/* Card 2: Cost of Sales */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Cost of Sales (Purchases)
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239, 68, 68, 0.12)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <TrendingDown size={15} />
+          return (
+            <div
+              key={c.id}
+              className={`glass-panel draggable-card ${pinnedCard ? 'is-pinned' : ''} ${isWide ? 'is-wide' : ''} ${isCompact ? 'is-compact' : ''}`}
+              role="button"
+              tabIndex={0}
+              draggable={true}
+              onDragStart={(e) => onPnlDragStart(e, c.id)}
+              onDragOver={(e) => onPnlDragOver(e, c.id)}
+              onDrop={(e) => onPnlDrop(e, c.id)}
+              onDragEnd={onPnlDragEnd}
+              onContextMenu={(e) => openPnlMenu(e, c)}
+              {...createHoldTouchHandler((pos) => openPnlMenu({ clientX: pos.x, clientY: pos.y, preventDefault: () => {} }, c))}
+              title={`${c.label} • Drag to reorder • Right-click or hold for options`}
+              style={{
+                padding: isCompact ? '12px 14px' : '18px 20px',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                gridColumn: isWide ? 'span 2' : undefined,
+                border: pinnedCard ? `2px solid rgb(${c.tint})` : (c.highlight ? (isProfit ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)') : undefined),
+                background: pinnedCard ? `rgba(${c.tint}, 0.08)` : (c.highlight ? (isProfit ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.02) 100%), var(--glass-bg)' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(185, 28, 28, 0.02) 100%), var(--glass-bg)') : undefined),
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              {pinnedCard && (
+                <span className="card-pin-badge" title="Pinned to top">
+                  <Pin size={11} />
+                </span>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isCompact ? '4px' : '8px' }}>
+                <span style={{ fontSize: isCompact ? '11px' : '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
+                  {c.label}
+                </span>
+                <div style={{
+                  width: isCompact ? 24 : 28,
+                  height: isCompact ? 24 : 28,
+                  borderRadius: 8,
+                  background: `rgba(${c.tint}, 0.12)`,
+                  color: c.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Icon size={isCompact ? 13 : 15} />
+                </div>
+              </div>
+              <div style={{ fontSize: isCompact ? '18px' : '22px', fontWeight: 800, color: c.color }}>
+                {c.value}
+              </div>
+              {c.note && (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
+                  {c.note}
+                </div>
+              )}
             </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: '#ef4444' }}>{inr(purchases)}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            {financialSummary.purchasesCount} purchase bill(s)
-          </div>
-        </div>
-
-        {/* Card 3: Gross Profit */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Gross Profit
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(14, 165, 233, 0.12)', color: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BarChart2 size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: grossProfit >= 0 ? 'var(--text-dark)' : '#ef4444' }}>
-            {inr(grossProfit)}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Margin: {grossProfitMargin.toFixed(1)}% of sales
-          </div>
-        </div>
-
-        {/* Card 4: Operating Expenses */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Operating Expenses
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Upload size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-dark)' }}>
-            {inr(indirectExpenses + directExpenses)}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Operational payments & overheads
-          </div>
-        </div>
-
-        {/* Card 5: Net Profit */}
-        <div className="glass-panel" style={{
-          padding: '18px 20px', borderRadius: '16px',
-          background: isProfit
-            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.02) 100%), var(--glass-bg)'
-            : 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(185, 28, 28, 0.02) 100%), var(--glass-bg)',
-          border: isProfit ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: isProfit ? '#10b981' : '#ef4444', letterSpacing: '0.4px' }}>
-              Net Profit / (Loss)
-            </span>
-            <div style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: isProfit ? '#10b981' : '#ef4444', color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              {isProfit ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
-            </div>
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: 850, color: isProfit ? '#10b981' : '#ef4444' }}>
-            {inr(netProfit)}
-          </div>
-          <div style={{ fontSize: '11px', color: isProfit ? '#059669' : '#dc2626', fontWeight: 700, marginTop: '4px' }}>
-            Net Margin: {netProfitMargin.toFixed(1)}%
-          </div>
-        </div>
+          );
+        })}
       </div>
+
+      <CardContextMenu
+        menu={pnlMenu}
+        onClose={() => setPnlMenu(null)}
+        pinned={pinnedPnlCards}
+        onTogglePin={togglePnlPin}
+        onMoveUp={moveUpPnlCard}
+        onMoveDown={moveDownPnlCard}
+        onHide={hidePnlCard}
+        onReset={resetPnlCards}
+        onUnhideAll={unhideAllPnlCards}
+        hiddenCount={hiddenPnlCards.length}
+        cardSizes={pnlCardSizes}
+        onSetSize={setPnlCardSize}
+        onShare={(c) => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${c.label}: ${c.value} (Profit & Loss)`);
+          }
+        }}
+      />
 
       {/* Tabs Switcher: Statement | Monthly Trend | Transaction Entries */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
@@ -571,6 +642,72 @@ export function BalanceSheetView({
     }).filter(l => !searchTerm || String(l.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
   }, [ledgers, drillGroup, searchTerm]);
 
+  const bsCards = useMemo(() => [
+    {
+      id: 'bs-assets',
+      key: 'assets',
+      label: 'Total Assets',
+      value: inr(totalAssets),
+      note: 'Current & Fixed Holdings',
+      icon: Layers,
+      color: '#0ea5e9',
+      tint: '14, 165, 233'
+    },
+    {
+      id: 'bs-liabilities',
+      key: 'liabilities',
+      label: 'Liabilities & Equity',
+      value: inr(totalLiabilities),
+      note: 'Creditors, Taxes & Capital',
+      icon: BookOpen,
+      color: '#e11d48',
+      tint: '225, 29, 72'
+    },
+    {
+      id: 'bs-working-capital',
+      key: 'working-capital',
+      label: 'Working Capital',
+      value: inr(workingCapital),
+      note: 'Current Assets minus Current Liab.',
+      icon: Wallet,
+      color: workingCapital >= 0 ? '#10b981' : '#ef4444',
+      tint: workingCapital >= 0 ? '16, 185, 129' : '239, 68, 68'
+    },
+    {
+      id: 'bs-current-ratio',
+      key: 'current-ratio',
+      label: 'Current Ratio',
+      value: `${currentRatio}x`,
+      note: 'Standard liquidity benchmark > 1.3x',
+      icon: TrendingUp,
+      color: 'var(--text-dark)',
+      tint: '245, 158, 11'
+    }
+  ], [totalAssets, totalLiabilities, workingCapital, currentRatio]);
+
+  const {
+    visibleCards: visibleBsCards,
+    hiddenCards: hiddenBsCards,
+    pinned: pinnedBsCards,
+    cardSizes: bsCardSizes,
+    setCardSize: setBsCardSize,
+    menu: bsMenu,
+    setMenu: setBsMenu,
+    togglePin: toggleBsPin,
+    moveUp: moveUpBsCard,
+    moveDown: moveDownBsCard,
+    hide: hideBsCard,
+    unhide: unhideBsCard,
+    unhideAll: unhideAllBsCards,
+    reset: resetBsCards,
+    handleDragStart: onBsDragStart,
+    handleDragOver: onBsDragOver,
+    handleDrop: onBsDrop,
+    handleDragEnd: onBsDragEnd,
+    openMenu: openBsMenu,
+    isPinned: isBsPinned,
+  } = useCardGridPreferences('tc_balance_sheet_kpi', bsCards);
+
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {loading && (
@@ -635,83 +772,105 @@ export function BalanceSheetView({
             />
           )}
           <ExportDropdown onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+          <ScheduleButton onClick={() => window.__tc_show_toast ? window.__tc_show_toast('Schedule email configured for Balance Sheet') : alert('Schedule email configured for Balance Sheet')} />
         </div>
       </div>
 
-      {/* Financial Health Metrics Ribbon */}
+      {/* Draggable & Resizable Summary Cards */}
+      <HiddenCardsChip hiddenCards={hiddenBsCards} onUnhide={unhideBsCard} />
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
         gap: '14px'
       }}>
-        {/* Total Assets */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Total Assets
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(14, 165, 233, 0.12)', color: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Layers size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: '#0ea5e9' }}>{inr(totalAssets)}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Current & Fixed Holdings
-          </div>
-        </div>
+        {visibleBsCards.map((c) => {
+          const Icon = c.icon || Layers;
+          const pinnedCard = isBsPinned(c.id);
+          const size = bsCardSizes[c.id] || 'normal';
+          const isWide = size === 'wide';
+          const isCompact = size === 'compact';
 
-        {/* Total Liabilities & Equity */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Liabilities & Equity
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(225, 29, 72, 0.12)', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BookOpen size={15} />
+          return (
+            <div
+              key={c.id}
+              className={`glass-panel draggable-card ${pinnedCard ? 'is-pinned' : ''} ${isWide ? 'is-wide' : ''} ${isCompact ? 'is-compact' : ''}`}
+              role="button"
+              tabIndex={0}
+              draggable={true}
+              onDragStart={(e) => onBsDragStart(e, c.id)}
+              onDragOver={(e) => onBsDragOver(e, c.id)}
+              onDrop={(e) => onBsDrop(e, c.id)}
+              onDragEnd={onBsDragEnd}
+              onContextMenu={(e) => openBsMenu(e, c)}
+              {...createHoldTouchHandler((pos) => openBsMenu({ clientX: pos.x, clientY: pos.y, preventDefault: () => {} }, c))}
+              title={`${c.label} • Drag to reorder • Right-click or hold for options`}
+              style={{
+                padding: isCompact ? '12px 14px' : '18px 20px',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                gridColumn: isWide ? 'span 2' : undefined,
+                border: pinnedCard ? `2px solid rgb(${c.tint})` : undefined,
+                background: pinnedCard ? `rgba(${c.tint}, 0.08)` : undefined,
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              {pinnedCard && (
+                <span className="card-pin-badge" title="Pinned to top">
+                  <Pin size={11} />
+                </span>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isCompact ? '4px' : '8px' }}>
+                <span style={{ fontSize: isCompact ? '11px' : '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
+                  {c.label}
+                </span>
+                <div style={{
+                  width: isCompact ? 24 : 28,
+                  height: isCompact ? 24 : 28,
+                  borderRadius: 8,
+                  background: `rgba(${c.tint}, 0.12)`,
+                  color: c.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Icon size={isCompact ? 13 : 15} />
+                </div>
+              </div>
+              <div style={{ fontSize: isCompact ? '18px' : '22px', fontWeight: 800, color: c.color }}>
+                {c.value}
+              </div>
+              {c.note && (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
+                  {c.note}
+                </div>
+              )}
             </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: '#e11d48' }}>{inr(totalLiabilities)}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Creditors, Taxes & Capital
-          </div>
-        </div>
-
-        {/* Working Capital */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Working Capital
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Wallet size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: workingCapital >= 0 ? '#10b981' : '#ef4444' }}>
-            {inr(workingCapital)}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Current Assets minus Current Liab.
-          </div>
-        </div>
-
-        {/* Current Ratio */}
-        <div className="glass-panel" style={{ padding: '18px 20px', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.4px' }}>
-              Current Ratio
-            </span>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <TrendingUp size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-dark)' }}>
-            {currentRatio}x
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Standard liquidity benchmark &gt; 1.3x
-          </div>
-        </div>
+          );
+        })}
       </div>
+
+      <CardContextMenu
+        menu={bsMenu}
+        onClose={() => setBsMenu(null)}
+        pinned={pinnedBsCards}
+        onTogglePin={toggleBsPin}
+        onMoveUp={moveUpBsCard}
+        onMoveDown={moveDownBsCard}
+        onHide={hideBsCard}
+        onReset={resetBsCards}
+        onUnhideAll={unhideAllBsCards}
+        hiddenCount={hiddenBsCards.length}
+        cardSizes={bsCardSizes}
+        onSetSize={setBsCardSize}
+        onShare={(c) => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${c.label}: ${c.value} (Balance Sheet)`);
+          }
+        }}
+      />
 
       {/* Dual Column Standard T-Format Balance Sheet */}
       <div style={{
@@ -1301,6 +1460,72 @@ export function ExpensesDetailedView({
     });
   }, [filteredVouchers, searchExp]);
 
+  const expensesCards = useMemo(() => [
+    {
+      id: 'exp-total',
+      key: 'total',
+      label: 'Total Outflow',
+      value: inr(total),
+      note: 'Direct purchases + payments',
+      icon: Upload,
+      color: '#ef4444',
+      tint: '239, 68, 68'
+    },
+    {
+      id: 'exp-direct',
+      key: 'direct',
+      label: 'Direct Purchases & Material',
+      value: inr(direct),
+      note: `${financialSummary?.purchasesCount || 0} purchase voucher(s)`,
+      icon: Package,
+      color: 'var(--text-dark)',
+      tint: '59, 130, 246'
+    },
+    {
+      id: 'exp-indirect',
+      key: 'indirect',
+      label: 'Indirect Operational Payments',
+      value: inr(indirect),
+      note: `${financialSummary?.paymentsCount || 0} payment voucher(s)`,
+      icon: CreditCard,
+      color: 'var(--text-dark)',
+      tint: '245, 158, 11'
+    },
+    {
+      id: 'exp-ledgers',
+      key: 'ledgers',
+      label: 'Expense Head Accounts',
+      value: `${expenseLedgers.length} Ledgers`,
+      note: 'Classified overheads',
+      icon: FileSpreadsheet,
+      color: 'var(--text-dark)',
+      tint: '16, 185, 129'
+    }
+  ], [total, direct, indirect, expenseLedgers, financialSummary]);
+
+  const {
+    visibleCards: visibleExpCards,
+    hiddenCards: hiddenExpCards,
+    pinned: pinnedExpCards,
+    cardSizes: expCardSizes,
+    setCardSize: setExpCardSize,
+    menu: expMenu,
+    setMenu: setExpMenu,
+    togglePin: toggleExpPin,
+    moveUp: moveUpExpCard,
+    moveDown: moveDownExpCard,
+    hide: hideExpCard,
+    unhide: unhideExpCard,
+    unhideAll: unhideAllExpCards,
+    reset: resetExpCards,
+    handleDragStart: onExpDragStart,
+    handleDragOver: onExpDragOver,
+    handleDrop: onExpDrop,
+    handleDragEnd: onExpDragEnd,
+    openMenu: openExpMenu,
+    isPinned: isExpPinned,
+  } = useCardGridPreferences('tc_expenses_kpi', expensesCards);
+
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {loading && (
@@ -1373,63 +1598,105 @@ export function ExpensesDetailedView({
             </button>
           )}
           <ExportDropdown onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+          <ScheduleButton onClick={() => window.__tc_show_toast ? window.__tc_show_toast('Schedule email configured for Expenses Analysis') : alert('Schedule email configured for Expenses Analysis')} />
         </div>
       </div>
 
-      {/* KPI Ribbon */}
+      {/* Draggable & Resizable Summary Cards */}
+      <HiddenCardsChip hiddenCards={hiddenExpCards} onUnhide={unhideExpCard} />
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
         gap: '14px'
       }}>
-        <div className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Total Outflow
-          </span>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: '#ef4444', marginTop: '4px' }}>
-            {inr(total)}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Direct purchases + payments
-          </div>
-        </div>
+        {visibleExpCards.map((c) => {
+          const Icon = c.icon || Upload;
+          const pinnedCard = isExpPinned(c.id);
+          const size = expCardSizes[c.id] || 'normal';
+          const isWide = size === 'wide';
+          const isCompact = size === 'compact';
 
-        <div className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Direct Purchases & Material
-          </span>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {inr(direct)}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            {financialSummary.purchasesCount} purchase voucher(s)
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Indirect Operational Payments
-          </span>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {inr(indirect)}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            {financialSummary.paymentsCount} payment voucher(s)
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px 20px', borderRadius: '16px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Expense Head Accounts
-          </span>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {expenseLedgers.length} Ledgers
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
-            Classified overheads
-          </div>
-        </div>
+          return (
+            <div
+              key={c.id}
+              className={`glass-panel draggable-card ${pinnedCard ? 'is-pinned' : ''} ${isWide ? 'is-wide' : ''} ${isCompact ? 'is-compact' : ''}`}
+              role="button"
+              tabIndex={0}
+              draggable={true}
+              onDragStart={(e) => onExpDragStart(e, c.id)}
+              onDragOver={(e) => onExpDragOver(e, c.id)}
+              onDrop={(e) => onExpDrop(e, c.id)}
+              onDragEnd={onExpDragEnd}
+              onContextMenu={(e) => openExpMenu(e, c)}
+              {...createHoldTouchHandler((pos) => openExpMenu({ clientX: pos.x, clientY: pos.y, preventDefault: () => {} }, c))}
+              title={`${c.label} • Drag to reorder • Right-click or hold for options`}
+              style={{
+                padding: isCompact ? '12px 14px' : '16px 20px',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                gridColumn: isWide ? 'span 2' : undefined,
+                border: pinnedCard ? `2px solid rgb(${c.tint})` : undefined,
+                background: pinnedCard ? `rgba(${c.tint}, 0.08)` : undefined,
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              {pinnedCard && (
+                <span className="card-pin-badge" title="Pinned to top">
+                  <Pin size={11} />
+                </span>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isCompact ? '4px' : '6px' }}>
+                <span style={{ fontSize: isCompact ? '11px' : '11.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  {c.label}
+                </span>
+                <div style={{
+                  width: isCompact ? 24 : 28,
+                  height: isCompact ? 24 : 28,
+                  borderRadius: 8,
+                  background: `rgba(${c.tint}, 0.12)`,
+                  color: c.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Icon size={isCompact ? 13 : 15} />
+                </div>
+              </div>
+              <div style={{ fontSize: isCompact ? '18px' : '22px', fontWeight: 800, color: c.color, marginTop: '2px' }}>
+                {c.value}
+              </div>
+              {c.note && (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
+                  {c.note}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      <CardContextMenu
+        menu={expMenu}
+        onClose={() => setExpMenu(null)}
+        pinned={pinnedExpCards}
+        onTogglePin={toggleExpPin}
+        onMoveUp={moveUpExpCard}
+        onMoveDown={moveDownExpCard}
+        onHide={hideExpCard}
+        onReset={resetExpCards}
+        onUnhideAll={unhideAllExpCards}
+        hiddenCount={hiddenExpCards.length}
+        cardSizes={expCardSizes}
+        onSetSize={setExpCardSize}
+        onShare={(c) => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${c.label}: ${c.value} (Expenses Analysis)`);
+          }
+        }}
+      />
 
       {/* Expense Vouchers Register */}
       <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
@@ -1702,6 +1969,8 @@ export function CashFlowView({
     menu: statementMenu,
     setMenu: setStatementMenu,
     togglePin: toggleStatementPin,
+    moveUp: moveUpStatementCard,
+    moveDown: moveDownStatementCard,
     hide: hideStatementCard,
     unhide: unhideStatementCard,
     unhideAll: unhideAllStatementCards,
@@ -1758,6 +2027,7 @@ export function CashFlowView({
             onExportCSV={() => onExportCSV && onExportCSV('cash-flow')}
             onExportPDF={() => onExportPDF && onExportPDF('cash-flow')}
           />
+          <ScheduleButton onClick={() => window.__tc_show_toast ? window.__tc_show_toast('Schedule email configured for Cash Flow Statement') : alert('Schedule email configured for Cash Flow Statement')} />
         </div>
       </div>
 
@@ -1826,6 +2096,8 @@ export function CashFlowView({
         onClose={() => setStatementMenu(null)}
         pinned={pinnedStatementCards}
         onTogglePin={toggleStatementPin}
+        onMoveUp={moveUpStatementCard}
+        onMoveDown={moveDownStatementCard}
         onHide={hideStatementCard}
         onReset={resetStatementCards}
         onUnhideAll={unhideAllStatementCards}

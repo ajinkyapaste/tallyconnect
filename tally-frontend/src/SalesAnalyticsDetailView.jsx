@@ -16,10 +16,13 @@ import {
   RotateCcw,
   Search,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Pin
 } from 'lucide-react';
 import { api, getSalesAnalytics } from './api';
 import StandardDateFilter, { isWithinStandardDateRange, getStandardDateRangeLabel } from './StandardDateFilter';
+import { ExportDropdown, ScheduleButton, createHoldTouchHandler } from './uiUtils';
+import { useCardGridPreferences, CardContextMenu, HiddenCardsChip } from './CardGridPreferences';
 
 const inr = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const formatShortInr = (n) => {
@@ -340,6 +343,72 @@ export default function SalesAnalyticsDetailView({
     };
   }, [vouchers, serverAnalytics, dateFilter, customStart, customEnd]);
 
+  const salesCards = useMemo(() => [
+    {
+      id: 'sa-invoices',
+      key: 'invoices',
+      label: 'Invoices',
+      value: String(salesData.totalInvoices || 0),
+      note: 'Total sales invoices in period',
+      icon: Receipt,
+      color: 'var(--text-dark)',
+      tint: '59, 130, 246'
+    },
+    {
+      id: 'sa-avg-invoice',
+      key: 'avg-invoice',
+      label: 'Average invoice',
+      value: inr(salesData.avgInvoice),
+      note: 'Average ticket size',
+      icon: BarChart3,
+      color: 'var(--text-dark)',
+      tint: '16, 185, 129'
+    },
+    {
+      id: 'sa-customers',
+      key: 'customers',
+      label: 'Customers',
+      value: String(salesData.uniqueCustomers || 0),
+      note: 'Active buying parties',
+      icon: Users,
+      color: 'var(--text-dark)',
+      tint: '245, 158, 11'
+    },
+    {
+      id: 'sa-returns',
+      key: 'returns',
+      label: 'Returns',
+      value: inr(salesData.returns),
+      note: 'Credit notes and adjustments',
+      icon: RotateCcw,
+      color: 'var(--text-dark)',
+      tint: '239, 68, 68'
+    }
+  ], [salesData.totalInvoices, salesData.avgInvoice, salesData.uniqueCustomers, salesData.returns]);
+
+  const {
+    visibleCards: visibleSalesCards,
+    hiddenCards: hiddenSalesCards,
+    pinned: pinnedSalesCards,
+    cardSizes: salesCardSizes,
+    setCardSize: setSalesCardSize,
+    menu: salesMenu,
+    setMenu: setSalesMenu,
+    togglePin: toggleSalesPin,
+    moveUp: moveUpSalesCard,
+    moveDown: moveDownSalesCard,
+    hide: hideSalesCard,
+    unhide: unhideSalesCard,
+    unhideAll: unhideAllSalesCards,
+    reset: resetSalesCards,
+    handleDragStart: onSalesDragStart,
+    handleDragOver: onSalesDragOver,
+    handleDrop: onSalesDrop,
+    handleDragEnd: onSalesDragEnd,
+    openMenu: openSalesMenu,
+    isPinned: isSalesPinned,
+  } = useCardGridPreferences('tc_sales_analytics_kpi', salesCards);
+
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto', animation: 'fadeIn 0.25s ease-out' }}>
       {/* ---------------- Top Navigation Header ---------------- */}
@@ -434,26 +503,11 @@ export default function SalesAnalyticsDetailView({
             {fetchingLive ? 'Refreshing…' : 'Refresh'}
           </button>
 
-          {onExportCSV && (
-            <button
-              onClick={onExportCSV}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                border: '1px solid var(--glass-border)',
-                background: 'var(--glass-bg, rgba(255,255,255,0.8))',
-                color: 'var(--text-dark)',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              <Download size={15} /> Export CSV
-            </button>
-          )}
+          <ExportDropdown onExportCSV={onExportCSV} onExportPDF={() => {
+            if (window.print) window.print();
+            else if (window.__tc_show_toast) window.__tc_show_toast('PDF Export requested');
+          }} />
+          <ScheduleButton onClick={() => window.__tc_show_toast ? window.__tc_show_toast('Schedule email configured for Sales Analytics') : alert('Schedule email configured for Sales Analytics')} />
         </div>
       </div>
 
@@ -501,64 +555,101 @@ export default function SalesAnalyticsDetailView({
       </div>
 
       {/* ---------------- 2x2 Metric Grid (Matching Screenshot 4) ---------------- */}
+      <HiddenCardsChip hiddenCards={hiddenSalesCards} onUnhide={unhideSalesCard} />
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
         gap: '14px',
         marginBottom: '14px'
       }}>
-        {/* Invoices */}
-        <div className="glass-panel" style={{
-          padding: '20px 24px',
-          borderRadius: '24px',
-          background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-          border: '1px solid var(--glass-border)'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>Invoices</div>
-          <div style={{ fontSize: '28px', fontWeight: 850, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {salesData.totalInvoices}
-          </div>
-        </div>
+        {visibleSalesCards.map((c) => {
+          const Icon = c.icon || BarChart3;
+          const pinnedCard = isSalesPinned(c.id);
+          const size = salesCardSizes[c.id] || 'normal';
+          const isWide = size === 'wide';
+          const isCompact = size === 'compact';
 
-        {/* Average invoice */}
-        <div className="glass-panel" style={{
-          padding: '20px 24px',
-          borderRadius: '24px',
-          background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-          border: '1px solid var(--glass-border)'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>Average invoice</div>
-          <div style={{ fontSize: '28px', fontWeight: 850, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {inr(salesData.avgInvoice)}
-          </div>
-        </div>
-
-        {/* Customers */}
-        <div className="glass-panel" style={{
-          padding: '20px 24px',
-          borderRadius: '24px',
-          background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-          border: '1px solid var(--glass-border)'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>Customers</div>
-          <div style={{ fontSize: '28px', fontWeight: 850, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {salesData.uniqueCustomers}
-          </div>
-        </div>
-
-        {/* Returns */}
-        <div className="glass-panel" style={{
-          padding: '20px 24px',
-          borderRadius: '24px',
-          background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-          border: '1px solid var(--glass-border)'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>Returns</div>
-          <div style={{ fontSize: '28px', fontWeight: 850, color: 'var(--text-dark)', marginTop: '4px' }}>
-            {inr(salesData.returns)}
-          </div>
-        </div>
+          return (
+            <div
+              key={c.id}
+              className={`glass-panel draggable-card ${pinnedCard ? 'is-pinned' : ''} ${isWide ? 'is-wide' : ''} ${isCompact ? 'is-compact' : ''}`}
+              role="button"
+              tabIndex={0}
+              draggable={true}
+              onDragStart={(e) => onSalesDragStart(e, c.id)}
+              onDragOver={(e) => onSalesDragOver(e, c.id)}
+              onDrop={(e) => onSalesDrop(e, c.id)}
+              onDragEnd={onSalesDragEnd}
+              onContextMenu={(e) => openSalesMenu(e, c)}
+              {...createHoldTouchHandler((pos) => openSalesMenu({ clientX: pos.x, clientY: pos.y, preventDefault: () => {} }, c))}
+              title={`${c.label} • Drag to reorder • Right-click or hold for options`}
+              style={{
+                padding: isCompact ? '14px 18px' : '20px 24px',
+                borderRadius: '24px',
+                background: pinnedCard ? `rgba(${c.tint}, 0.08)` : 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
+                border: pinnedCard ? `2px solid rgb(${c.tint})` : '1px solid var(--glass-border)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                gridColumn: isWide ? 'span 2' : undefined,
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              {pinnedCard && (
+                <span className="card-pin-badge" title="Pinned to top">
+                  <Pin size={11} />
+                </span>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isCompact ? '4px' : '8px' }}>
+                <span style={{ fontSize: isCompact ? '12px' : '13px', fontWeight: 700, color: 'var(--text-muted)' }}>
+                  {c.label}
+                </span>
+                <div style={{
+                  width: isCompact ? 24 : 28,
+                  height: isCompact ? 24 : 28,
+                  borderRadius: 8,
+                  background: `rgba(${c.tint}, 0.12)`,
+                  color: `rgb(${c.tint})`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Icon size={isCompact ? 13 : 15} />
+                </div>
+              </div>
+              <div style={{ fontSize: isCompact ? '22px' : '28px', fontWeight: 850, color: 'var(--text-dark)', marginTop: '4px' }}>
+                {c.value}
+              </div>
+              {c.note && (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
+                  {c.note}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      <CardContextMenu
+        menu={salesMenu}
+        onClose={() => setSalesMenu(null)}
+        pinned={pinnedSalesCards}
+        onTogglePin={toggleSalesPin}
+        onMoveUp={moveUpSalesCard}
+        onMoveDown={moveDownSalesCard}
+        onHide={hideSalesCard}
+        onReset={resetSalesCards}
+        onUnhideAll={unhideAllSalesCards}
+        hiddenCount={hiddenSalesCards.length}
+        cardSizes={salesCardSizes}
+        onSetSize={setSalesCardSize}
+        onShare={(c) => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${c.label}: ${c.value} (Sales Analytics)`);
+          }
+        }}
+      />
 
       {/* ---------------- Net sales (after returns) Card (Matching Screenshot 4) ---------------- */}
       <div className="glass-panel" style={{

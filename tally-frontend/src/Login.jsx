@@ -177,14 +177,14 @@ export default function Login({ onLogin }) {
                       <button
                         type="button"
                         onClick={() => setLoginType('USER')}
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: loginType === 'USER' ? '#fff' : 'transparent', color: loginType === 'USER' ? 'var(--primary-color)' : 'rgba(0,0,0,0.6)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', boxShadow: loginType === 'USER' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                        style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: 'none', background: loginType === 'USER' ? '#fff' : 'transparent', color: loginType === 'USER' ? 'var(--primary-color)' : 'rgba(0,0,0,0.6)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', boxShadow: loginType === 'USER' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', touchAction: 'manipulation' }}
                       >
                         User
                       </button>
                       <button
                         type="button"
                         onClick={() => setLoginType('ADMIN')}
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: loginType === 'ADMIN' ? '#fff' : 'transparent', color: loginType === 'ADMIN' ? 'var(--primary-color)' : 'rgba(0,0,0,0.6)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', boxShadow: loginType === 'ADMIN' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                        style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: 'none', background: loginType === 'ADMIN' ? '#fff' : 'transparent', color: loginType === 'ADMIN' ? 'var(--primary-color)' : 'rgba(0,0,0,0.6)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', boxShadow: loginType === 'ADMIN' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', touchAction: 'manipulation' }}
                       >
                         Admin
                       </button>
@@ -266,7 +266,7 @@ export default function Login({ onLogin }) {
             {error && <p className="auth-error">{error}</p>}
             {notice && <p className="auth-notice">{notice}</p>}
 
-            <button className="btn-primary" type="submit" disabled={busy} style={{ width: '100%', marginBottom: '14px' }}>
+            <button className="btn-primary" type="submit" disabled={busy} style={{ width: '100%', minHeight: '48px', fontSize: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px', touchAction: 'manipulation' }}>
               {busy ? 'Please wait…' : mode === 'login' ? (<><LogIn size={18} /> Sign In</>) : (<><UserPlus size={18} /> Create Account</>)}
             </button>
 

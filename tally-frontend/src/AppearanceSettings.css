@@ -1,0 +1,648 @@
+/* ==========================================================================
+   AppearanceSettings.css — Bitrix24-Style Appearance & Personalization
+   ========================================================================== */
+
+.tc-appearance-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  color: var(--text-dark, #f8fafc);
+}
+
+/* Header with Back navigation */
+.tc-appearance-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.tc-appearance-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--glass-border, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+  color: var(--text-dark, #f8fafc);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tc-appearance-back-btn:hover {
+  background: var(--glass-hover, rgba(255, 255, 255, 0.15));
+  transform: translateX(-2px);
+}
+
+.tc-appearance-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  margin: 0;
+  color: var(--text-dark, #f8fafc);
+}
+
+/* Top Notification / Adaptive Glass Banner */
+.tc-appearance-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .tc-appearance-banner {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.tc-appearance-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #8b5cf6 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35);
+  flex-shrink: 0;
+}
+
+.tc-appearance-banner-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dark, #e2e8f0);
+  line-height: 1.4;
+}
+
+/* Section Container */
+.tc-appearance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.tc-appearance-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tc-appearance-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tc-appearance-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-dark, #f8fafc);
+  margin: 0;
+}
+
+.tc-appearance-count-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  letter-spacing: 0.1px;
+}
+
+.tc-appearance-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Segmented View Mode Toggle (Grid vs Scroll) */
+.tc-view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 2px;
+}
+
+.tc-view-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tc-view-mode-btn:hover {
+  color: var(--text-dark, #f8fafc);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tc-view-mode-btn.active {
+  background: var(--primary-color, #007aff);
+  color: #ffffff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+}
+
+/* Carousel Navigation Arrows */
+.tc-carousel-nav-arrows {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tc-carousel-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-dark, #f8fafc);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tc-carousel-arrow-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: scale(1.05);
+}
+
+/* --------------------------------------------------------------------------
+   Section 1: Theme Container (Grid System & Carousel)
+   -------------------------------------------------------------------------- */
+.tc-theme-container-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* 1. Responsive Grid System (Default) */
+.tc-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 11px;
+  max-height: 298px;
+  overflow-y: auto;
+  padding: 4px 2px 8px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.tc-theme-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tc-theme-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tc-theme-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.tc-theme-grid .tc-theme-card {
+  width: 100%;
+  height: 138px;
+}
+
+/* 2. Horizontal Scroll Carousel */
+.tc-theme-carousel {
+  display: flex;
+  gap: 11px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 10px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tc-theme-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tc-theme-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tc-theme-carousel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.tc-theme-carousel .tc-theme-card {
+  flex: 0 0 114px;
+  height: 138px;
+  scroll-snap-align: start;
+}
+
+/* --------------------------------------------------------------------------
+   Optimized Compact Card Design
+   -------------------------------------------------------------------------- */
+.tc-theme-card {
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.18s ease,
+              box-shadow 0.2s ease;
+  user-select: none;
+  background: #0f172a;
+}
+
+.tc-theme-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+.tc-theme-card.active {
+  border-color: #0088ff;
+  box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.45), 0 8px 24px rgba(0, 136, 255, 0.35);
+}
+
+.tc-theme-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.35s ease;
+}
+
+.tc-theme-card:hover .tc-theme-card-bg {
+  transform: scale(1.06);
+}
+
+/* Top-right active check badge */
+.tc-theme-active-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 4;
+}
+
+.tc-theme-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.85) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: 8px 7px 8px 7px;
+  gap: 5px;
+  text-align: center;
+}
+
+.tc-theme-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.1px;
+  line-height: 1.25;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tc-theme-card-btn {
+  width: 100%;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.tc-theme-card-btn.apply {
+  background: rgba(15, 23, 42, 0.72);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.tc-theme-card-btn.apply:hover {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.tc-theme-card-btn.active {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   Section 2: App theme (Light / Dark / System)
+   -------------------------------------------------------------------------- */
+.tc-app-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tc-app-theme-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.tc-app-theme-preview {
+  width: 100%;
+  height: 74px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.tc-app-theme-card:hover .tc-app-theme-preview {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.tc-app-theme-card.selected .tc-app-theme-preview {
+  border-color: #0088ff;
+  box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.3), 0 0 18px rgba(0, 136, 255, 0.3);
+}
+
+/* Phone Mockup Illustration */
+.tc-phone-mockup {
+  width: 36px;
+  height: 54px;
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 2px 5px 2px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Phone: Light mode mockup */
+.tc-phone-mockup.light {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+}
+
+.tc-phone-mockup.light .tc-phone-notch {
+  width: 12px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: #cbd5e1;
+}
+
+.tc-phone-mockup.light .tc-phone-bar {
+  width: 78%;
+  height: 3.5px;
+  border-radius: 2px;
+  background: #007aff;
+}
+
+/* Phone: Dark mode mockup */
+.tc-phone-mockup.dark {
+  background: #0a0f1d;
+  border: 1.5px solid #2563eb;
+}
+
+.tc-phone-mockup.dark .tc-phone-notch {
+  width: 12px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: #3b82f6;
+}
+
+.tc-phone-mockup.dark .tc-phone-bar {
+  width: 78%;
+  height: 3.5px;
+  border-radius: 2px;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+/* Phone: System mode mockup (Split 50/50 Light/Dark) */
+.tc-phone-mockup.system {
+  background: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, #0a0f1d 50%, #0a0f1d 100%);
+  border: 1.5px solid #3b82f6;
+}
+
+.tc-phone-mockup.system .tc-phone-notch {
+  width: 12px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #94a3b8 0%, #94a3b8 50%, #38bdf8 50%, #38bdf8 100%);
+}
+
+.tc-phone-mockup.system .tc-phone-bar {
+  width: 78%;
+  height: 3.5px;
+  border-radius: 2px;
+  background: #007aff;
+}
+
+.tc-app-theme-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark, #f8fafc);
+  letter-spacing: 0.1px;
+}
+
+/* Selected Checkmark Badge */
+.tc-selected-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.6);
+  z-index: 5;
+}
+
+/* --------------------------------------------------------------------------
+   Section 3: Text size (×1, ×1.5, ×2)
+   -------------------------------------------------------------------------- */
+.tc-text-size-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tc-text-size-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.tc-text-size-preview {
+  width: 100%;
+  height: 74px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tc-text-size-card:hover .tc-text-size-preview {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.tc-text-size-card.selected .tc-text-size-preview {
+  border-color: #0088ff;
+  box-shadow: 0 0 0 2px rgba(0, 136, 255, 0.3), 0 0 18px rgba(0, 136, 255, 0.3);
+}
+
+.tc-text-size-aa {
+  font-weight: 700;
+  color: var(--text-dark, #f8fafc);
+  letter-spacing: -0.5px;
+  user-select: none;
+}
+
+.tc-text-size-aa.size-1 {
+  font-size: 18px;
+}
+
+.tc-text-size-aa.size-1-5 {
+  font-size: 24px;
+}
+
+.tc-text-size-aa.size-2 {
+  font-size: 30px;
+}
+
+.tc-text-size-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark, #f8fafc);
+  letter-spacing: 0.2px;
+}
+
+/* Custom Background Details (Collapsible Drawer) */
+.tc-custom-bg-section {
+  margin-top: 6px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--glass-border, rgba(255, 255, 255, 0.12));
+}
+
+.tc-custom-bg-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-color, #007aff);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tc-custom-bg-toggle:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .tc-theme-grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px;
+    max-height: 260px;
+  }
+  .tc-theme-grid .tc-theme-card,
+  .tc-theme-carousel .tc-theme-card {
+    height: 124px;
+  }
+  .tc-theme-carousel .tc-theme-card {
+    flex: 0 0 102px;
+  }
+  .tc-app-theme-preview,
+  .tc-text-size-preview {
+    height: 64px;
+  }
+  .tc-phone-mockup {
+    width: 32px;
+    height: 48px;
+  }
+}

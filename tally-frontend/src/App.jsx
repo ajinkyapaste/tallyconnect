@@ -10,7 +10,7 @@ import {
   ChevronDown, Inbox, Upload,
   Star, Sparkles, Bot, Pin, Move, ExternalLink, MessageSquare, Send, EyeOff, MoreVertical, Mic,
   Megaphone, LayoutGrid, AlertTriangle, Shield, ShieldCheck, Sliders, Copy, Key,
-  List, User, ShieldAlert, Crown, Gift, MapPin
+  List, User, ShieldAlert, Crown, Gift, MapPin, Palette
 } from 'lucide-react';
 import './index.css';
 import Login from './Login';
@@ -50,6 +50,9 @@ import EinvoiceManager from './EinvoiceManager';
 import EarthLoader from './EarthLoader';
 import VideoLoader from './VideoLoader';
 import WorkingTimeClock from './WorkingTimeClock';
+import AppearanceSettings, { ALL_THEMES_PRESETS } from './AppearanceSettings';
+import AiChatbotIcon from './AiChatbotIcon';
+import BitrixContextMenu from './BitrixContextMenu';
 
 
 /* ---------------- helpers for live data ---------------- */
@@ -66,16 +69,7 @@ const shortDate = (s) =>
 
 export const CLEAN_WHITE_BG = 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #edf2f7 100%)';
 
-export const WALLPAPER_PRESETS = [
-  { id: 'beach', name: 'Coastal Beach', value: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2800&q=80', thumbnail: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80' },
-  { id: 'mountain', name: 'Mountain Lake', value: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2800&q=80', thumbnail: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80' },
-  { id: 'liquid', name: 'Abstract Liquid', value: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=2800&q=80', thumbnail: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=400&q=80' },
-  { id: 'space', name: 'Dark Space', value: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2800&q=80', thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80' },
-  { id: 'violet', name: 'Cosmic Violet', value: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=2800&q=80', thumbnail: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=400&q=80' },
-  { id: 'white', name: 'Clean White', value: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #edf2f7 100%)', thumbnail: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #edf2f7 100%)' },
-  { id: 'sunset', name: 'Sunset Aura', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', thumbnail: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-  { id: 'midnight', name: 'Midnight Deep', value: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #030712 100%)', thumbnail: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #030712 100%)' }
-];
+export const WALLPAPER_PRESETS = ALL_THEMES_PRESETS;
 
 export const formatSyncTime = (ts) => {
   if (!ts) return 'Never';
@@ -2527,7 +2521,7 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
           aria-label="Open AI Assistant"
         >
           <span className="ai-fab-icon">
-            {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+            {isOpen ? <X size={24} /> : <AiChatbotIcon size={26} color="#ffffff" glow={true} />}
           </span>
           {!isOpen && <span className="ai-fab-pulse" />}
         </button>
@@ -9800,7 +9794,18 @@ function UserProfileModal({ user, onClose, onUserUpdate }) {
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files && e.target.files[0];
+    e.target.value = '';
     if (!file) return;
+
+    if (!file.type || !file.type.startsWith('image/')) {
+      setNotice({ ok: false, msg: 'Please choose an image file (PNG, JPG or WebP).' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setNotice({ ok: false, msg: 'Avatar image must be under 5 MB.' });
+      return;
+    }
+
     setUploadingAvatar(true);
     setNotice(null);
     try {
@@ -9958,6 +9963,8 @@ const SettingsHub = ({
   bgImage, setBgImage,
   glassOpacity, setGlassOpacity,
   darkMode, setDarkMode,
+  themeMode, setThemeMode,
+  textScale, setTextScale,
   autoSync, setAutoSync,
   language, setLanguage,
   onOpenMasterUnhide,
@@ -10078,16 +10085,30 @@ const SettingsHub = ({
       };
       img.onload = () => {
         try {
-          const MAX_WIDTH = 1600;
-          const scale = Math.min(1, MAX_WIDTH / img.width);
+          const screenW = typeof window !== 'undefined' ? (window.screen?.width || window.innerWidth || 1920) : 1920;
+          const screenH = typeof window !== 'undefined' ? (window.screen?.height || window.innerHeight || 1080) : 1080;
+          const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+          const maxDim = Math.max(2560, Math.round(Math.max(screenW, screenH) * dpr));
+
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
           const width = Math.max(1, Math.round(img.width * scale));
           const height = Math.max(1, Math.round(img.height * scale));
           const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+
+          let compressed = '';
+          try {
+            compressed = canvas.toDataURL('image/webp', 0.92);
+          } catch {}
+          if (!compressed || !compressed.startsWith('data:image/webp')) {
+            compressed = canvas.toDataURL('image/jpeg', 0.90);
+          }
+
           setBgImage(compressed);
           try {
             localStorage.setItem('tc_bg', compressed);
@@ -10145,139 +10166,45 @@ const SettingsHub = ({
         </div>
       </div>
 
-      <h3 className="section-title">Personalization (Theme &amp; Color)</h3>
-      <div className="ios-form-group">
-
-        <div className="ios-input-row" style={{ display: 'block' }}>
-          <label style={{ display: 'block', marginBottom: '12px' }}>App Primary Color</label>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {predefinedColors.map((color, idx) => (
-              <div
-                key={idx}
-                onClick={() => setPrimaryColor(color.value)}
-                style={{
-                  width: 36, height: 36, borderRadius: 18, background: color.value,
-                  cursor: 'pointer', border: primaryColor === color.value ? '3px solid white' : '2px solid transparent',
-                  boxShadow: primaryColor === color.value ? '0 0 0 2px var(--glass-border)' : '0 2px 4px var(--glass-border)'
-                }}
-                title={color.name}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="ios-input-row" style={{ display: 'block' }}>
-          <label style={{ display: 'block', marginBottom: '12px' }}>Background Image</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
-            {predefinedBackgrounds.map((bg, idx) => {
-              const bgCssVal = bg.value.startsWith('linear-gradient') ? bg.value : `url('${bg.thumbnail || bg.value}')`;
-              const isSelected = bgImage === bg.value;
-              return (
+      <h3 className="section-title">Personalization (Theme &amp; Appearance)</h3>
+      <div className="ios-form-group" style={{ padding: 0, overflow: 'hidden' }}>
+        <AppearanceSettings
+          bgImage={bgImage}
+          setBgImage={setBgImage}
+          themeMode={themeMode}
+          setThemeMode={setThemeMode}
+          textScale={textScale}
+          setTextScale={setTextScale}
+          showTitle={false}
+        />
+        <div style={{ padding: '0 20px 20px 20px' }}>
+          <div className="ios-input-row" style={{ display: 'block', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '12px' }}>App Primary Color</label>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {predefinedColors.map((color, idx) => (
                 <div
-                  key={bg.id || idx}
-                  onClick={() => {
-                    setBgImage(bg.value);
-                    try { localStorage.setItem('tc_bg', bg.value); } catch { }
-                    window.dispatchEvent(new CustomEvent('tc-bg-changed', { detail: { bgImage: bg.value } }));
-                  }}
+                  key={idx}
+                  onClick={() => setPrimaryColor(color.value)}
                   style={{
-                    height: 80,
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    background: bgCssVal,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    border: isSelected ? '3px solid var(--primary-color)' : '2px solid transparent',
-                    boxShadow: isSelected ? '0 0 0 2px rgba(0, 122, 255, 0.3), 0 6px 16px rgba(0,0,0,0.15)' : '0 4px 12px rgba(0,0,0,0.08)',
-                    transition: 'all 0.15s ease',
-                    position: 'relative',
-                    overflow: 'hidden'
+                    width: 36, height: 36, borderRadius: 18, background: color.value,
+                    cursor: 'pointer', border: primaryColor === color.value ? '3px solid white' : '2px solid transparent',
+                    boxShadow: primaryColor === color.value ? '0 0 0 2px var(--glass-border)' : '0 2px 4px var(--glass-border)'
                   }}
-                  title={bg.name}
-                >
-                  <span
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      padding: '4px 6px',
-                      fontSize: '10.5px',
-                      fontWeight: 700,
-                      color: bg.value.includes('ffffff') ? '#0f172a' : '#ffffff',
-                      background: bg.value.includes('ffffff') ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.45)',
-                      backdropFilter: 'blur(4px)',
-                      textAlign: 'center',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {bg.name}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ marginTop: '16px' }}>
-            <label htmlFor="settings-custom-bg" style={{ fontSize: '13px', display: 'block', marginBottom: '6px' }}>Custom Background URL</label>
-            <input
-              id="settings-custom-bg"
-              name="custom_bg_url"
-              type="text"
-              value={bgImage.startsWith('data:') ? '' : bgImage}
-              onChange={(e) => {
-                const val = e.target.value;
-                setBgImage(val);
-                clearBgError();
-                try { localStorage.setItem('tc_bg', val); } catch { }
-                window.dispatchEvent(new CustomEvent('tc-bg-changed', { detail: { bgImage: val } }));
-              }}
-              placeholder={bgImage.startsWith('data:') ? 'Uploaded image in use — paste a URL to replace' : 'Paste image URL here...'}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'var(--glass-border)', textAlign: 'left' }}
-            />
-          </div>
-
-          <div style={{ marginTop: '16px' }}>
-            <label style={{ fontSize: '13px', display: 'block', marginBottom: '6px' }}>Or upload from your device</label>
-            <input
-              ref={bgFileRef}
-              id="settings-bg-upload"
-              name="bg_upload"
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-              onChange={handleBgUpload}
-              style={{ display: 'none' }}
-            />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={bgBusy}
-                onClick={() => bgFileRef.current && bgFileRef.current.click()}
-                style={{ padding: '10px 18px', fontSize: '14px' }}
-              >
-                <Upload size={16} /> {bgBusy ? 'Processing…' : 'Upload Image'}
-              </button>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>PNG, JPG or WebP · up to 12 MB</span>
+                  title={color.name}
+                />
+              ))}
             </div>
-            {bgError && (
-              <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger)' }}>
-                <AlertCircle size={13} style={{ verticalAlign: '-2px', marginRight: '4px' }} />
-                {bgError}
-              </p>
-            )}
           </div>
-        </div>
 
-        <div className="ios-input-row" style={{ display: 'block', padding: '16px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Sparkles size={18} color="var(--primary-color)" />
-            <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-dark)' }}>
-              Liquid Glass &amp; Transparency System
-            </h4>
+          <div className="ios-input-row" style={{ display: 'block', padding: '16px 0 0 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <Sparkles size={18} color="var(--primary-color)" />
+              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                Liquid Glass &amp; Transparency System
+              </h4>
+            </div>
+            <LiquidGlassControls isDarkMode={darkMode} onSettingsChanged={(s) => setGlassOpacity(s.opacity)} />
           </div>
-          <LiquidGlassControls isDarkMode={darkMode} onSettingsChanged={(s) => setGlassOpacity(s.opacity)} />
         </div>
       </div>
 
@@ -10288,7 +10215,11 @@ const SettingsHub = ({
           <div className="switch-container">
             <div
               className={`ios-switch ${darkMode ? 'on' : ''}`}
-              onClick={() => setDarkMode((v) => !v)}
+              onClick={() => {
+                const nextDark = !darkMode;
+                setDarkMode(nextDark);
+                if (setThemeMode) setThemeMode(nextDark ? 'dark' : 'light');
+              }}
             ></div>
           </div>
         </div>
@@ -11331,6 +11262,90 @@ const UsersManager = ({ companyGuid }) => {
     showUserNotice('All hidden users restored');
   };
 
+  const [userContextMenu, setUserContextMenu] = useState(null);
+  const [userSearchMenu, setUserSearchMenu] = useState(null);
+
+  const openUserContextMenu = (e, u) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isPinned = userPinned.includes(u.id);
+    setUserContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      title: u.username || u.email || `User #${u.id}`,
+      items: [
+        {
+          label: isPinned ? 'Unpin User from Top' : 'Pin User to Top',
+          icon: Pin,
+          onClick: () => togglePinUser(u.id)
+        },
+        {
+          label: 'Configure Permissions',
+          icon: Shield,
+          onClick: () => setPermissionsUser(u)
+        },
+        {
+          label: 'View Credentials',
+          icon: Key,
+          onClick: () => setCredentialsUser(u)
+        },
+        {
+          label: 'Hide User from View',
+          icon: EyeOff,
+          onClick: () => handleHideUser(u.id)
+        },
+        { type: 'divider' },
+        {
+          label: 'Delete User Account',
+          icon: Trash2,
+          danger: true,
+          style: { color: '#ef4444' },
+          onClick: () => handleDeleteUser(u.id)
+        }
+      ]
+    });
+  };
+
+  const openUserSearchContextMenu = (e) => {
+    e.preventDefault();
+    setUserSearchMenu({
+      x: e.clientX,
+      y: e.clientY,
+      title: 'User Filter Options',
+      items: [
+        {
+          label: 'Show All Users',
+          icon: User,
+          checked: roleFilter === '',
+          onClick: () => setRoleFilter('')
+        },
+        {
+          label: 'Filter by Admins Only',
+          icon: Crown,
+          checked: roleFilter === 'ADMIN',
+          onClick: () => setRoleFilter('ADMIN')
+        },
+        {
+          label: 'Filter by Staff Only',
+          icon: User,
+          checked: roleFilter === 'USER',
+          onClick: () => setRoleFilter('USER')
+        },
+        { type: 'divider' },
+        {
+          label: 'Reset Search & Filters',
+          icon: RotateCcw,
+          onClick: () => { setUserSearch(''); setRoleFilter(''); }
+        },
+        ...(userHidden.length > 0 ? [{
+          label: `Restore Hidden Users (${userHidden.length})`,
+          icon: Eye,
+          onClick: () => setShowUserUnhideModal(true)
+        }] : [])
+      ]
+    });
+  };
+
   const hiddenUsersList = useMemo(() => {
     return userHidden.map(id => {
       const u = users.find(x => x.id === id);
@@ -11466,22 +11481,30 @@ const UsersManager = ({ companyGuid }) => {
       );
     }
 
-    // Pinned users first, then custom drag order
-    list.sort((a, b) => {
-      const aPin = userPinned.includes(a.id);
-      const bPin = userPinned.includes(b.id);
-      if (aPin && !bPin) return -1;
-      if (!aPin && bPin) return 1;
+    // Pinned users strictly first, then custom drag order
+    const pinnedUsers = list.filter(u => userPinned.includes(u.id));
+    const unpinnedUsers = list.filter(u => !userPinned.includes(u.id));
 
-      const aIdx = userOrder.indexOf(a.id);
-      const bIdx = userOrder.indexOf(b.id);
-      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-      if (aIdx !== -1) return -1;
-      if (bIdx !== -1) return 1;
-      return 0;
-    });
+    if (userOrder && userOrder.length > 0) {
+      pinnedUsers.sort((a, b) => {
+        const aIdx = userOrder.indexOf(a.id);
+        const bIdx = userOrder.indexOf(b.id);
+        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        if (aIdx !== -1) return -1;
+        if (bIdx !== -1) return 1;
+        return 0;
+      });
+      unpinnedUsers.sort((a, b) => {
+        const aIdx = userOrder.indexOf(a.id);
+        const bIdx = userOrder.indexOf(b.id);
+        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        if (aIdx !== -1) return -1;
+        if (bIdx !== -1) return 1;
+        return 0;
+      });
+    }
 
-    return list;
+    return [...pinnedUsers, ...unpinnedUsers];
   }, [users, roleFilter, userSearch, userHidden, userPinned, userOrder]);
 
   const paginatedUsers = useMemo(() => {
@@ -12702,13 +12725,19 @@ const UsersManager = ({ companyGuid }) => {
             {/* Search and Role Filter Pills */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               {/* Search Input */}
-              <div className="header-search" style={{ width: '220px', background: 'var(--glass-bg)' }}>
+              <div
+                className="header-search"
+                onContextMenu={openUserSearchContextMenu}
+                style={{ width: '220px', background: 'var(--glass-bg)', cursor: 'context-menu' }}
+                title="Right-click for filter options"
+              >
                 <Search size={15} color="var(--text-muted)" />
                 <input
                   type="text"
                   placeholder="Search users..."
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
+                  onContextMenu={openUserSearchContextMenu}
                 />
                 {userSearch && (
                   <button
@@ -12900,6 +12929,7 @@ const UsersManager = ({ companyGuid }) => {
                       onDragOver={(e) => handleUserDragOver(u.id, e)}
                       onDrop={(e) => handleUserDrop(u.id, e)}
                       onDragEnd={() => { setDraggedUserId(null); setDragOverUserId(null); }}
+                      onContextMenu={(e) => openUserContextMenu(e, u)}
                       style={{
                         padding: '20px',
                         borderRadius: '18px',
@@ -13248,6 +13278,7 @@ const UsersManager = ({ companyGuid }) => {
                           onDragOver={(e) => handleUserDragOver(u.id, e)}
                           onDrop={(e) => handleUserDrop(u.id, e)}
                           onDragEnd={() => { setDraggedUserId(null); setDragOverUserId(null); }}
+                          onContextMenu={(e) => openUserContextMenu(e, u)}
                           style={{
                             background: isDragOver
                               ? 'rgba(0, 122, 255, 0.08)'
@@ -13626,6 +13657,20 @@ const UsersManager = ({ companyGuid }) => {
         onUnhideOne={handleUnhideOneUser}
         onUnhideAll={handleUnhideAllUsers}
         title="Hidden Team Members"
+      />
+
+      {/* User Context Menus */}
+      <BitrixContextMenu
+        menu={userContextMenu}
+        onClose={() => setUserContextMenu(null)}
+        title={userContextMenu?.title}
+        items={userContextMenu?.items}
+      />
+      <BitrixContextMenu
+        menu={userSearchMenu}
+        onClose={() => setUserSearchMenu(null)}
+        title={userSearchMenu?.title}
+        items={userSearchMenu?.items}
       />
     </div>
   );
@@ -17323,16 +17368,68 @@ function App() {
         setBgImage(e.detail.bgImage);
       }
     };
+    const handleBgSizeSync = (e) => {
+      if (e?.detail?.bgSize) {
+        document.documentElement.style.setProperty('--bg-size', e.detail.bgSize);
+      }
+    };
     window.addEventListener('tc-bg-changed', handleBgSync);
-    return () => window.removeEventListener('tc-bg-changed', handleBgSync);
+    window.addEventListener('tc-bg-size-changed', handleBgSizeSync);
+    return () => {
+      window.removeEventListener('tc-bg-changed', handleBgSync);
+      window.removeEventListener('tc-bg-size-changed', handleBgSizeSync);
+    };
   }, []);
   const [glassOpacity, setGlassOpacity] = useState(() => {
     const v = parseFloat(localStorage.getItem('tc_glass'));
     return Number.isFinite(v) ? v : 0.55;
   });
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('tc_dark') === '1');
+  const [themeMode, setThemeMode] = useState(() => {
+    return localStorage.getItem('tc_theme_mode') || (localStorage.getItem('tc_dark') === '1' ? 'dark' : 'light');
+  });
+  const [textScale, setTextScale] = useState(() => {
+    return localStorage.getItem('tc_text_scale') || '1';
+  });
+  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const [autoSync, setAutoSync] = useState(() => localStorage.getItem('tc_autosync') !== '0');
   const [language, setLanguage] = useState(() => localStorage.getItem('tc_lang') || 'English');
+
+  /* Dynamic system theme preference synchronization */
+  React.useEffect(() => {
+    if (themeMode !== 'system') {
+      setDarkMode(themeMode === 'dark');
+      return;
+    }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const updateSystemDark = () => {
+      setDarkMode(mediaQuery.matches);
+    };
+    updateSystemDark();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateSystemDark);
+      return () => mediaQuery.removeEventListener('change', updateSystemDark);
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(updateSystemDark);
+      return () => mediaQuery.removeListener(updateSystemDark);
+    }
+  }, [themeMode]);
+
+  /* Synchronize custom events across tabs/components */
+  React.useEffect(() => {
+    const handleThemeSync = (e) => {
+      if (e.detail?.themeMode) setThemeMode(e.detail.themeMode);
+    };
+    const handleTextScaleSync = (e) => {
+      if (e.detail?.textScale) setTextScale(e.detail.textScale);
+    };
+    window.addEventListener('tc-theme-changed', handleThemeSync);
+    window.addEventListener('tc-text-scale-changed', handleTextScaleSync);
+    return () => {
+      window.removeEventListener('tc-theme-changed', handleThemeSync);
+      window.removeEventListener('tc-text-scale-changed', handleTextScaleSync);
+    };
+  }, []);
 
   /* Re-render whenever login/logout changes the session */
   React.useEffect(() => {
@@ -17532,6 +17629,8 @@ function App() {
     }
 
     document.documentElement.style.setProperty('--bg-image', bgCss);
+    const initialBgSize = localStorage.getItem('tc_bg_size') || 'cover';
+    document.documentElement.style.setProperty('--bg-size', initialBgSize);
     applyGlassSettings({ opacity: glassOpacity, ...getSavedGlassSettings() }, darkMode);
     document.documentElement.style.setProperty(
       '--bg-tint',
@@ -17545,18 +17644,27 @@ function App() {
     document.documentElement.style.setProperty('--text-muted', darkMode ? '#e2e8f0' : '#1e293b');
     document.documentElement.style.setProperty('--glass-hover', darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)');
 
+    // Set theme and text scale attributes on root element
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme-mode', themeMode);
+    document.documentElement.setAttribute('data-text-scale', textScale);
+    document.documentElement.classList.toggle('dark', darkMode);
+    document.body.classList.toggle('dark', darkMode);
+
     try {
       localStorage.setItem('tc_color', primaryColor);
-      if (bgImage && (!bgImage.startsWith('data:') || bgImage.length < 500000)) {
+      if (bgImage && (!bgImage.startsWith('data:') || bgImage.length < 3500000)) {
         localStorage.setItem('tc_bg', bgImage);
       }
       localStorage.setItem('tc_glass', String(glassOpacity));
       localStorage.setItem('tc_dark', darkMode ? '1' : '0');
+      localStorage.setItem('tc_theme_mode', themeMode);
+      localStorage.setItem('tc_text_scale', textScale);
       localStorage.setItem('tc_lang', language);
     } catch {
       /* storage quota exceeded or private mode */
     }
-  }, [primaryColor, bgImage, glassOpacity, darkMode, language]);
+  }, [primaryColor, bgImage, glassOpacity, darkMode, language, themeMode, textScale]);
 
   /* Viewport tracking: switch the sidebar to icon-rail on tablets and to a
      drawer on phones. */
@@ -17875,7 +17983,13 @@ function App() {
           onOpenAdminVisibility={() => setShowAdminVisibilityModal(true)}
           bgImage={bgImage} setBgImage={setBgImage}
           glassOpacity={glassOpacity} setGlassOpacity={setGlassOpacity}
-          darkMode={darkMode} setDarkMode={setDarkMode}
+          darkMode={darkMode} setDarkMode={(val) => {
+            const nextDark = typeof val === 'function' ? val(darkMode) : val;
+            setDarkMode(nextDark);
+            setThemeMode(nextDark ? 'dark' : 'light');
+          }}
+          themeMode={themeMode} setThemeMode={setThemeMode}
+          textScale={textScale} setTextScale={setTextScale}
           autoSync={autoSync} setAutoSync={setAutoSync}
           language={language} setLanguage={setLanguage}
           onOpenMasterUnhide={() => setShowMasterUnhideModal(true)}
@@ -18024,6 +18138,15 @@ function App() {
                 aria-label="Liquid Glass Customizer"
               >
                 <Sparkles size={18} />
+              </button>
+              <button
+                className="icon-btn header-appearance-btn"
+                title="Appearance & Personalization"
+                style={{ position: 'relative', cursor: 'pointer' }}
+                onClick={() => setShowAppearanceModal(true)}
+                aria-label="Appearance & Personalization"
+              >
+                <Palette size={18} />
               </button>
               <div className="header-divider" style={{ width: '1px', height: '24px', background: 'var(--glass-border)', margin: '0 8px' }}></div>
 
@@ -18314,6 +18437,51 @@ function App() {
         onClose={() => setShowGlassModal(false)}
         isDarkMode={darkMode}
       />
+
+      {/* Centralized Appearance & Personalization Modal */}
+      {showAppearanceModal && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setShowAppearanceModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div
+            className="glass-panel"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '560px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              borderRadius: '24px',
+              padding: '24px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              border: '1px solid var(--glass-border)'
+            }}
+          >
+            <AppearanceSettings
+              bgImage={bgImage}
+              setBgImage={setBgImage}
+              themeMode={themeMode}
+              setThemeMode={setThemeMode}
+              textScale={textScale}
+              setTextScale={setTextScale}
+              onBack={() => setShowAppearanceModal(false)}
+              showTitle={true}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Centralized Administrator Visibility Modal */}
       <AdminVisibilityModal
