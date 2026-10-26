@@ -3242,9 +3242,25 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                           </p>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#e11d48', fontWeight: 700, fontSize: '13px' }}>
-                        <span>Open</span>
-                        <ChevronRight size={18} />
+                      <div
+                        className="btn-glass"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#e11d48',
+                          fontWeight: 700,
+                          fontSize: '13px',
+                          padding: '8px 16px',
+                          borderRadius: '12px',
+                          background: 'rgba(225, 29, 72, 0.08)',
+                          border: '1px solid rgba(225, 29, 72, 0.22)',
+                          boxShadow: '0 2px 8px rgba(225, 29, 72, 0.08)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <span>View Analytics</span>
+                        <ChevronRight size={16} />
                       </div>
                     </div>
                   )}

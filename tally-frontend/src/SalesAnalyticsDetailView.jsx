@@ -395,25 +395,6 @@ export default function SalesAnalyticsDetailView({
               }}>
                 Sales analytics
               </h1>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  padding: '3px 10px',
-                  borderRadius: '10px',
-                  background: apiStatus === 'connected' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                  color: apiStatus === 'connected' ? '#10b981' : '#ef4444',
-                  border: `1px solid ${apiStatus === 'connected' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
-                }}
-              >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: apiStatus === 'connected' ? '#10b981' : '#ef4444' }} />
-                {apiStatus === 'connected' ? 'API Connected' : 'Offline Mode'}
-              </span>
             </div>
             <p style={{
               fontSize: '13.5px',
@@ -430,23 +411,27 @@ export default function SalesAnalyticsDetailView({
           <button
             onClick={fetchLiveVouchers}
             disabled={fetchingLive}
-            title="Refresh Live API Data"
+            title="Refresh Sales Data"
+            className="btn-glass"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '20px',
-              border: '1px solid var(--glass-border)',
-              background: 'var(--glass-bg, rgba(255,255,255,0.8))',
-              color: 'var(--text-dark)',
+              gap: '7px',
+              padding: '9px 16px',
+              borderRadius: '12px',
+              border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.6))',
+              background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
+              color: 'var(--text-dark, #0f172a)',
               fontSize: '13px',
               fontWeight: 700,
-              cursor: 'pointer'
+              cursor: fetchingLive ? 'not-allowed' : 'pointer',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              transition: 'all 0.2s ease',
+              opacity: fetchingLive ? 0.7 : 1
             }}
           >
-            <RotateCcw size={14} className={fetchingLive ? 'spin-icon' : ''} />
-            {fetchingLive ? 'Syncing...' : 'Sync API'}
+            <RotateCcw size={15} className={fetchingLive ? 'spin-icon' : ''} />
+            {fetchingLive ? 'Refreshing…' : 'Refresh'}
           </button>
 
           {onExportCSV && (

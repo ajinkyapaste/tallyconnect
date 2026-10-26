@@ -113,7 +113,23 @@ export default function Login({ onLogin }) {
     setBusy(true);
     try {
       if (mode === 'login') {
-        const data = await login({ username, password, loginType });
+        let data;
+        try {
+          data = await login({ username, password, loginType });
+        } catch (err) {
+          const isRoleMismatch = /invalid user login type/i.test(err.message) || /not an admin account/i.test(err.message);
+          if (isRoleMismatch) {
+            const fallbackType = loginType === 'USER' ? 'ADMIN' : 'USER';
+            try {
+              data = await login({ username, password, loginType: fallbackType });
+              setLoginType(fallbackType);
+            } catch {
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
         onLogin(data.user);
       } else {
         await register({ username, email, password, isAdmin: true });
@@ -193,10 +209,10 @@ export default function Login({ onLogin }) {
               ) : (
                 <>
                   <div className="auth-field">
-                    <label htmlFor="tc-username">Name</label>
+                    <label htmlFor="tc-reg-name">Name</label>
                     <input
-                      id="tc-username"
-                      name="username"
+                      id="tc-reg-name"
+                      name="name"
                       type="text"
                       autoFocus
                       value={username}
@@ -492,6 +508,11 @@ export default function Login({ onLogin }) {
           </div>
         </div>
       )}
+      {/* Powered by Averlon in bottom-right corner */}
+      <div className="auth-powered-by">
+        <span>Powered by</span>
+        <span className="auth-powered-by-brand">Averlon</span>
+      </div>
     </div>
   );
 }

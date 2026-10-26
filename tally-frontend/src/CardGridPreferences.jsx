@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Eye, EyeOff, Pin, RotateCcw, X } from 'lucide-react';
+import { Eye, EyeOff, Pin, RotateCcw, X, Move, ChevronRight, Share2, Maximize2, Minimize2 } from 'lucide-react';
 
 function readJSON(key, def) {
   try {
@@ -24,6 +24,7 @@ export function useCardGridPreferences(prefix, cards) {
   const [order, setOrder] = useState(() => readJSON(`${prefix}_order`, null));
   const [hidden, setHidden] = useState(() => readJSON(`${prefix}_hidden`, []));
   const [pinned, setPinned] = useState(() => readJSON(`${prefix}_pinned`, []));
+  const [cardSizes, setCardSizes] = useState(() => readJSON(`${prefix}_sizes`, {}));
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
   const [menu, setMenu] = useState(null);
@@ -55,6 +56,7 @@ export function useCardGridPreferences(prefix, cards) {
   useEffect(() => {
     const sync = () => {
       setHidden(readJSON(`${prefix}_hidden`, []));
+      setCardSizes(readJSON(`${prefix}_sizes`, {}));
     };
     window.addEventListener('tc-unhide-sync', sync);
     return () => window.removeEventListener('tc-unhide-sync', sync);
@@ -72,6 +74,24 @@ export function useCardGridPreferences(prefix, cards) {
       return next;
     });
     setMenu(null);
+  };
+
+  const setCardSize = (id, size) => {
+    setCardSizes((prev) => {
+      const next = { ...prev, [id]: size };
+      writeJSON(`${prefix}_sizes`, next);
+      return next;
+    });
+  };
+
+  const cycleCardSize = (id) => {
+    setCardSizes((prev) => {
+      const cur = prev[id] || 'normal';
+      const nextSize = cur === 'normal' ? 'wide' : (cur === 'wide' ? 'compact' : 'normal');
+      const next = { ...prev, [id]: nextSize };
+      writeJSON(`${prefix}_sizes`, next);
+      return next;
+    });
   };
 
   const hide = (id) => {
@@ -101,9 +121,11 @@ export function useCardGridPreferences(prefix, cards) {
     setOrder(null);
     setPinned([]);
     setHidden([]);
+    setCardSizes({});
     try { localStorage.removeItem(`${prefix}_order`); } catch {}
     try { localStorage.removeItem(`${prefix}_pinned`); } catch {}
     try { localStorage.removeItem(`${prefix}_hidden`); } catch {}
+    try { localStorage.removeItem(`${prefix}_sizes`); } catch {}
     setMenu(null);
   };
 
@@ -142,9 +164,9 @@ export function useCardGridPreferences(prefix, cards) {
   };
 
   const openMenu = (e, card) => {
-    e.preventDefault();
-    const x = e.clientX;
-    const y = e.clientY;
+    if (e?.preventDefault) e.preventDefault();
+    const x = e?.clientX ?? (window.innerWidth / 2);
+    const y = e?.clientY ?? (window.innerHeight / 2);
     setMenu({ x, y, card });
   };
 
@@ -153,6 +175,9 @@ export function useCardGridPreferences(prefix, cards) {
     hiddenCards,
     pinned,
     hidden,
+    cardSizes,
+    setCardSize,
+    cycleCardSize,
     draggedId,
     dragOverId,
     menu,
@@ -174,52 +199,181 @@ export function useCardGridPreferences(prefix, cards) {
 export function CardContextMenu({
   menu,
   onClose,
-  pinned,
+  pinned = [],
   onTogglePin,
   onHide,
   onReset,
   onUnhideAll,
   hiddenCount = 0,
+  cardSizes = {},
+  onSetSize,
+  onFilterView,
+  onShare,
 }) {
   if (!menu) return null;
+  const card = menu.card || {};
+  const cardId = card.id;
+  const isPinned = pinned?.includes(cardId);
+  const currentSize = cardSizes[cardId] || card.size || 'normal';
+
   return createPortal(
     <div
+      className="dashboard-context-menu-scrim"
       onClick={onClose}
       onContextMenu={(e) => { e.preventDefault(); onClose(); }}
-      style={{ position: 'fixed', inset: 0, zIndex: 99999 }}
     >
       <div
-        className="glass-panel"
+        className="dashboard-context-menu glass-panel"
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'fixed',
-          left: `${Math.min(menu.x, window.innerWidth - 200)}px`,
-          top: `${Math.min(menu.y, window.innerHeight - 240)}px`,
-          minWidth: '170px',
-          padding: '6px',
-          borderRadius: '14px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2px',
+          left: `${Math.min(menu.x, window.innerWidth - 220)}px`,
+          top: `${Math.min(menu.y, window.innerHeight - 340)}px`,
+          zIndex: 99999,
+          minWidth: '200px',
         }}
       >
-        <div style={{ padding: '6px 10px 4px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted, #64748b)', borderBottom: '1px solid rgba(0,0,0,0.04)', marginBottom: '4px' }}>
-          {menu.card?.label || menu.card?.title || menu.card?.name}
+        <div className="dashboard-context-menu-header">
+          {card.icon && (
+            <span style={{ color: card.color || 'var(--primary-color)', display: 'flex', alignItems: 'center' }}>
+              {React.isValidElement(card.icon)
+                ? card.icon
+                : React.createElement(card.icon, { size: 14 })}
+            </span>
+          )}
+          <span style={{ fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {card.label || card.title || card.name || 'Card Options'}
+          </span>
         </div>
-        <button type="button" onClick={() => onTogglePin(menu.card.id)} style={{ border: 'none', background: 'transparent', textAlign: 'left', padding: '7px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
-          <Pin size={14} /> {pinned?.includes(menu.card.id) ? 'Unpin' : 'Pin'}
-        </button>
-        <button type="button" onClick={() => onHide(menu.card.id)} style={{ border: 'none', background: 'transparent', textAlign: 'left', padding: '7px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
-          <EyeOff size={14} /> Hide
-        </button>
-        {hiddenCount > 0 && (
-          <button type="button" onClick={onUnhideAll} style={{ border: 'none', background: 'transparent', textAlign: 'left', padding: '7px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
-            <Eye size={14} /> Unhide all ({hiddenCount})
+
+        {onTogglePin && (
+          <button
+            type="button"
+            className={isPinned ? 'active-pin' : ''}
+            onClick={() => { onTogglePin(cardId); onClose(); }}
+          >
+            <Pin size={14} />
+            <span>{isPinned ? 'Unpin Card' : 'Pin to Top'}</span>
           </button>
         )}
-        <button type="button" onClick={onReset} style={{ border: 'none', background: 'transparent', textAlign: 'left', padding: '7px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
-          <RotateCcw size={14} /> Reset layout
+
+        {onFilterView && (card.status || card.filterValue) && (
+          <button
+            type="button"
+            onClick={() => { onFilterView(card.status || card.filterValue); onClose(); }}
+          >
+            <ChevronRight size={14} />
+            <span>Filter by this Status</span>
+          </button>
+        )}
+
+        {onSetSize && (
+          <div style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid var(--glass-border)', borderBottom: '1px solid var(--glass-border)', margin: '2px 0' }}>
+            <div style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              Card Size
+            </div>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                type="button"
+                onClick={() => { onSetSize(cardId, 'compact'); onClose(); }}
+                style={{
+                  flex: 1,
+                  padding: '5px 4px',
+                  fontSize: '11px',
+                  justifyContent: 'center',
+                  background: currentSize === 'compact' ? 'var(--primary-color)' : 'rgba(0,0,0,0.04)',
+                  color: currentSize === 'compact' ? '#ffffff' : 'var(--text-dark)',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: currentSize === 'compact' ? 700 : 500,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Compact
+              </button>
+              <button
+                type="button"
+                onClick={() => { onSetSize(cardId, 'normal'); onClose(); }}
+                style={{
+                  flex: 1,
+                  padding: '5px 4px',
+                  fontSize: '11px',
+                  justifyContent: 'center',
+                  background: currentSize === 'normal' ? 'var(--primary-color)' : 'rgba(0,0,0,0.04)',
+                  color: currentSize === 'normal' ? '#ffffff' : 'var(--text-dark)',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: currentSize === 'normal' ? 700 : 500,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                onClick={() => { onSetSize(cardId, 'wide'); onClose(); }}
+                style={{
+                  flex: 1,
+                  padding: '5px 4px',
+                  fontSize: '11px',
+                  justifyContent: 'center',
+                  background: currentSize === 'wide' ? 'var(--primary-color)' : 'rgba(0,0,0,0.04)',
+                  color: currentSize === 'wide' ? '#ffffff' : 'var(--text-dark)',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: currentSize === 'wide' ? 700 : 500,
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Wide
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            if (typeof window !== 'undefined' && window.__tc_show_toast) {
+              window.__tc_show_toast('Drag card to reorder');
+            }
+          }}
+        >
+          <Move size={14} />
+          <span>Drag to Reorder</span>
         </button>
+
+        {onHide && (
+          <button type="button" onClick={() => { onHide(cardId); onClose(); }}>
+            <EyeOff size={14} />
+            <span>Hide Card</span>
+          </button>
+        )}
+
+        {onShare && (
+          <button type="button" onClick={() => { onShare(card); onClose(); }}>
+            <Share2 size={14} />
+            <span>Share Card</span>
+          </button>
+        )}
+
+        {hiddenCount > 0 && onUnhideAll && (
+          <button type="button" onClick={() => { onUnhideAll(); onClose(); }}>
+            <Eye size={14} />
+            <span>Unhide all ({hiddenCount})</span>
+          </button>
+        )}
+
+        {onReset && (
+          <button type="button" onClick={() => { onReset(); onClose(); }}>
+            <RotateCcw size={14} />
+            <span>Reset layout</span>
+          </button>
+        )}
       </div>
     </div>,
     document.body

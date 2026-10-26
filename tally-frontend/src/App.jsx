@@ -48,6 +48,7 @@ import DashboardAttendanceCard from './DashboardAttendanceCard';
 import LeaveManager from './LeaveManager';
 import EinvoiceManager from './EinvoiceManager';
 import EarthLoader from './EarthLoader';
+import VideoLoader from './VideoLoader';
 import WorkingTimeClock from './WorkingTimeClock';
 
 
@@ -17166,6 +17167,7 @@ const AdminNotifications = ({ onNavigate }) => {
 /* ---------------- App ---------------- */
 function App() {
   const [user, setUser] = useState(getUser());
+  const [isPostLoginLoading, setIsPostLoginLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -17777,7 +17779,22 @@ function App() {
   /* Not logged in → login / register screen */
   if (!user) {
     return (
-      <Login onLogin={(u) => setUser(u || getUser())} />
+      <Login
+        onLogin={(u) => {
+          setIsPostLoginLoading(true);
+          setUser(u || getUser());
+        }}
+      />
+    );
+  }
+
+  /* Post-login transition: show cinematic video loader before displaying dashboard */
+  if (isPostLoginLoading) {
+    return (
+      <VideoLoader
+        minDuration={2300}
+        onComplete={() => setIsPostLoginLoading(false)}
+      />
     );
   }
 

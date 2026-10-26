@@ -1,0 +1,203 @@
+/* ==========================================================================
+   VideoLoader.css — Premium Cinematic TallyConnect Loading Experience
+   ========================================================================== */
+
+.tc-video-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: #030712;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s ease;
+  user-select: none;
+}
+
+.tc-video-loader-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Cosmic background canvas and vignette */
+.tc-video-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 45%, #071126 0%, #030712 70%);
+}
+
+.tc-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: contrast(1.05) brightness(1.02);
+}
+
+/* Atmospheric vignette to frame the globe */
+.tc-video-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(3, 7, 18, 0.6) 80%, #030712 100%);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Seamless Logo Blending Shield
+   Dissolves the video's harsh rectangular logo background and renders the
+   pristine transparent official TallyConnect branding.
+   ========================================================================== */
+
+.tc-logo-floating-brand,
+.tc-logo-blend-shield {
+  position: absolute;
+  left: 50%;
+  top: 73%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  pointer-events: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.tc-logo-brand-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: tcLogoBreathe 3s ease-in-out infinite alternate;
+}
+
+.tc-logo-brand-inner img {
+  height: clamp(34px, 4.5vh, 52px);
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px rgba(225, 29, 72, 0.45)) drop-shadow(0 0 32px rgba(56, 189, 248, 0.35));
+}
+
+@keyframes tcLogoBreathe {
+  0% {
+    transform: scale(0.98);
+    filter: brightness(0.96);
+  }
+  100% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+}
+
+/* ==========================================================================
+   Status, Network Pill & Progress Bar
+   ========================================================================== */
+
+.tc-loader-hud {
+  position: absolute;
+  bottom: clamp(36px, 8vh, 72px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.tc-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: clamp(11.5px, 1.3vw, 13px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #f1f5f9;
+}
+
+.tc-status-beacon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 12px #10b981, 0 0 20px rgba(16, 185, 129, 0.6);
+  animation: tcBeaconPulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes tcBeaconPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.tc-progress-track {
+  width: clamp(220px, 24vw, 320px);
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.tc-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #be123c 0%, #ef4444 45%, #38bdf8 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.7);
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle skip control for power users */
+.tc-loader-skip-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  margin-top: 4px;
+}
+
+.tc-loader-skip-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Accessibility: respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .tc-video-loader-overlay {
+    transition: none !important;
+  }
+  .tc-logo-brand-inner,
+  .tc-status-beacon {
+    animation: none !important;
+  }
+}

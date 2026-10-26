@@ -64,7 +64,7 @@ try {
 export const setSession = (token, user) => {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-  localStorage.setItem(TOKEN_ORIGIN_KEY, API_ORIGIN);
+  localStorage.setItem(TOKEN_ORIGIN_KEY, API_ORIGIN || 'https://tallymobile.utkarshmishra.online');
   resetRequestState();
   window.dispatchEvent(new Event('tc-auth'));
 };

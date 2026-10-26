@@ -4,10 +4,12 @@ import {
   ArrowLeft, Search, Download, TrendingUp, TrendingDown,
   DollarSign, CheckCircle2, ChevronRight, Filter,
   Building2, Users, Package, Wallet, CreditCard,
-  FileText, Calendar, ArrowUpRight, ArrowDownRight, Layers, X
+  FileText, Calendar, ArrowUpRight, ArrowDownRight, Layers, X,
+  Pin, Sparkles
 } from 'lucide-react';
-import { ExportDropdown } from './uiUtils';
+import { ExportDropdown, createHoldTouchHandler } from './uiUtils';
 import StandardDateFilter from './StandardDateFilter';
+import { useCardGridPreferences, CardContextMenu, HiddenCardsChip } from './CardGridPreferences';
 
 const inr = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const formatShortInr = (val) => {
@@ -1638,6 +1640,80 @@ export function CashFlowView({
     );
   }, [accounts, searchQuery]);
 
+  const statementCards = useMemo(() => [
+    {
+      id: 'cfs-closing-balance',
+      key: 'closing',
+      label: 'Closing Balance',
+      value: inr(closing),
+      note: 'Combined Cash & Bank liquidity',
+      icon: Wallet,
+      color: '#2563eb',
+      tint: '37, 99, 235',
+    },
+    {
+      id: 'cfs-opening-balance',
+      key: 'opening',
+      label: 'Opening Balance',
+      value: inr(opening),
+      note: 'At start of selected period',
+      icon: Building2,
+      color: '#64748b',
+      tint: '100, 116, 139',
+    },
+    {
+      id: 'cfs-money-in',
+      key: 'inflow',
+      label: 'Money In',
+      value: `+${inr(inflow)}`,
+      note: 'Receipts & inflows received',
+      icon: ArrowDownRight,
+      color: '#10b981',
+      tint: '16, 185, 129',
+    },
+    {
+      id: 'cfs-money-out',
+      key: 'outflow',
+      label: 'Money Out',
+      value: `-${inr(outflow)}`,
+      note: 'Payments & expenses disbursed',
+      icon: ArrowUpRight,
+      color: '#ef4444',
+      tint: '239, 68, 68',
+    },
+    {
+      id: 'cfs-net-flow',
+      key: 'net',
+      label: 'Nett Flow',
+      value: `${net >= 0 ? '+' : ''}${inr(net)}`,
+      note: net >= 0 ? 'Net Cash Inflow for period' : 'Net Cash Outflow for period',
+      icon: TrendingUp,
+      color: net >= 0 ? '#10b981' : '#ef4444',
+      tint: net >= 0 ? '16, 185, 129' : '239, 68, 68',
+    }
+  ], [closing, opening, inflow, outflow, net]);
+
+  const {
+    visibleCards: visibleStatementCards,
+    hiddenCards: hiddenStatementCards,
+    pinned: pinnedStatementCards,
+    cardSizes: statementCardSizes,
+    setCardSize: setStatementCardSize,
+    menu: statementMenu,
+    setMenu: setStatementMenu,
+    togglePin: toggleStatementPin,
+    hide: hideStatementCard,
+    unhide: unhideStatementCard,
+    unhideAll: unhideAllStatementCards,
+    reset: resetStatementCards,
+    handleDragStart: onStatementDragStart,
+    handleDragOver: onStatementDragOver,
+    handleDrop: onStatementDrop,
+    handleDragEnd: onStatementDragEnd,
+    openMenu: openStatementMenu,
+    isPinned: isStatementPinned,
+  } = useCardGridPreferences('tc_cashflow_statement_kpi', statementCards);
+
   return (
     <div className="financial-statement-view" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {loading && (
@@ -1685,92 +1761,83 @@ export function CashFlowView({
         </div>
       </div>
 
-      {/* 4 KPI Cards (Matching Mobile Reference: Closing, Opening, Money in, Money out) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        {/* Closing Balance (Main KPI) */}
-        <div className="summary-card" style={{
-          padding: '18px 20px', borderRadius: '12px',
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.05) 100%)',
-          border: '1px solid rgba(59, 130, 246, 0.25)',
-          display: 'flex', flexDirection: 'column', gap: '6px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Closing Balance
-            </span>
-            <Wallet size={18} color="#2563eb" />
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-dark)' }}>
-            {inr(closing)}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Combined Cash & Bank liquidity
-          </div>
-        </div>
+      {/* Draggable & Resizable Summary Cards */}
+      <HiddenCardsChip hiddenCards={hiddenStatementCards} onUnhide={unhideStatementCard} />
 
-        {/* Opening Balance */}
-        <div className="summary-card" style={{
-          padding: '18px 20px', borderRadius: '12px',
-          background: 'var(--glass-bg)',
-          border: '1px solid var(--glass-border)',
-          display: 'flex', flexDirection: 'column', gap: '6px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Opening Balance
-            </span>
-            <Building2 size={18} color="var(--text-muted)" />
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-dark)' }}>
-            {inr(opening)}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            At start of selected period
-          </div>
-        </div>
+      <div className="ledger-stats">
+        {visibleStatementCards.map((c) => {
+          const Icon = c.icon || Wallet;
+          const pinnedCard = isStatementPinned(c.id);
+          const size = statementCardSizes[c.id] || 'normal';
+          const isWide = size === 'wide';
+          const isCompact = size === 'compact';
 
-        {/* Money In (Positive tone) */}
-        <div className="summary-card" style={{
-          padding: '18px 20px', borderRadius: '12px',
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
-          display: 'flex', flexDirection: 'column', gap: '6px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Money In
-            </span>
-            <ArrowDownRight size={18} color="#10b981" />
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: '#10b981' }}>
-            +{inr(inflow)}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Receipts & inflows received
-          </div>
-        </div>
-
-        {/* Money Out (Negative tone) */}
-        <div className="summary-card" style={{
-          padding: '18px 20px', borderRadius: '12px',
-          background: 'rgba(239, 68, 68, 0.08)',
-          border: '1px solid rgba(239, 68, 68, 0.2)',
-          display: 'flex', flexDirection: 'column', gap: '6px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Money Out
-            </span>
-            <ArrowUpRight size={18} color="#ef4444" />
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: '#ef4444' }}>
-            -{inr(outflow)}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Payments & expenses disbursed
-          </div>
-        </div>
+          return (
+            <div
+              key={c.id}
+              className={`ledger-stat glass-panel draggable-card ${pinnedCard ? 'is-pinned' : ''} ${isWide ? 'is-wide' : ''} ${isCompact ? 'is-compact' : ''}`}
+              role="button"
+              tabIndex={0}
+              draggable={true}
+              onDragStart={(e) => onStatementDragStart(e, c.id)}
+              onDragOver={(e) => onStatementDragOver(e, c.id)}
+              onDrop={(e) => onStatementDrop(e, c.id)}
+              onDragEnd={onStatementDragEnd}
+              onContextMenu={(e) => openStatementMenu(e, c)}
+              {...createHoldTouchHandler((pos) => openStatementMenu({ clientX: pos.x, clientY: pos.y, preventDefault: () => {} }, c))}
+              title={`${c.label} • Drag to reorder • Right-click or hold for options`}
+              style={{
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                border: pinnedCard ? `2px solid rgb(${c.tint})` : undefined,
+                background: pinnedCard ? `rgba(${c.tint}, 0.08)` : undefined,
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              {pinnedCard && (
+                <span className="card-pin-badge" title="Pinned to top">
+                  <Pin size={11} />
+                </span>
+              )}
+              <div
+                className="ledger-stat-icon"
+                style={{
+                  background: `rgba(${c.tint}, 0.14)`,
+                  color: c.color,
+                }}
+              >
+                <Icon size={20} />
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="ledger-stat-label">{c.label}</div>
+                <div className="ledger-stat-value" style={{ color: c.color }}>
+                  {c.value}
+                </div>
+                {c.note && <div className="ledger-stat-sub">{c.note}</div>}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      <CardContextMenu
+        menu={statementMenu}
+        onClose={() => setStatementMenu(null)}
+        pinned={pinnedStatementCards}
+        onTogglePin={toggleStatementPin}
+        onHide={hideStatementCard}
+        onReset={resetStatementCards}
+        onUnhideAll={unhideAllStatementCards}
+        hiddenCount={hiddenStatementCards.length}
+        cardSizes={statementCardSizes}
+        onSetSize={setStatementCardSize}
+        onShare={(c) => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${c.label}: ${c.value} (Cash Flow Statement)`);
+          }
+        }}
+      />
 
       {/* Net Flow & InfoBox */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

@@ -18,9 +18,19 @@ import {
   Receipt,
   ShieldAlert,
   Sparkles,
-  Info
+  Info,
+  Wallet,
+  Landmark,
+  Eye,
+  EyeOff,
+  Pin,
+  Move,
+  Plus,
+  X
 } from 'lucide-react';
 import { getCashflowForecast, getCashflowWeek } from './api';
+import { useCardGridPreferences, CardContextMenu, HiddenCardsChip } from './CardGridPreferences';
+import { createHoldTouchHandler } from './uiUtils';
 
 const inr = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const formatShortInr = (val) => {
@@ -386,6 +396,142 @@ export default function CashFlowForecast({
     document.body.removeChild(link);
   };
 
+  // Custom Cashflow Milestones (Stored in LocalStorage)
+  const [customMilestones, setCustomMilestones] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tc_cashflow_custom_milestones') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
+  const [newMilestoneAmount, setNewMilestoneAmount] = useState('');
+  const [newMilestoneType, setNewMilestoneType] = useState('target');
+  const [newMilestoneNote, setNewMilestoneNote] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 2800);
+  };
+
+  const handleCreateCustomMilestone = (e) => {
+    e.preventDefault();
+    if (!newMilestoneTitle.trim()) return;
+    const newCard = {
+      id: `cf-custom-${Date.now()}`,
+      title: newMilestoneTitle.trim(),
+      amount: parseFloat(newMilestoneAmount) || 0,
+      type: newMilestoneType,
+      note: newMilestoneNote.trim() || undefined
+    };
+    const next = [newCard, ...customMilestones];
+    setCustomMilestones(next);
+    try {
+      localStorage.setItem('tc_cashflow_custom_milestones', JSON.stringify(next));
+    } catch {}
+    setShowMilestoneModal(false);
+    setNewMilestoneTitle('');
+    setNewMilestoneAmount('');
+    setNewMilestoneNote('');
+    showToast(`Created Cash Flow card: ${newCard.title}`);
+  };
+
+  // KPI Summary Cards Model for useCardGridPreferences
+  const forecastCards = useMemo(() => {
+    const base = [
+      {
+        id: 'cff-cash-bank-today',
+        key: 'cash_bank_today',
+        label: 'Cash + bank today',
+        value: activeForecast.opening != null
+          ? inr(activeForecast.opening)
+          : (cashBankToday.hasData ? inr(cashBankToday.total) : 'Not available'),
+        note: activeForecast.openingBasedOn
+          ? `As on ${activeForecast.openingBasedOn} (${activeForecast.openingAccounts?.length || 0} accounts)`
+          : 'Combined cash & bank liquidity',
+        icon: Landmark,
+        color: '#2563eb',
+        tint: '37, 99, 235',
+      },
+      {
+        id: 'cff-money-in',
+        key: 'money_in',
+        label: 'Money in (13 wk)',
+        value: inr(activeForecast.totalIn),
+        note: `${activeForecast.counts?.inflow_bills || activeForecast.weeks.reduce((acc, w) => acc + (w.inflowBills || 0), 0)} projected customer inflows`,
+        icon: TrendingUp,
+        color: '#10b981',
+        tint: '16, 185, 129',
+      },
+      {
+        id: 'cff-money-out',
+        key: 'money_out',
+        label: 'Money out (13 wk)',
+        value: inr(activeForecast.totalOut),
+        note: `${activeForecast.counts?.outflow_bills || activeForecast.weeks.reduce((acc, w) => acc + (w.outflowBills || 0), 0)} projected supplier disbursements`,
+        icon: TrendingDown,
+        color: '#e11d48',
+        tint: '225, 29, 72',
+      },
+      {
+        id: 'cff-net-change',
+        key: 'net_change',
+        label: 'Net change (13 wk)',
+        value: activeForecast.netChange >= 0 ? `+${inr(activeForecast.netChange)}` : `-${inr(Math.abs(activeForecast.netChange))}`,
+        note: activeForecast.netChange >= 0 ? 'Net surplus expected' : 'Net deficit expected',
+        icon: Wallet,
+        color: activeForecast.netChange >= 0 ? '#10b981' : '#e11d48',
+        tint: activeForecast.netChange >= 0 ? '16, 185, 129' : '225, 29, 72',
+      },
+      ...(activeForecast.delays ? [{
+        id: 'cff-payment-intel',
+        key: 'payment_intel',
+        label: 'Payment Delay Intel',
+        value: `+${activeForecast.delays.company_median ?? 0} days`,
+        note: `${activeForecast.delays.company_on_time_pct ?? 0}% on-time rate (${activeForecast.delays.parties_with_history || 0} parties)`,
+        icon: Clock,
+        color: '#0d9488',
+        tint: '13, 148, 136',
+      }] : []),
+      ...customMilestones.map(m => ({
+        id: m.id,
+        key: m.id,
+        label: m.title,
+        value: inr(m.amount),
+        note: m.note || (m.type === 'target' ? 'Target milestone' : 'Liquidity threshold'),
+        icon: Sparkles,
+        color: m.type === 'target' ? '#8b5cf6' : (m.type === 'buffer' ? '#f59e0b' : '#0284c7'),
+        tint: m.type === 'target' ? '139, 92, 246' : (m.type === 'buffer' ? '245, 158, 11' : '2, 132, 199'),
+        isCustom: true
+      }))
+    ];
+    return base;
+  }, [activeForecast, cashBankToday, customMilestones]);
+
+  const {
+    visibleCards,
+    hiddenCards,
+    pinned,
+    cardSizes,
+    setCardSize,
+    cycleCardSize,
+    menu,
+    setMenu,
+    togglePin,
+    hide,
+    unhide,
+    unhideAll,
+    reset,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleDragEnd,
+    openMenu,
+    isPinned,
+  } = useCardGridPreferences('tc_cashflow_forecast_kpi', forecastCards);
+
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto', animation: 'fadeIn 0.25s ease-out' }}>
       {/* ---------------- Top Navigation Header ---------------- */}
@@ -451,53 +597,99 @@ export default function CashFlowForecast({
           </div>
         </div>
 
-        {/* Top Actions: Export Document & Refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Top Actions: Generate Card, Unhide, Export Document & Refresh */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setNewMilestoneTitle('');
+              setNewMilestoneAmount('');
+              setNewMilestoneNote('');
+              setShowMilestoneModal(true);
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '12px',
+              fontWeight: 750,
+              fontSize: '13px'
+            }}
+            title="Generate a custom Cash Flow card"
+          >
+            <Sparkles size={16} />
+            <span>Generate Card</span>
+          </button>
+
+          {hiddenCards.length > 0 && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={unhideAll}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontWeight: 650
+              }}
+            >
+              <Eye size={15} />
+              <span>Unhide ({hiddenCards.length})</span>
+            </button>
+          )}
+
           <button
             onClick={handleExportCSV}
             title="Export CSV Forecast"
+            className="btn-glass"
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              border: '1px solid var(--glass-border, rgba(0,0,0,0.1))',
-              background: 'var(--glass-bg, rgba(255,255,255,0.8))',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '12px',
+              border: '1px solid var(--glass-border, rgba(0,0,0,0.1))',
+              background: 'var(--glass-bg, rgba(255,255,255,0.85))',
               color: 'var(--text-dark, #1e293b)',
+              fontSize: '13px',
+              fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
               transition: 'all 0.15s ease'
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
           >
-            <Download size={18} />
+            <Download size={15} />
+            <span>Export CSV</span>
           </button>
 
           {onRefresh && (
             <button
               onClick={onRefresh}
               title="Refresh Data"
+              className="btn-glass"
               style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                border: '1px solid var(--glass-border, rgba(0,0,0,0.1))',
-                background: 'var(--glass-bg, rgba(255,255,255,0.8))',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '12px',
+                border: '1px solid var(--glass-border, rgba(0,0,0,0.1))',
+                background: 'var(--glass-bg, rgba(255,255,255,0.85))',
                 color: 'var(--text-dark, #1e293b)',
+                fontSize: '13px',
+                fontWeight: 700,
                 cursor: 'pointer',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                 transition: 'all 0.15s ease'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={15} />
+              <span>Refresh</span>
             </button>
           )}
         </div>
@@ -637,168 +829,84 @@ export default function CashFlowForecast({
         </div>
       )}
 
-      {/* ---------------- Primary Forecast Metrics Stack ---------------- */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '22px' }}>
-        {/* Card 1: Cash + bank today */}
-        <div className="glass-panel" style={{
-          padding: '22px 24px',
-          borderRadius: '24px',
-          background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-          border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.6))',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
-        }}>
-          <div style={{
-            fontSize: '13px',
-            fontWeight: 700,
-            color: 'var(--text-muted, #64748b)',
-            marginBottom: '4px'
-          }}>
-            Cash + bank today
-          </div>
+      {/* ---------------- Top KPI Summary Cards (Draggable, Resizable & Customizable) ---------------- */}
+      <HiddenCardsChip hiddenCards={hiddenCards} onUnhide={unhide} />
 
-          <div style={{
-            fontSize: '32px',
-            fontWeight: 850,
-            color: activeForecast.opening != null ? '#0f172a' : (cashBankToday.hasData ? '#0f172a' : '#334155'),
-            letterSpacing: '-0.8px',
-            lineHeight: '1.2'
-          }}>
-            {activeForecast.opening != null
-              ? inr(activeForecast.opening)
-              : (cashBankToday.hasData ? inr(cashBankToday.total) : 'Not available')}
-          </div>
+      <div className="ledger-stats" style={{ marginBottom: '22px' }}>
+        {visibleCards.map((c) => {
+          const Icon = c.icon || Landmark;
+          const pinnedCard = isPinned(c.id);
+          const size = cardSizes[c.id] || 'normal';
+          const isWide = size === 'wide';
+          const isCompact = size === 'compact';
 
-          <div style={{
-            fontSize: '12.5px',
-            color: 'var(--text-muted, #64748b)',
-            marginTop: '6px',
-            fontWeight: 500,
-            lineHeight: '1.4'
-          }}>
-            {activeForecast.openingBasedOn
-              ? `Synced from Tally as on ${activeForecast.openingBasedOn} across ${activeForecast.openingAccounts?.length || 0} cash/bank accounts.`
-              : 'Sync Financial Reports to see exact closing balances; money in and out are still projected.'}
-          </div>
-        </div>
-
-        {/* Card 2a & 2b: Money in (13 wk) & Money out (13 wk) */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '14px'
-        }}>
-          {/* Money in */}
-          <div className="glass-panel" style={{
-            padding: '20px 24px',
-            borderRadius: '24px',
-            background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-            border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.6))',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
-          }}>
-            <div style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              color: 'var(--text-muted, #64748b)',
-              marginBottom: '6px'
-            }}>
-              Money in (13 wk)
-            </div>
-            <div style={{
-              fontSize: '28px',
-              fontWeight: 850,
-              color: '#10b981',
-              letterSpacing: '-0.6px',
-              lineHeight: '1.2'
-            }}>
-              {inr(activeForecast.totalIn)}
-            </div>
-          </div>
-
-          {/* Money out */}
-          <div className="glass-panel" style={{
-            padding: '20px 24px',
-            borderRadius: '24px',
-            background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-            border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.6))',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
-          }}>
-            <div style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              color: 'var(--text-muted, #64748b)',
-              marginBottom: '6px'
-            }}>
-              Money out (13 wk)
-            </div>
-            <div style={{
-              fontSize: '28px',
-              fontWeight: 850,
-              color: '#e11d48',
-              letterSpacing: '-0.6px',
-              lineHeight: '1.2'
-            }}>
-              {inr(activeForecast.totalOut)}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Net change over 13 weeks */}
-        <div className="glass-panel" style={{
-          padding: '20px 24px',
-          borderRadius: '24px',
-          background: 'var(--glass-bg, rgba(255, 255, 255, 0.85))',
-          border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.6))',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)'
-        }}>
-          <div style={{
-            fontSize: '13px',
-            fontWeight: 700,
-            color: 'var(--text-muted, #64748b)',
-            marginBottom: '6px'
-          }}>
-            Net change over 13 weeks
-          </div>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: 850,
-            color: activeForecast.netChange >= 0 ? '#10b981' : '#e11d48',
-            letterSpacing: '-0.6px',
-            lineHeight: '1.2'
-          }}>
-            {activeForecast.netChange >= 0 ? `+${inr(activeForecast.netChange)}` : `-${inr(Math.abs(activeForecast.netChange))}`}
-          </div>
-        </div>
-
-        {/* Payment Intelligence Card (if available from server) */}
-        {activeForecast.delays && (
-          <div className="glass-panel" style={{
-            padding: '16px 20px',
-            borderRadius: '20px',
-            background: 'rgba(248, 250, 252, 0.85)',
-            border: '1px solid var(--glass-border, rgba(0,0,0,0.06))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '18px' }}>⏱️</span>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-dark, #0f172a)' }}>
-                  Customer Payment Delay Intelligence
+          return (
+            <div
+              key={c.id}
+              className={`ledger-stat glass-panel draggable-card ${pinnedCard ? 'is-pinned' : ''} ${isWide ? 'is-wide' : ''} ${isCompact ? 'is-compact' : ''}`}
+              role="button"
+              tabIndex={0}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, c.id)}
+              onDragOver={(e) => handleDragOver(e, c.id)}
+              onDrop={(e) => handleDrop(e, c.id)}
+              onDragEnd={handleDragEnd}
+              onContextMenu={(e) => openMenu(e, c)}
+              {...createHoldTouchHandler((pos) => openMenu({ clientX: pos.x, clientY: pos.y, preventDefault: () => {} }, c))}
+              title={`${c.label} • Drag to reorder • Right-click or hold for options`}
+              style={{
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                border: pinnedCard ? `2px solid rgb(${c.tint})` : undefined,
+                background: pinnedCard ? `rgba(${c.tint}, 0.08)` : undefined,
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+            >
+              {pinnedCard && (
+                <span className="card-pin-badge" title="Pinned to top">
+                  <Pin size={11} />
+                </span>
+              )}
+              <div
+                className="ledger-stat-icon"
+                style={{
+                  background: `rgba(${c.tint}, 0.14)`,
+                  color: c.color,
+                }}
+              >
+                <Icon size={20} />
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="ledger-stat-label">{c.label}</div>
+                <div className="ledger-stat-value" style={{ color: c.color }}>
+                  {c.value}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>
-                  Median delay: <strong>+{activeForecast.delays.company_median ?? 0} days</strong> · On-time rate: <strong>{activeForecast.delays.company_on_time_pct ?? 0}%</strong> · Method: {activeForecast.delays.method === 'alloc' ? 'Tally bill-wise allocations' : 'FIFO Estimated'}
-                </div>
+                {c.note && <div className="ledger-stat-sub">{c.note}</div>}
               </div>
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: '#0d9488', background: 'rgba(13, 148, 136, 0.1)', padding: '4px 10px', borderRadius: '8px' }}>
-              {activeForecast.delays.parties_with_history || 0} parties analyzed
-            </div>
-          </div>
-        )}
+          );
+        })}
       </div>
+
+      <CardContextMenu
+        menu={menu}
+        onClose={() => setMenu(null)}
+        pinned={pinned}
+        onTogglePin={togglePin}
+        onHide={hide}
+        onReset={reset}
+        onUnhideAll={unhideAll}
+        hiddenCount={hiddenCards.length}
+        cardSizes={cardSizes}
+        onSetSize={setCardSize}
+        onShare={(c) => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(`${c.label}: ${c.value} (${companyName} Cash Flow)`);
+            showToast(`${c.label} copied to clipboard`);
+          }
+        }}
+      />
 
       {/* ---------------- Card 4: Interactive 13-Week Timeline Chart Panel ---------------- */}
       <div className="glass-panel" style={{
@@ -1212,6 +1320,219 @@ export default function CashFlowForecast({
             })}
         </div>
       </div>
+
+      {/* Custom Cashflow Milestone / Card Modal */}
+      {showMilestoneModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Generate Cashflow Card"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowMilestoneModal(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div
+            className="glass-panel"
+            style={{
+              width: '100%',
+              maxWidth: '460px',
+              padding: '28px',
+              borderRadius: '24px',
+              background: 'rgba(255, 255, 255, 0.98)',
+              boxShadow: '0 30px 80px rgba(15, 23, 42, 0.3)',
+              position: 'relative'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowMilestoneModal(false)}
+              aria-label="Close"
+              style={{
+                position: 'absolute',
+                top: '18px',
+                right: '18px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'rgba(15, 23, 42, 0.06)',
+                color: '#475569',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '14px',
+                background: 'rgba(37, 99, 235, 0.12)',
+                color: '#2563eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
+                  Generate Cash Flow Card
+                </h3>
+                <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#64748b' }}>
+                  Add a custom liquidity target, safety buffer, or milestone
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateCustomMilestone}>
+              <div style={{ marginBottom: '14px' }}>
+                <label htmlFor="cf-milestone-title" style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Card Title
+                </label>
+                <input
+                  id="cf-milestone-title"
+                  type="text"
+                  value={newMilestoneTitle}
+                  onChange={(e) => setNewMilestoneTitle(e.target.value)}
+                  placeholder="e.g. Min Working Capital Buffer"
+                  required
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: '11px',
+                    border: '1px solid #d7e6f3',
+                    fontSize: '14px',
+                    color: '#0f172a',
+                    background: '#fff'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label htmlFor="cf-milestone-amount" style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Amount (₹)
+                </label>
+                <input
+                  id="cf-milestone-amount"
+                  type="number"
+                  step="any"
+                  value={newMilestoneAmount}
+                  onChange={(e) => setNewMilestoneAmount(e.target.value)}
+                  placeholder="e.g. 500000"
+                  required
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: '11px',
+                    border: '1px solid #d7e6f3',
+                    fontSize: '14px',
+                    color: '#0f172a',
+                    background: '#fff'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label htmlFor="cf-milestone-type" style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Card Category
+                </label>
+                <select
+                  id="cf-milestone-type"
+                  value={newMilestoneType}
+                  onChange={(e) => setNewMilestoneType(e.target.value)}
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 12px',
+                    borderRadius: '11px',
+                    border: '1px solid #d7e6f3',
+                    fontSize: '14px',
+                    color: '#0f172a',
+                    background: '#fff'
+                  }}
+                >
+                  <option value="target">Cash Target Milestone (Purple)</option>
+                  <option value="buffer">Safety Buffer Threshold (Amber)</option>
+                  <option value="reserve">Contingency Reserve (Blue)</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label htmlFor="cf-milestone-note" style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Subtitle / Note (Optional)
+                </label>
+                <input
+                  id="cf-milestone-note"
+                  type="text"
+                  value={newMilestoneNote}
+                  onChange={(e) => setNewMilestoneNote(e.target.value)}
+                  placeholder="e.g. Recommended reserve for operations"
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '0 14px',
+                    borderRadius: '11px',
+                    border: '1px solid #d7e6f3',
+                    fontSize: '14px',
+                    color: '#0f172a',
+                    background: '#fff'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{ width: '100%', height: '46px', fontSize: '14px', fontWeight: 750 }}
+              >
+                Create Cash Flow Card
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: 'rgba(15, 23, 42, 0.94)',
+            color: '#fff',
+            padding: '12px 20px',
+            borderRadius: '14px',
+            fontSize: '13.5px',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.25)',
+            zIndex: 100000,
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        >
+          <CheckCircle2 size={16} color="#10b981" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

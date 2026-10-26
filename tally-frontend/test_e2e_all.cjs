@@ -2,12 +2,14 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
-const ARTIFACT_DIR = path.resolve('C:/Users/User/.gemini/antigravity-ide/brain/bf40a3da-5687-43f6-bfae-4f621515d2e7');
+const PORT = process.env.TEST_PORT || '5173';
+const ARTIFACT_DIR = process.env.ARTIFACT_DIR || path.resolve('C:/Users/User/.gemini/antigravity-ide/brain/fdcdaf60-843e-4f65-9705-4f956d8ab3fd');
 
 (async () => {
   console.log('--- Starting Comprehensive E2E Verification ---');
   const browser = await puppeteer.launch({
     headless: 'new',
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security'],
     defaultViewport: { width: 1400, height: 950 }
   });
@@ -22,7 +24,7 @@ const ARTIFACT_DIR = path.resolve('C:/Users/User/.gemini/antigravity-ide/brain/b
 
   try {
     // 1. Pre-seed authentication & company session in localStorage
-    await page.goto('http://[::1]:5174/', { waitUntil: 'domcontentloaded' });
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
       localStorage.setItem('tc_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwicm9sZSI6IkFETUlOIiwiYWRtaW5JZCI6NSwidXNlcm5hbWUiOiJ0YWxseWNvbm5lY3QiLCJlbWFpbCI6InRhbGx5Y29ubmVjdEBnbWFpbC5jb20iLCJpYXQiOjE3OTIwNDY4MTEsImV4cCI6MTc5MjEzMzIxMX0.W9uCYFUHX8Q5Cev_J-GqVtRq-a0G7_YvzhKLNkz8CWU');
       localStorage.setItem('tc_user', JSON.stringify({ id: 5, username: 'tallyconnect', email: 'tallyconnect@gmail.com', role: 'ADMIN', adminId: 5, plan: 'Enterprise' }));
@@ -34,7 +36,7 @@ const ARTIFACT_DIR = path.resolve('C:/Users/User/.gemini/antigravity-ide/brain/b
 
     // 2. Reload with full authenticated session
     console.log('Reloading with seeded session...');
-    await page.goto('http://[::1]:5174/', { waitUntil: 'networkidle2' });
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle2' });
     await new Promise(r => setTimeout(r, 2000));
 
     // 3. Verify Dashboard & Search bar & Create Voucher button
