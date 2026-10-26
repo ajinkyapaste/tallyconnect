@@ -1,11 +1,11 @@
 import React from 'react';
 
 /**
- * AiChatbotIcon - Professional, enterprise-grade AI Chatbot icon (100% robot-free)
- * Features an elegant conversational chat bubble with 3 dialogue dots and
- * an intelligent AI sparkle star. Clean, executive, modern, and universally recognizable.
+ * AiChatbotIcon - Authentic, professional Generative AI Star icon
+ * Features the industry-standard curved AI neural sparkles (Google Gemini / Apple Intelligence style).
+ * Clean, executive, modern, and instantly recognizable as an intelligent AI Assistant.
  */
-export default function AiChatbotIcon({ size = 26, className = '', color = 'currentColor', glow = true }) {
+export default function AiChatbotIcon({ size = 26, className = '', color = '#ffffff', glow = true }) {
   return (
     <svg
       width={size}
@@ -15,36 +15,41 @@ export default function AiChatbotIcon({ size = 26, className = '', color = 'curr
       xmlns="http://www.w3.org/2000/svg"
       className={`tc-ai-chatbot-icon ${className}`}
       style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
-      aria-label="TallyConnect AI Chatbot"
+      aria-label="TallyConnect AI"
     >
       <defs>
-        <linearGradient id="tcAiSparkleGrad" x1="16" y1="1" x2="23" y2="8" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#818cf8" />
+        <linearGradient id="tcAiStarGlow" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="60%" stopColor="#f0f9ff" />
+          <stop offset="100%" stopColor="#e0e7ff" />
         </linearGradient>
+        <filter id="tcAiDropGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="rgba(255,255,255,0.45)" />
+        </filter>
       </defs>
 
-      {/* Main Conversational Chat Bubble Shell */}
+      {/* Primary Iconic AI Curved Star (Gemini / Generative AI Star) */}
       <path
-        d="M12 3.5C6.75329 3.5 2.5 7.19365 2.5 11.75C2.5 14.1882 3.70425 16.3719 5.64259 17.8546C5.45269 18.7303 4.95726 19.8322 4.02013 20.8929C3.82112 21.1181 3.97825 21.5 4.28189 21.5C5.9723 21.5 7.73142 20.597 8.7844 19.6845C9.79979 19.9248 10.8794 20.05 12 20.05C17.2467 20.05 21.5 16.3563 21.5 11.75C21.5 7.19365 17.2467 3.5 12 3.5Z"
-        fill={color === '#ffffff' ? 'rgba(255, 255, 255, 0.16)' : 'rgba(99, 102, 241, 0.1)'}
+        d="M12 2.2C12 7.2 7.8 11.4 2.8 11.4C7.8 11.4 12 15.6 12 20.6C12 15.6 16.2 11.4 21.2 11.4C16.2 11.4 12 7.2 12 2.2Z"
+        fill={color === '#ffffff' ? 'url(#tcAiStarGlow)' : color}
         stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
+        strokeWidth="0.6"
         strokeLinejoin="round"
+        filter={glow ? 'url(#tcAiDropGlow)' : 'none'}
       />
 
-      {/* 3 Conversational Dialogue Dots */}
-      <circle cx="7.75" cy="11.75" r="1.35" fill={color} />
-      <circle cx="12" cy="11.75" r="1.35" fill={color} />
-      <circle cx="16.25" cy="11.75" r="1.35" fill={color} />
-
-      {/* AI Sparkle Star on Top Right */}
+      {/* Companion Secondary AI Sparkle (Top-Right) */}
       <path
-        d="M19.5 1.5L20.15 3.35L22 4L20.15 4.65L19.5 6.5L18.85 4.65L17 4L18.85 3.35L19.5 1.5Z"
-        fill={glow ? 'url(#tcAiSparkleGrad)' : color}
-        stroke={color === '#ffffff' ? '#ffffff' : 'none'}
-        strokeWidth="0.4"
+        d="M19 2C19 4.3 17.3 6 15 6C17.3 6 19 7.7 19 10C19 7.7 20.7 6 23 6C20.7 6 19 4.3 19 2Z"
+        fill={color === '#ffffff' ? '#ffffff' : color}
+        opacity="0.95"
+      />
+
+      {/* Tertiary Ambient Micro-Sparkle (Bottom-Left) */}
+      <path
+        d="M5 16C5 17.4 4 18.4 2.6 18.4C4 18.4 5 19.4 5 20.8C5 19.4 6 18.4 7.4 18.4C6 18.4 5 17.4 5 16Z"
+        fill={color === '#ffffff' ? '#ffffff' : color}
+        opacity="0.85"
       />
     </svg>
   );

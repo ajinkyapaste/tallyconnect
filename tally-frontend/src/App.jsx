@@ -2935,7 +2935,7 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
                       {/* Tools used pill */}
                       {m.toolsUsed && m.toolsUsed.length > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                          <Bot size={13} style={{ color: 'var(--primary-color)' }} />
+                          <Sparkles size={13} style={{ color: 'var(--primary-color)' }} />
                           <span>Synced from Tally tools: {m.toolsUsed.join(', ')}</span>
                         </div>
                       )}
