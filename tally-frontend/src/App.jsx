@@ -294,6 +294,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'companies', name: 'Companies', icon: <Building2 size={18} />, color: '#6366f1' },
       { id: 'users', name: 'User Management', icon: <UsersIcon size={18} />, color: '#8b5cf6' },
+      { id: 'settings', name: 'Settings', icon: <Settings size={18} />, color: '#0ea5e9' },
       { id: 'deleted', name: 'Delete History', icon: <RotateCcw size={18} />, color: '#64748b' },
     ],
   },
@@ -10098,6 +10099,7 @@ const SettingsHub = ({
   const [hiddenCount, setHiddenCount] = useState(() => getGlobalHiddenCount());
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showVoucherFieldSettingsModal, setShowVoucherFieldSettingsModal] = useState(false);
+  const [activeSection, setActiveSection] = useState('appearance');
 
   // Monthly Report Schedule state
   const [reportSchedule, setReportSchedule] = useState({
@@ -10249,292 +10251,587 @@ const SettingsHub = ({
 
   const clearBgError = () => { if (bgError) setBgError(''); };
 
+  const sections = [
+    { id: 'appearance', label: 'Appearance & Themes', icon: <Palette size={16} /> },
+    { id: 'general', label: 'General & Workspace', icon: <Sliders size={16} /> },
+    { id: 'reports', label: 'Automated Reports', icon: <Calendar size={16} /> },
+    ...(user?.role === 'ADMIN' ? [{ id: 'admin', label: 'Admin & Visibility', icon: <ShieldCheck size={16} /> }] : [])
+  ];
+
   return (
-    <div className="fade-in form-container">
-      <div className="page-header">
+    <div className="fade-in form-container" style={{ maxWidth: '1100px', margin: '0 auto', paddingBottom: '60px' }}>
+      {/* Top Header */}
+      <div className="page-header" style={{ marginBottom: '24px' }}>
         <div>
-          <h1>Settings</h1>
-          <p>Manage application preferences &amp; Personalization</p>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Settings size={28} style={{ color: 'var(--primary-color)' }} />
+            Settings &amp; Preferences
+          </h1>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '14px' }}>
+            Configure personalized visual themes, background synchronization, automated reports, and workspace permissions.
+          </p>
         </div>
       </div>
 
-      <div className="grid-3" style={{ marginBottom: '32px' }}>
+      {/* Quick Overview Status Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        {/* Account Profile Card */}
         <div
-          className="glass-panel hub-card"
-          style={{ padding: '20px', cursor: 'pointer', transition: 'all 0.2s' }}
-          onClick={() => setCurrentTab && setCurrentTab('companies')}
-          title="Manage connected companies"
+          className="glass-panel"
+          style={{
+            padding: '16px 20px',
+            borderRadius: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
         >
-          <div className="hub-icon" style={{ width: 44, height: 44, color: 'var(--primary-color)' }}><Package size={24} /></div>
-          <span>Company</span>
-        </div>
-        <div
-          className="glass-panel hub-card"
-          style={{ padding: '20px', cursor: 'pointer', transition: 'all 0.2s' }}
-          onClick={() => setShowProfileModal(true)}
-          title="View & update account profile"
-        >
-          <div className="hub-icon" style={{ width: 44, height: 44, color: 'var(--primary-color)' }}><Search size={24} /></div>
-          <span>Profile</span>
-        </div>
-        <div
-          className="glass-panel hub-card"
-          style={{ padding: '20px', cursor: 'pointer', transition: 'all 0.2s' }}
-          onClick={() => setCurrentTab && setCurrentTab('notifications')}
-          title="Notification feeds & alert history"
-        >
-          <div className="hub-icon" style={{ width: 44, height: 44, color: 'var(--primary-color)' }}><Bell size={24} /></div>
-          <span>Notifications</span>
-        </div>
-      </div>
-
-      <h3 className="section-title">Personalization (Theme &amp; Appearance)</h3>
-      <div className="ios-form-group" style={{ padding: 0, overflow: 'hidden' }}>
-        <AppearanceSettings
-          bgImage={bgImage}
-          setBgImage={setBgImage}
-          themeMode={themeMode}
-          setThemeMode={setThemeMode}
-          textScale={textScale}
-          setTextScale={setTextScale}
-          showTitle={false}
-        />
-        <div style={{ padding: '0 20px 20px 20px' }}>
-          <div className="ios-input-row" style={{ display: 'block', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '12px' }}>App Primary Color</label>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {predefinedColors.map((color, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => setPrimaryColor(color.value)}
-                  style={{
-                    width: 36, height: 36, borderRadius: 18, background: color.value,
-                    cursor: 'pointer', border: primaryColor === color.value ? '3px solid white' : '2px solid transparent',
-                    boxShadow: primaryColor === color.value ? '0 0 0 2px var(--glass-border)' : '0 2px 4px var(--glass-border)'
-                  }}
-                  title={color.name}
-                />
-              ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, var(--primary-color), #6366f1)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '18px',
+              flexShrink: 0
+            }}>
+              {(user?.name || user?.email || 'U')[0].toUpperCase()}
             </div>
-          </div>
-
-          <div className="ios-input-row" style={{ display: 'block', padding: '16px 0 0 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <Sparkles size={18} color="var(--primary-color)" />
-              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-dark)' }}>
-                Liquid Glass &amp; Transparency System
-              </h4>
-            </div>
-            <LiquidGlassControls isDarkMode={darkMode} onSettingsChanged={(s) => setGlassOpacity(s.opacity)} />
-          </div>
-        </div>
-      </div>
-
-      <h3 className="section-title">Application Settings</h3>
-      <div className="ios-form-group">
-        <div className="ios-input-row">
-          <label>Dark Mode</label>
-          <div className="switch-container">
-            <div
-              className={`ios-switch ${darkMode ? 'on' : ''}`}
-              onClick={() => {
-                const nextDark = !darkMode;
-                setDarkMode(nextDark);
-                if (setThemeMode) setThemeMode(nextDark ? 'dark' : 'light');
-              }}
-            ></div>
-          </div>
-        </div>
-        <div className="ios-input-row">
-          <label>Auto Sync</label>
-          <div className="switch-container">
-            <div
-              className={`ios-switch ${autoSync ? 'on' : ''}`}
-              onClick={() => setAutoSync((v) => !v)}
-            ></div>
-          </div>
-        </div>
-        <div className="ios-input-row">
-          <label htmlFor="settings-language">Language</label>
-          <select id="settings-language" name="app_language" value={language} onChange={(e) => setLanguage(e.target.value)}>
-            <option>English</option>
-            <option>Hindi</option>
-          </select>
-        </div>
-      </div>
-
-      <h3 className="section-title">Workspace Layout &amp; Hidden Items</h3>
-      <div className="ios-form-group">
-        <div className="ios-input-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-dark)' }}>Unhide Hidden Items</div>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Restore any KPI cards, summary metrics, or navigation tabs hidden in your workspace.
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.name || user?.email || 'My Account'}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                {user?.role === 'ADMIN' ? 'Administrator' : 'Staff Member'}
+              </div>
             </div>
           </div>
           <button
             type="button"
             className="btn-secondary"
-            onClick={onOpenMasterUnhide}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '9px 18px', fontSize: '13px', cursor: 'pointer', height: 'auto', borderRadius: '12px', fontWeight: 600 }}
+            onClick={() => setShowProfileModal(true)}
+            style={{ padding: '7px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            title="Edit profile & personal info"
           >
-            <Eye size={16} style={{ color: '#10b981' }} />
-            <span>Unhide Hidden Items</span>
-            {hiddenCount > 0 && (
-              <span style={{
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#10b981',
-                fontSize: '11px',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '10px'
-              }}>
-                {hiddenCount}
-              </span>
-            )}
+            <User size={14} /> Profile
+          </button>
+        </div>
+
+        {/* Company Workspace Card */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '16px 20px',
+            borderRadius: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '14px',
+              background: 'rgba(52, 199, 89, 0.15)',
+              color: 'var(--success)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Building2 size={22} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Workspaces
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Connected Tally Entities
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setCurrentTab && setCurrentTab('companies')}
+            style={{ padding: '7px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            title="Manage companies & entities"
+          >
+            <Package size={14} /> Entities
+          </button>
+        </div>
+
+        {/* Notifications Card */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '16px 20px',
+            borderRadius: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '14px',
+              background: 'rgba(255, 149, 0, 0.15)',
+              color: 'var(--warning)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Bell size={22} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Notifications
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Alerts &amp; Activity Logs
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setCurrentTab && setCurrentTab('notifications')}
+            style={{ padding: '7px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            title="View system alerts & updates"
+          >
+            <Bell size={14} /> Alerts
           </button>
         </div>
       </div>
 
-      {/* Automated Monthly Report Schedule */}
-      <h3 className="section-title">Automated Monthly Financial Reports</h3>
-      <div className="glass-panel" style={{ padding: '24px', borderRadius: '18px', marginBottom: '28px' }}>
-        <form onSubmit={handleSaveReportSchedule}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(52,199,89,0.12)', color: '#34c759', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Calendar size={20} />
-              </div>
-              <div>
-                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>Monthly Financial Summary Dispatch</h4>
-                <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Automatically compile and email your company's P&L and turnover report
-                </p>
-              </div>
-            </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '46px', height: '26px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={reportSchedule.enabled}
-                onChange={(e) => setReportSchedule(prev => ({ ...prev, enabled: e.target.checked }))}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span style={{
-                position: 'absolute', inset: 0, borderRadius: '26px',
-                background: reportSchedule.enabled ? 'var(--primary-color)' : '#d1d5db',
-                transition: 'background 0.2s ease'
-              }}>
-                <span style={{
-                  position: 'absolute', height: '20px', width: '20px', left: reportSchedule.enabled ? '23px' : '3px', bottom: '3px',
-                  background: '#fff', borderRadius: '50%', transition: 'left 0.2s ease',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }} />
-              </span>
-            </label>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Day of Month
-              </label>
-              <select
-                className="cv-input"
-                value={reportSchedule.day_of_month}
-                onChange={(e) => setReportSchedule(prev => ({ ...prev, day_of_month: Number(e.target.value) }))}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}
-              >
-                {[1, 2, 3, 5, 7, 10, 15, 20, 25, 28].map(d => (
-                  <option key={d} value={d}>{d === 1 ? '1st of every month' : d === 2 ? '2nd of every month' : d === 3 ? '3rd of every month' : `${d}th of every month`}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Delivery Time
-              </label>
-              <select
-                className="cv-input"
-                value={reportSchedule.report_time}
-                onChange={(e) => setReportSchedule(prev => ({ ...prev, report_time: e.target.value }))}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}
-              >
-                <option value="08:00:00">08:00 AM (Early Morning)</option>
-                <option value="09:00:00">09:00 AM (Business Start)</option>
-                <option value="12:00:00">12:00 PM (Midday)</option>
-                <option value="18:00:00">06:00 PM (Evening Close)</option>
-                <option value="20:00:00">08:00 PM (Night Summary)</option>
-              </select>
-            </div>
-          </div>
-
-          {scheduleNotice && (
-            <div style={{
-              marginTop: '16px', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
-              background: scheduleNotice.ok ? 'rgba(16,185,129,0.1)' : 'rgba(255,59,48,0.1)',
-              color: scheduleNotice.ok ? '#10b981' : '#ef4444'
-            }}>
-              {scheduleNotice.msg}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+      {/* Category Navigation Tabs */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '6px',
+        background: 'rgba(0,0,0,0.04)',
+        borderRadius: '16px',
+        marginBottom: '24px',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      }}>
+        {sections.map((sec) => {
+          const isActive = activeSection === sec.id;
+          return (
             <button
-              type="submit"
-              className="btn-primary"
-              disabled={savingSchedule}
-              style={{ padding: '9px 24px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              key={sec.id}
+              type="button"
+              onClick={() => setActiveSection(sec.id)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 18px',
+                borderRadius: '12px',
+                border: 'none',
+                background: isActive ? '#ffffff' : 'transparent',
+                color: isActive ? 'var(--primary-color)' : 'var(--text-muted)',
+                fontWeight: isActive ? 700 : 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+                boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.18s ease'
+              }}
             >
-              <Check size={16} /> {savingSchedule ? 'Saving…' : 'Save Report Schedule'}
+              {sec.icon}
+              <span>{sec.label}</span>
             </button>
-          </div>
-        </form>
+          );
+        })}
       </div>
 
-      {user?.role === 'ADMIN' && (
-        <div style={{ marginBottom: '28px' }}>
-          <h3 className="section-title">Voucher Input Fields &amp; Custom Fields</h3>
-          <div className="glass-panel" style={{ padding: '24px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      {/* Tab Content: Appearance & Themes */}
+      {activeSection === 'appearance' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Visual Themes & Wallpapers */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>Visual Themes &amp; Wallpaper</h3>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+                Select a Bitrix24 reference theme, nature landscape, or upload your custom background image
+              </p>
+            </div>
+            <AppearanceSettings
+              bgImage={bgImage}
+              setBgImage={setBgImage}
+              themeMode={themeMode}
+              setThemeMode={setThemeMode}
+              textScale={textScale}
+              setTextScale={setTextScale}
+              showTitle={false}
+            />
+          </div>
+
+          {/* Accent Color & Transparency */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
+            <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>App Primary Accent Color</h3>
+            <p style={{ margin: '0 0 16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              Choose the highlight color used across buttons, active badges, and navigation links
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '28px' }}>
+              {predefinedColors.map((color, idx) => {
+                const isSelected = primaryColor === color.value;
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setPrimaryColor(color.value)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 14px',
+                      borderRadius: '12px',
+                      background: isSelected ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.02)',
+                      border: isSelected ? '1.5px solid var(--primary-color)' : '1px solid var(--glass-border)',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s'
+                    }}
+                    title={color.name}
+                  >
+                    <div style={{
+                      width: 24, height: 24, borderRadius: 12, background: color.value,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {isSelected && <Check size={14} color="#ffffff" />}
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-dark)' }}>{color.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <Sparkles size={18} color="var(--primary-color)" />
+                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                  Liquid Glass &amp; Transparency System
+                </h4>
+              </div>
+              <LiquidGlassControls isDarkMode={darkMode} onSettingsChanged={(s) => setGlassOpacity(s.opacity)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: General & Workspace */}
+      {activeSection === 'general' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* System Sync & Language */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
+            <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>System Synchronization</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              Manage real-time Tally connector synchronization and language settings
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Auto Sync Toggle */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderRadius: '14px',
+                background: 'rgba(0,0,0,0.02)',
+                border: '1px solid var(--glass-border)'
+              }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-dark)' }}>Auto Sync with Tally</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Continuously update vouchers, ledgers, and masters in the background
+                  </div>
+                </div>
+                <div className="switch-container">
+                  <div
+                    className={`ios-switch ${autoSync ? 'on' : ''}`}
+                    onClick={() => setAutoSync((v) => !v)}
+                  />
+                </div>
+              </div>
+
+              {/* Language Selector */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderRadius: '14px',
+                background: 'rgba(0,0,0,0.02)',
+                border: '1px solid var(--glass-border)',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-dark)' }}>Display Language</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Select default language for tables, charts, and report exports
+                  </div>
+                </div>
+                <select
+                  id="settings-language"
+                  name="app_language"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  style={{
+                    padding: '9px 16px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--glass-border)',
+                    background: 'var(--glass-bg)',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--text-dark)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="English">English (EN)</option>
+                  <option value="Hindi">Hindi (HI)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Workspace Layout & Unhide Items */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
+            <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>Workspace Layout &amp; Hidden Elements</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              Easily audit and restore any dashboard KPI cards, summary tiles, or navigation tabs hidden in your workspace
+            </p>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '18px 20px',
+              borderRadius: '14px',
+              background: 'rgba(0,0,0,0.02)',
+              border: '1px solid var(--glass-border)',
+              flexWrap: 'wrap',
+              gap: '14px'
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-dark)' }}>Unhide Hidden Items</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Restore any dashboard cards, report widgets, or menu items
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={onOpenMasterUnhide}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '9px 20px',
+                  fontSize: '13px',
+                  borderRadius: '12px',
+                  fontWeight: 600
+                }}
+              >
+                <Eye size={16} style={{ color: '#10b981' }} />
+                <span>Unhide Hidden Items</span>
+                {hiddenCount > 0 && (
+                  <span style={{
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    color: '#10b981',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: '10px'
+                  }}>
+                    {hiddenCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: Automated Reports */}
+      {activeSection === 'reports' && (
+        <div className="fade-in">
+          <div className="glass-panel" style={{ padding: '28px', borderRadius: '20px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: 'var(--text-dark)' }}>Automated Monthly Financial Reports</h3>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+                Schedule automated delivery of company profit &amp; loss and turnover statements directly to your email inbox
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveReportSchedule}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderRadius: '14px',
+                background: 'rgba(0,0,0,0.02)',
+                border: '1px solid var(--glass-border)',
+                marginBottom: '20px',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(52,199,89,0.15)', color: '#34c759', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Calendar size={22} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-dark)' }}>Monthly Dispatch Status</h4>
+                    <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      {reportSchedule.enabled ? 'Active — statements will be automatically compiled and emailed' : 'Paused — automatic delivery is currently disabled'}
+                    </p>
+                  </div>
+                </div>
+                <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={reportSchedule.enabled}
+                    onChange={(e) => setReportSchedule(prev => ({ ...prev, enabled: e.target.checked }))}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span style={{
+                    position: 'absolute', inset: 0, borderRadius: '26px',
+                    background: reportSchedule.enabled ? 'var(--primary-color)' : '#d1d5db',
+                    transition: 'background 0.2s ease'
+                  }}>
+                    <span style={{
+                      position: 'absolute', height: '20px', width: '20px', left: reportSchedule.enabled ? '25px' : '3px', bottom: '3px',
+                      background: '#fff', borderRadius: '50%', transition: 'left 0.2s ease',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }} />
+                  </span>
+                </label>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '8px' }}>
+                    Dispatch Day of Month
+                  </label>
+                  <select
+                    className="cv-input"
+                    value={reportSchedule.day_of_month}
+                    onChange={(e) => setReportSchedule(prev => ({ ...prev, day_of_month: Number(e.target.value) }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '13px' }}
+                  >
+                    {[1, 2, 3, 5, 7, 10, 15, 20, 25, 28].map(d => (
+                      <option key={d} value={d}>{d === 1 ? '1st of every month' : d === 2 ? '2nd of every month' : d === 3 ? '3rd of every month' : `${d}th of every month`}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '8px' }}>
+                    Target Delivery Time
+                  </label>
+                  <select
+                    className="cv-input"
+                    value={reportSchedule.report_time}
+                    onChange={(e) => setReportSchedule(prev => ({ ...prev, report_time: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '13px' }}
+                  >
+                    <option value="08:00:00">08:00 AM (Early Morning)</option>
+                    <option value="09:00:00">09:00 AM (Business Start)</option>
+                    <option value="12:00:00">12:00 PM (Midday)</option>
+                    <option value="18:00:00">06:00 PM (Evening Close)</option>
+                    <option value="20:00:00">08:00 PM (Night Summary)</option>
+                  </select>
+                </div>
+              </div>
+
+              {scheduleNotice && (
+                <div style={{
+                  marginBottom: '20px', padding: '12px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 600,
+                  background: scheduleNotice.ok ? 'rgba(16,185,129,0.1)' : 'rgba(255,59,48,0.1)',
+                  color: scheduleNotice.ok ? '#10b981' : '#ef4444'
+                }}>
+                  {scheduleNotice.msg}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={savingSchedule}
+                  style={{ padding: '10px 26px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}
+                >
+                  <Check size={16} /> {savingSchedule ? 'Saving…' : 'Save Report Schedule'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: Admin & Visibility Controls */}
+      {activeSection === 'admin' && user?.role === 'ADMIN' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Dynamic Voucher Fields Customizer */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Sliders size={22} style={{ color: 'var(--primary-color)' }} />
-                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>
                   Dynamic Voucher Fields Customizer
                 </h4>
               </div>
-              <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-muted)', maxWidth: '520px' }}>
-                Enable or hide standard fields (due date, reference, GST, discounts) and manage custom metadata fields for Sales, Purchase, Receipt, Payment, and Journal vouchers.
+              <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-muted)', maxWidth: '540px' }}>
+                Enable or hide standard fields (due date, reference, GST, discounts) and configure custom metadata fields across all voucher types.
               </p>
             </div>
             <button
               type="button"
               className="btn-primary"
               onClick={() => setShowVoucherFieldSettingsModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '14px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '14px', fontSize: '13px' }}
             >
               <Sliders size={16} /> Configure Voucher Fields
             </button>
           </div>
-        </div>
-      )}
 
-      {user?.role === 'ADMIN' && (
-        <div style={{ marginTop: '28px' }}>
-          <h3 className="section-title">Organization Display &amp; Visibility Controls</h3>
-          <div className="glass-panel" style={{ padding: '24px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          {/* Administrator Visibility Controls */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShieldCheck size={22} style={{ color: 'var(--primary-color)' }} />
-                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>Administrator Visibility Controls</h4>
+                <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                  Administrator Visibility Controls
+                </h4>
               </div>
-              <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-muted)', maxWidth: '520px' }}>
-                Centrally configure which navigation tabs, dashboard KPI cards, and financial report sections are visible to standard users.
+              <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-muted)', maxWidth: '540px' }}>
+                Centrally configure which navigation tabs, dashboard KPI cards, and financial report sections are visible to team members and staff.
               </p>
             </div>
             <button
+              type="button"
               className="btn-primary"
               onClick={onOpenAdminVisibility}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '14px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '14px', fontSize: '13px' }}
             >
               <Sliders size={16} /> Manage User Visibility
             </button>
