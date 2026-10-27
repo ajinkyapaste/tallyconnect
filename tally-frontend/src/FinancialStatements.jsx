@@ -10,6 +10,7 @@ import {
 import { ExportDropdown, ScheduleButton, createHoldTouchHandler } from './uiUtils';
 import StandardDateFilter from './StandardDateFilter';
 import { useCardGridPreferences, CardContextMenu, HiddenCardsChip } from './CardGridPreferences';
+import BitrixFilterBar from './BitrixFilterBar';
 
 const inr = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const formatShortInr = (val) => {
@@ -517,25 +518,13 @@ export function ProfitLossView({
             <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>
               Contributing Vouchers
             </h3>
-            <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px', width: '260px' }}>
-              <Search size={14} color="var(--text-muted)" />
-              <input
-                type="text"
+            <div style={{ width: '280px', maxWidth: '100%' }}>
+              <BitrixFilterBar
+                storageKey="tc_fs_vouchers_filter"
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
                 placeholder="Search party or voucher..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', width: '100%', color: 'var(--text-dark)' }}
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--text-muted)' }}
-                  title="Clear search"
-                >
-                  <X size={13} />
-                </button>
-              )}
             </div>
           </div>
           <div className="table-responsive-container" style={{ overflowX: 'auto' }}>
@@ -1314,17 +1303,12 @@ export function TrialBalanceView({
         alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '240px' }}>
-          <div className="glass-panel" style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px',
-            borderRadius: '12px', width: '100%', maxWidth: '320px'
-          }}>
-            <Search size={15} color="var(--text-muted)" />
-            <input
-              type="text"
+          <div style={{ width: '100%', maxWidth: '340px' }}>
+            <BitrixFilterBar
+              storageKey="tc_fs_tb_filter"
+              searchQuery={searchLedger}
+              onSearchChange={setSearchLedger}
               placeholder="Search ledger by name or group..."
-              value={searchLedger}
-              onChange={(e) => setSearchLedger(e.target.value)}
-              style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', width: '100%', color: 'var(--text-dark)' }}
             />
           </div>
 
@@ -1704,25 +1688,13 @@ export function ExpensesDetailedView({
           <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>
             Operational Expense Transactions ({expenseVouchers.length})
           </h3>
-          <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px', width: '260px' }}>
-            <Search size={14} color="var(--text-muted)" />
-            <input
-              type="text"
+          <div style={{ width: '280px', maxWidth: '100%' }}>
+            <BitrixFilterBar
+              storageKey="tc_fs_expenses_filter"
+              searchQuery={searchExp}
+              onSearchChange={setSearchExp}
               placeholder="Search expenses..."
-              value={searchExp}
-              onChange={(e) => setSearchExp(e.target.value)}
-              style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', width: '100%', color: 'var(--text-dark)' }}
             />
-            {searchExp && (
-              <button
-                type="button"
-                onClick={() => setSearchExp('')}
-                style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--text-muted)' }}
-                title="Clear search"
-              >
-                <X size={13} />
-              </button>
-            )}
           </div>
         </div>
 
@@ -2245,18 +2217,12 @@ export function CashFlowView({
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-dark)' }}>
               Cash and Bank Accounts ({accounts.length})
             </h3>
-            <div style={{ position: 'relative', width: '220px' }}>
-              <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
+            <div style={{ width: '260px', maxWidth: '100%' }}>
+              <BitrixFilterBar
+                storageKey="tc_fs_cashbank_filter"
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
                 placeholder="Search accounts..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%', padding: '7px 10px 7px 30px', borderRadius: '6px',
-                  border: '1px solid var(--glass-border)', background: 'var(--card-bg)',
-                  fontSize: '12px', color: 'var(--text-dark)'
-                }}
               />
             </div>
           </div>

@@ -477,7 +477,7 @@ export default function SalesAnalyticsDetailView({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
+          {/* <button
             onClick={fetchLiveVouchers}
             disabled={fetchingLive}
             title="Refresh Sales Data"
@@ -501,7 +501,7 @@ export default function SalesAnalyticsDetailView({
           >
             <RotateCcw size={15} className={fetchingLive ? 'spin-icon' : ''} />
             {fetchingLive ? 'Refreshing…' : 'Refresh'}
-          </button>
+          </button> */}
 
           <ExportDropdown onExportCSV={onExportCSV} onExportPDF={() => {
             if (window.print) window.print();

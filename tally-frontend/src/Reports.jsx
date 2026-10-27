@@ -3826,13 +3826,7 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                       <ChevronRight size={14} />
                       <span>Open</span>
                     </button>
-                    <button type="button" onClick={() => {
-                      setCardContextMenu(null);
-                      showToast('Drag card anywhere to reorder');
-                    }}>
-                      <Move size={14} />
-                      <span>Drag</span>
-                    </button>
+
                     <button type="button" onClick={() => handleHideReportCard(cardContextMenu.card, cardContextMenu.isSummary)}>
                       <EyeOff size={14} />
                       <span>Hide</span>
@@ -4435,17 +4429,13 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px' }}>
-                        <Search size={14} color="var(--text-muted)" />
-                        <input
-                          type="text"
-                          placeholder="Search customer, invoice..."
-                          value={detailSearch}
-                          onChange={(e) => setDetailSearch(e.target.value)}
-                          style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', color: 'var(--text-dark)' }}
-                        />
-                      </div>
+                    <div style={{ width: '280px', maxWidth: '100%' }}>
+                      <BitrixFilterBar
+                        storageKey="tc_report_sales_reg_filter"
+                        searchQuery={detailSearch}
+                        onSearchChange={setDetailSearch}
+                        placeholder="Search customer, invoice..."
+                      />
                     </div>
                   </div>
 
@@ -4517,14 +4507,12 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                       </p>
                     </div>
 
-                    <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px' }}>
-                      <Search size={14} color="var(--text-muted)" />
-                      <input
-                        type="text"
+                    <div style={{ width: '280px', maxWidth: '100%' }}>
+                      <BitrixFilterBar
+                        storageKey="tc_report_purch_reg_filter"
+                        searchQuery={detailSearch}
+                        onSearchChange={setDetailSearch}
                         placeholder="Search supplier, bill..."
-                        value={detailSearch}
-                        onChange={(e) => setDetailSearch(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', color: 'var(--text-dark)' }}
                       />
                     </div>
                   </div>
@@ -4597,14 +4585,12 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                       </p>
                     </div>
 
-                    <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px' }}>
-                      <Search size={14} color="var(--text-muted)" />
-                      <input
-                        type="text"
+                    <div style={{ width: '280px', maxWidth: '100%' }}>
+                      <BitrixFilterBar
+                        storageKey="tc_report_daybook_filter"
+                        searchQuery={detailSearch}
+                        onSearchChange={setDetailSearch}
                         placeholder="Search day book..."
-                        value={detailSearch}
-                        onChange={(e) => setDetailSearch(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', color: 'var(--text-dark)' }}
                       />
                     </div>
                   </div>
@@ -4705,23 +4691,12 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {/* Search */}
-                      <div style={{ position: 'relative' }}>
-                        <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                        <input
-                          type="text"
-                          value={stockSearch}
-                          onChange={(e) => setStockSearch(e.target.value)}
+                      <div style={{ width: '240px', maxWidth: '100%' }}>
+                        <BitrixFilterBar
+                          storageKey="tc_report_stock_filter"
+                          searchQuery={stockSearch}
+                          onSearchChange={setStockSearch}
                           placeholder="Search items…"
-                          style={{
-                            padding: '7px 12px 7px 32px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--glass-bg)',
-                            fontSize: '12px',
-                            color: 'var(--text-dark)',
-                            width: '160px'
-                          }}
                         />
                       </div>
 
@@ -5011,23 +4986,12 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {/* Search */}
-                      <div style={{ position: 'relative' }}>
-                        <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                        <input
-                          type="text"
-                          value={quietSearch}
-                          onChange={(e) => setQuietSearch(e.target.value)}
+                      <div style={{ width: '240px', maxWidth: '100%' }}>
+                        <BitrixFilterBar
+                          storageKey="tc_report_quiet_filter"
+                          searchQuery={quietSearch}
+                          onSearchChange={setQuietSearch}
                           placeholder="Search quiet debtors…"
-                          style={{
-                            padding: '7px 12px 7px 32px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--glass-bg)',
-                            fontSize: '12px',
-                            color: 'var(--text-dark)',
-                            width: '180px'
-                          }}
                         />
                       </div>
 
@@ -5286,23 +5250,12 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {/* Search */}
-                      <div style={{ position: 'relative' }}>
-                        <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                        <input
-                          type="text"
-                          value={itemsNotMovingSearch}
-                          onChange={(e) => setItemsNotMovingSearch(e.target.value)}
+                      <div style={{ width: '240px', maxWidth: '100%' }}>
+                        <BitrixFilterBar
+                          storageKey="tc_report_dormant_filter"
+                          searchQuery={itemsNotMovingSearch}
+                          onSearchChange={setItemsNotMovingSearch}
                           placeholder="Search dormant SKUs…"
-                          style={{
-                            padding: '7px 12px 7px 32px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--glass-bg)',
-                            fontSize: '12px',
-                            color: 'var(--text-dark)',
-                            width: '180px'
-                          }}
                         />
                       </div>
 
@@ -5831,24 +5784,13 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
 
                     {/* Search & Sort Controls */}
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px' }}>
-                        <Search size={14} color="var(--text-muted)" />
-                        <input
-                          type="text"
+                      <div style={{ width: '260px', maxWidth: '100%' }}>
+                        <BitrixFilterBar
+                          storageKey="tc_report_ledger_out_filter"
+                          searchQuery={partySearch}
+                          onSearchChange={setPartySearch}
                           placeholder="Search party or group..."
-                          value={partySearch}
-                          onChange={(e) => setPartySearch(e.target.value)}
-                          style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', color: 'var(--text-dark)', width: '180px' }}
                         />
-                        {partySearch && (
-                          <button
-                            onClick={() => setPartySearch('')}
-                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: 'var(--text-muted)' }}
-                            title="Clear search"
-                          >
-                            <X size={14} />
-                          </button>
-                        )}
                       </div>
 
                       <select
@@ -6025,23 +5967,12 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {/* Search */}
-                      <div style={{ position: 'relative' }}>
-                        <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                        <input
-                          type="text"
-                          value={billsSearch}
-                          onChange={(e) => setBillsSearch(e.target.value)}
+                      <div style={{ width: '260px', maxWidth: '100%' }}>
+                        <BitrixFilterBar
+                          storageKey="tc_report_bills_out_filter"
+                          searchQuery={billsSearch}
+                          onSearchChange={setBillsSearch}
                           placeholder="Search party or bill…"
-                          style={{
-                            padding: '7px 12px 7px 32px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--glass-bg)',
-                            fontSize: '12px',
-                            color: 'var(--text-dark)',
-                            width: '180px'
-                          }}
                         />
                       </div>
 

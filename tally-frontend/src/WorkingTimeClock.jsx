@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { resolveAvatarUrl } from './api';
 
 /**
  * WorkingTimeClock
@@ -91,7 +92,7 @@ export default function WorkingTimeClock({ mode = 'pill', user, onClick, onNavig
         <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
           {user?.avatar_url ? (
             <img
-              src={user.avatar_url}
+              src={resolveAvatarUrl(user.avatar_url)}
               alt={user.username || 'User'}
               style={{
                 width: '30px',

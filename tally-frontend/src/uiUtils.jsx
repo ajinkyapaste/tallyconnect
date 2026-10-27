@@ -85,22 +85,28 @@ export const ExportDropdown = ({ onExportCSV, onExportPDF, label = 'Export', ali
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '6px',
-          height: '36px',
-          padding: '0 14px',
-          fontSize: '13px',
+          justifyContent: 'center',
+          gap: '7px',
+          height: '42px',
+          minHeight: '42px',
+          maxHeight: '42px',
+          padding: '0 18px',
+          fontSize: '13.5px',
           fontWeight: 650,
-          borderRadius: '10px',
+          borderRadius: '12px',
           cursor: 'pointer',
           background: 'var(--glass-bg, rgba(255, 255, 255, 0.75))',
           border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.8))',
           color: 'var(--text-dark, #0f172a)',
-          transition: 'all 0.15s ease'
+          transition: 'all 0.15s ease',
+          boxSizing: 'border-box',
+          lineHeight: 1,
+          whiteSpace: 'nowrap'
         }}
         title="Export data (CSV or PDF)"
         aria-expanded={open}
       >
-        <Download size={15} />
+        <Download size={16} />
         <span>{label}</span>
         <ChevronDown size={14} style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>

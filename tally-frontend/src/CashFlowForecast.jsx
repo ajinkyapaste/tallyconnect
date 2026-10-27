@@ -667,7 +667,7 @@ export default function CashFlowForecast({
             <span>Export CSV</span>
           </button>
 
-          {onRefresh && (
+          {/* {onRefresh && (
             <button
               onClick={onRefresh}
               title="Refresh Data"
@@ -691,7 +691,7 @@ export default function CashFlowForecast({
               <RefreshCw size={15} />
               <span>Refresh</span>
             </button>
-          )}
+          )} */}
         </div>
       </div>
 

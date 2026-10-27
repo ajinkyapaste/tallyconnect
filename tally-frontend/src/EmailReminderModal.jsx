@@ -1101,7 +1101,7 @@ export const EmailReminderModal = ({
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>
                   {selectedParty ? `Showing reminders for ${selectedParty.party}` : 'Showing all reminders'}
                 </span>
-                <button
+                {/* <button
                   type="button"
                   onClick={() => fetchHistory(selectedParty?.ledgerGuid || null)}
                   disabled={historyLoading}
@@ -1119,7 +1119,7 @@ export const EmailReminderModal = ({
                 >
                   <RefreshCw size={13} className={historyLoading ? 'spin' : ''} />
                   Refresh
-                </button>
+                </button> */}
               </div>
 
               {historyLoading ? (

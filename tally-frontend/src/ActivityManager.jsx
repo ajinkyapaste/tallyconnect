@@ -15,6 +15,7 @@ import { createHoldTouchHandler, UnhideModal } from './uiUtils';
 import { CreateVoucherWizard } from './CreateVoucherWizard';
 import { TallyConnectorModal } from './TallyConnectorModal';
 import { CardContextMenu, HiddenCardsChip, useCardGridPreferences } from './CardGridPreferences';
+import BitrixFilterBar from './BitrixFilterBar';
 
 /* ---------------- Voucher Type Color & Icon Mapping ---------------- */
 const VOUCHER_TYPE_META = {
@@ -1092,7 +1093,7 @@ export const ActivityManager = ({
             </button>
 
             {/* Refresh Button */}
-            <button
+            {/* <button
               type="button"
               onClick={() => fetchActivityData(true)}
               className="glass-panel"
@@ -1112,7 +1113,7 @@ export const ActivityManager = ({
               title="Refresh queue activity"
             >
               <RefreshCw size={16} className={refreshing ? 'spin-icon' : ''} />
-            </button>
+            </button> */}
 
             {/* Create Voucher CTA */}
             {onOpenCreateVoucher && (
@@ -1374,45 +1375,31 @@ export const ActivityManager = ({
           {/* Search Input & Sorter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flexShrink: 0 }}>
             {/* Search Input */}
-            <div
-              className="glass-panel"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px',
-                borderRadius: '12px',
-                background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
-                border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))',
-                width: '240px'
+            <BitrixFilterBar
+              storageKey="tc_activity_filter"
+              id="activity-search-input"
+              name="activity_search"
+              searchQuery={searchQuery}
+              onSearchChange={(val) => {
+                setSearchQuery(val);
+                setPage(1);
               }}
-            >
-              <Search size={14} color="var(--text-muted, #64748b)" />
-              <input
-                type="text"
-                placeholder="Search party, voucher #..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  outline: 'none',
-                  width: '100%',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: 'var(--text-dark, #0f172a)'
-                }}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b', padding: 0 }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+              placeholder="Search party, voucher #..."
+              availableFields={[
+                { id: 'search', label: 'Party / Voucher #', type: 'text', category: 'General' },
+                { id: 'module', label: 'Module', type: 'select', category: 'General', options: ['Vouchers', 'Ledgers', 'Orders', 'Users', 'Reports'] }
+              ]}
+              defaultVisibleFieldIds={['search', 'module']}
+              presets={[
+                { id: 'all_activity', label: 'All activities', filters: {} },
+                { id: 'voucher_activity', label: 'Vouchers', filters: { module: 'Vouchers' } },
+                { id: 'ledger_activity', label: 'Ledgers', filters: { module: 'Ledgers' } }
+              ]}
+              onReset={() => {
+                setSearchQuery('');
+                setPage(1);
+              }}
+            />
 
             {/* Sort Dropdown */}
             <select
@@ -2416,18 +2403,7 @@ export const ActivityManager = ({
               <span>View Details</span>
             </button>
 
-            {/* Drag to reorder */}
-            <button
-              type="button"
-              className="item-popover-action-btn"
-              onClick={() => {
-                setMenuActivity(null);
-                showToast('Entry ready: Drag and drop anywhere to reorder');
-              }}
-            >
-              <Move size={18} style={{ color: '#64748b' }} />
-              <span>Drag</span>
-            </button>
+
 
             {/* Hide Entry */}
             <button

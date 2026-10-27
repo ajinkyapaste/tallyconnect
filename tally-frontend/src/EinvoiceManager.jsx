@@ -13,6 +13,7 @@ import StandardDateFilter from './StandardDateFilter';
 import { CardContextMenu, HiddenCardsChip, useCardGridPreferences } from './CardGridPreferences';
 import { createHoldTouchHandler, UnhideModal } from './uiUtils';
 import { DisplayPreferencesBar } from './DisplayPreferencesBar';
+import BitrixFilterBar from './BitrixFilterBar';
 
 const formatInr = (n) =>
   `\u20B9${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -850,10 +851,10 @@ export default function EinvoiceManager({ user, companyGuid }) {
           )}
 
           {/* Action 3: Refresh button */}
-          <button className="btn-secondary" onClick={() => fetchList(true)} disabled={refreshing}>
+          {/* <button className="btn-secondary" onClick={() => fetchList(true)} disabled={refreshing}>
             <RefreshCcw size={16} className={refreshing ? 'spin-icon' : ''} />
             <span>Refresh</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -1043,34 +1044,31 @@ export default function EinvoiceManager({ user, companyGuid }) {
             )}
 
             {/* Search Input */}
-            <div
-              className="header-search glass-panel"
-              style={{
-                width: '280px',
-                maxWidth: '100%',
-                background: 'var(--glass-bg, rgba(255, 255, 255, 0.7))',
-                border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.8))',
-                backdropFilter: 'blur(var(--glass-blur, 24px))',
-                WebkitBackdropFilter: 'blur(var(--glass-blur, 24px))'
+            <BitrixFilterBar
+              storageKey="tc_einvoice_filter"
+              id="einvoice-search-input"
+              name="einvoice_search"
+              searchQuery={search}
+              onSearchChange={(val) => {
+                setSearch(val);
+                setPage(1);
               }}
-            >
-              <Search size={16} color="var(--text-muted)" />
-              <input
-                type="text"
-                placeholder="Search party, GSTIN, voucher, IRN"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
-                >
-                  <XCircle size={14} color="#64748b" />
-                </button>
-              )}
-            </div>
+              placeholder="Search party, GSTIN, voucher, IRN"
+              availableFields={[
+                { id: 'search', label: 'Keyword', type: 'text', category: 'General' },
+                { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Pending', 'E-Invoiced', 'Cancelled', 'Not Needed', 'Alerts'] }
+              ]}
+              defaultVisibleFieldIds={['search', 'status']}
+              presets={[
+                { id: 'all_einvoices', label: 'All e-invoices', filters: {} },
+                { id: 'pending_einvoices', label: 'Pending IRN', filters: { status: 'Pending' } },
+                { id: 'generated_einvoices', label: 'E-Invoiced', filters: { status: 'E-Invoiced' } }
+              ]}
+              onReset={() => {
+                setSearch('');
+                setPage(1);
+              }}
+            />
           </div>
         </div>
 
@@ -1708,7 +1706,7 @@ export default function EinvoiceManager({ user, companyGuid }) {
                 <Printer size={14} />
                 <span>Print</span>
               </button>
-              <button
+              {/* <button
                 type="button"
                 className="btn-secondary"
                 onClick={() => openDetail(selected)}
@@ -1717,7 +1715,7 @@ export default function EinvoiceManager({ user, companyGuid }) {
               >
                 <RefreshCw size={14} className={detailLoading ? 'spin-icon' : ''} />
                 <span>Refresh</span>
-              </button>
+              </button> */}
             </div>
 
             {detailLoading ? (

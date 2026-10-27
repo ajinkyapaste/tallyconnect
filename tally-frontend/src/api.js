@@ -284,24 +284,83 @@ export const updateMonthlyReportSchedule = ({ report_day, report_time, enabled }
   api.put('/users/me/monthly-report-schedule', { report_day, report_time, enabled });
 
 /* ---------------- User Profile & Avatar ---------------- */
-export const updateUserProfile = ({ username, email, company, role }) =>
-  api.put('/users/me', { username, email, company, role });
+export const resolveAvatarUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) {
+    const base = (import.meta.env.VITE_API_URL || 'https://tallymobile.utkarshmishra.online').replace(/\/+$/, '');
+    return `${base}${url}`;
+  }
+  return url;
+};
+
+export const updateUserProfile = ({ username, email, company, role, avatar_url }) =>
+  api.put('/users/me', { username, email, company, role, avatar_url });
 
 export const uploadUserAvatar = async (file, endpoint = '/users/me/avatar') => {
+  // Compress and generate local data URL fallback so upload never leaves user stuck
+  const getClientDataUrl = () => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 200;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.88));
+        } catch {
+          resolve(e.target.result);
+        }
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+
+  const clientDataUrl = await getClientDataUrl();
+
   const formData = new FormData();
   formData.append('avatar', file);
   const token = getToken();
   const url = buildUrl(endpoint || '/api/users/me/avatar');
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || 'Avatar upload failed');
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data?.avatar_url) {
+        return { avatar_url: resolveAvatarUrl(data.avatar_url) };
+      }
+    }
+  } catch (err) {
+    console.warn('Backend avatar upload failed, falling back to local client avatar:', err);
   }
-  return await res.json();
+
+  // Graceful fallback: use clientDataUrl and attempt saving through PUT /users/me
+  if (clientDataUrl) {
+    try {
+      await api.put('/users/me', { avatar_url: clientDataUrl }).catch(() => {});
+    } catch {}
+    return { avatar_url: clientDataUrl };
+  }
+
+  throw new Error('Avatar upload failed');
 };
 
 /* ---------------- Staff Permissions & Bulk Operations ---------------- */

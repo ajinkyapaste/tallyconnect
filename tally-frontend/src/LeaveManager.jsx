@@ -27,6 +27,7 @@ import {
 import DisplayPreferencesBar from './DisplayPreferencesBar';
 import StandardPagination from './StandardPagination';
 import { UnhideModal, createHoldTouchHandler } from './uiUtils';
+import BitrixFilterBar from './BitrixFilterBar';
 
 /* ---------------- Date Helpers ---------------- */
 const istToday = () => {
@@ -703,7 +704,7 @@ export default function LeaveManager({ user, companyGuid }) {
             <Plus size={16} /> Apply Leave
           </button>
 
-          <button
+          {/* <button
             className="btn-secondary"
             onClick={refreshAll}
             disabled={refreshing}
@@ -711,7 +712,7 @@ export default function LeaveManager({ user, companyGuid }) {
             style={{ padding: '9px 14px' }}
           >
             <RotateCcw size={15} className={refreshing ? 'spin-icon' : ''} />
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -886,16 +887,31 @@ export default function LeaveManager({ user, companyGuid }) {
           {/* Controls & Preferences */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ position: 'relative' }}>
-                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Search your requests..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ padding: '8px 12px 8px 36px', borderRadius: '10px', border: '1px solid var(--glass-border)', background: 'var(--glass-bg)', color: 'var(--text-dark)', fontSize: '13px', width: '220px' }}
-                />
-              </div>
+              <BitrixFilterBar
+                storageKey="tc_leave_my_filter"
+                id="leave-my-search-input"
+                name="leave_my_search"
+                searchQuery={searchQuery}
+                onSearchChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(1);
+                }}
+                placeholder="Search your requests..."
+                availableFields={[
+                  { id: 'search', label: 'Request', type: 'text', category: 'General' },
+                  { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Pending', 'Approved', 'Rejected', 'Cancelled'] }
+                ]}
+                defaultVisibleFieldIds={['search', 'status']}
+                presets={[
+                  { id: 'all_requests', label: 'All requests', filters: {} },
+                  { id: 'pending_requests', label: 'Pending', filters: { status: 'Pending' } },
+                  { id: 'approved_requests', label: 'Approved', filters: { status: 'Approved' } }
+                ]}
+                onReset={() => {
+                  setSearchQuery('');
+                  setPage(1);
+                }}
+              />
 
               <select
                 value={statusFilter}
@@ -1184,16 +1200,31 @@ export default function LeaveManager({ user, companyGuid }) {
           {/* Controls & Filter Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative' }}>
-                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Search team requests..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ padding: '8px 12px 8px 36px', borderRadius: '10px', border: '1px solid var(--glass-border)', background: 'var(--glass-bg)', color: 'var(--text-dark)', fontSize: '13px', width: '220px' }}
-                />
-              </div>
+              <BitrixFilterBar
+                storageKey="tc_leave_team_filter"
+                id="leave-team-search-input"
+                name="leave_team_search"
+                searchQuery={searchQuery}
+                onSearchChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(1);
+                }}
+                placeholder="Search team requests..."
+                availableFields={[
+                  { id: 'search', label: 'Team Request / Member', type: 'text', category: 'General' },
+                  { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Pending', 'Approved', 'Rejected', 'Cancelled'] }
+                ]}
+                defaultVisibleFieldIds={['search', 'status']}
+                presets={[
+                  { id: 'all_requests', label: 'All requests', filters: {} },
+                  { id: 'pending_requests', label: 'Pending', filters: { status: 'Pending' } },
+                  { id: 'approved_requests', label: 'Approved', filters: { status: 'Approved' } }
+                ]}
+                onReset={() => {
+                  setSearchQuery('');
+                  setPage(1);
+                }}
+              />
 
               <select
                 value={statusFilter}

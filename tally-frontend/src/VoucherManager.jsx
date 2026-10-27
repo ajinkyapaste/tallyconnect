@@ -2632,17 +2632,7 @@ export const VoucherManager = ({
               <span>Edit Voucher</span>
             </button>
 
-            <button
-              type="button"
-              className="item-popover-action-btn"
-              onClick={() => {
-                setMenuVoucher(null);
-                showToast('Voucher ready: Drag and drop anywhere to reorder');
-              }}
-            >
-              <Move size={18} style={{ color: '#64748b' }} />
-              <span>Drag</span>
-            </button>
+
 
             <button
               type="button"

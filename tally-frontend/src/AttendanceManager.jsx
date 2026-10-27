@@ -22,6 +22,7 @@ import {
 import DisplayPreferencesBar from './DisplayPreferencesBar';
 import StandardPagination from './StandardPagination';
 import { UnhideModal, createHoldTouchHandler } from './uiUtils';
+import BitrixFilterBar from './BitrixFilterBar';
 
 const formatDuration = (totalSeconds) => {
   const s = Math.max(0, Math.floor(totalSeconds));
@@ -690,7 +691,7 @@ export default function AttendanceManager({ user, companyGuid }) {
               </>
             )}
 
-            <button
+            {/* <button
               type="button"
               className="btn-secondary"
               onClick={() => {
@@ -707,7 +708,7 @@ export default function AttendanceManager({ user, companyGuid }) {
             >
               <RotateCcw size={14} className={refreshing ? 'spinning' : ''} />
               <span>Refresh</span>
-            </button>
+            </button> */}
           </div>
       </div>
 
@@ -812,15 +813,31 @@ export default function AttendanceManager({ user, companyGuid }) {
           }}>
             {/* Left: Search & Filter Pills */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <div className="header-search" style={{ width: '240px', background: 'var(--glass-bg)' }}>
-                <Search size={16} color="var(--text-muted)" />
-                <input
-                  type="text"
-                  placeholder="Search team members..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                />
-              </div>
+              <BitrixFilterBar
+                storageKey="tc_attendance_filter"
+                id="attendance-search-input"
+                name="attendance_search"
+                searchQuery={searchQuery}
+                onSearchChange={(val) => {
+                  setSearchQuery(val);
+                  setPage(1);
+                }}
+                placeholder="Search team members..."
+                availableFields={[
+                  { id: 'search', label: 'Team Member', type: 'text', category: 'General' },
+                  { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Idle', 'Checked Out', 'Absent', 'Exempt'] }
+                ]}
+                defaultVisibleFieldIds={['search', 'status']}
+                presets={[
+                  { id: 'all_attendance', label: 'All members', filters: {} },
+                  { id: 'active_attendance', label: 'Active', filters: { status: 'Active' } },
+                  { id: 'absent_attendance', label: 'Absent', filters: { status: 'Absent' } }
+                ]}
+                onReset={() => {
+                  setSearchQuery('');
+                  setPage(1);
+                }}
+              />
 
               <div style={{ display: 'flex', gap: '6px', background: 'var(--glass-bg)', padding: '3px', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
                 {['all', 'active', 'idle', 'checked_out', 'absent', 'exempt'].map((filterKey) => {

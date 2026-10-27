@@ -71,6 +71,34 @@ const getDefaultFieldsForStorage = (key) => {
       { id: 'date', label: 'Date', type: 'date', category: 'Date' }
     ];
   }
+  if (k.includes('user') || k.includes('member') || k.includes('team')) {
+    return [
+      { id: 'search', label: 'Name / Email', type: 'text', category: 'General' },
+      { id: 'role', label: 'Role', type: 'select', category: 'General', options: ['Admin', 'Staff'] },
+      { id: 'email', label: 'Email', type: 'text', category: 'General' }
+    ];
+  }
+  if (k.includes('attendance')) {
+    return [
+      { id: 'search', label: 'Team Member', type: 'text', category: 'General' },
+      { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Idle', 'Checked Out', 'Absent', 'Exempt'] },
+      { id: 'date', label: 'Date', type: 'date', category: 'Date' }
+    ];
+  }
+  if (k.includes('leave')) {
+    return [
+      { id: 'search', label: 'Request / Name', type: 'text', category: 'General' },
+      { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Pending', 'Approved', 'Rejected', 'Cancelled'] },
+      { id: 'leave_type', label: 'Type', type: 'select', category: 'General', options: ['Casual Leave', 'Sick Leave', 'Earned Leave'] }
+    ];
+  }
+  if (k.includes('activity')) {
+    return [
+      { id: 'search', label: 'Party / Voucher #', type: 'text', category: 'General' },
+      { id: 'action', label: 'Action', type: 'select', category: 'General', options: ['Created', 'Updated', 'Deleted', 'Downloaded'] },
+      { id: 'module', label: 'Module', type: 'select', category: 'General', options: ['Vouchers', 'Ledgers', 'Orders', 'Users', 'Reports'] }
+    ];
+  }
   return [
     { id: 'search', label: 'Keyword', type: 'text', category: 'General' },
     { id: 'total', label: 'Total', type: 'number', category: 'Financial' },
@@ -121,6 +149,34 @@ const getDefaultPresetsForStorage = (key) => {
       { id: 'all_einvoices', label: 'All e-invoices', filters: {} },
       { id: 'generated_einvoices', label: 'Generated', filters: { status: 'Generated' } },
       { id: 'pending_einvoices', label: 'Pending IRN', filters: { status: 'Pending' } }
+    ];
+  }
+  if (k.includes('user') || k.includes('member') || k.includes('team')) {
+    return [
+      { id: 'all_users', label: 'All users', filters: {} },
+      { id: 'admin_users', label: 'Admins', filters: { role: 'Admin' } },
+      { id: 'staff_users', label: 'Staff members', filters: { role: 'Staff' } }
+    ];
+  }
+  if (k.includes('attendance')) {
+    return [
+      { id: 'all_attendance', label: 'All members', filters: {} },
+      { id: 'active_attendance', label: 'Active', filters: { status: 'Active' } },
+      { id: 'absent_attendance', label: 'Absent', filters: { status: 'Absent' } }
+    ];
+  }
+  if (k.includes('leave')) {
+    return [
+      { id: 'all_requests', label: 'All requests', filters: {} },
+      { id: 'pending_requests', label: 'Pending', filters: { status: 'Pending' } },
+      { id: 'approved_requests', label: 'Approved', filters: { status: 'Approved' } }
+    ];
+  }
+  if (k.includes('activity')) {
+    return [
+      { id: 'all_activity', label: 'All activities', filters: {} },
+      { id: 'voucher_activity', label: 'Vouchers', filters: { module: 'Vouchers' } },
+      { id: 'ledger_activity', label: 'Ledgers', filters: { module: 'Ledgers' } }
     ];
   }
   return [

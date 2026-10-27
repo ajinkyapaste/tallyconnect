@@ -747,7 +747,7 @@ export const FinancialInsights = ({ companyGuid, setCurrentTab, isStandalone = f
             </div>
 
             {/* Quick Refresh */}
-            <button
+            {/* <button
               type="button"
               className="btn-secondary"
               onClick={fetchInsightsData}
@@ -757,7 +757,7 @@ export const FinancialInsights = ({ companyGuid, setCurrentTab, isStandalone = f
             >
               <RotateCcw size={15} className={loading ? 'spin-icon' : ''} />
               <span style={{ fontSize: '13px', fontWeight: 600 }}>Sync</span>
-            </button>
+            </button> */}
 
             {/* Unhide Sections Button */}
             {sectionsHidden.length > 0 && (

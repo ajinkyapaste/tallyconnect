@@ -5,7 +5,7 @@ import {
   FileText, Package, Settings, LogOut, Search, Bell, CheckCircle2,
   TrendingUp, Grid, Landmark, Filter, Plus, ChevronRight, ChevronLeft, RotateCcw, Building2,
   Users as UsersIcon, CreditCard, Receipt, BarChart3, Clock, Clipboard,
-  X, AlertCircle, Trash2, Download, RefreshCw, Calendar, Layers, Eye,
+  X, AlertCircle, Trash2, Download, RefreshCw, Calendar, Layers, Eye, Info,
   Share2, Tag, Mail as MailIcon, Phone as PhoneIcon, Check,
   ChevronDown, Inbox, Upload,
   Star, Sparkles, Bot, Pin, Move, ExternalLink, MessageSquare, Send, EyeOff, MoreVertical, Mic,
@@ -21,7 +21,7 @@ import {
   getNotificationPreferences, updateNotificationPreferences, requestAccessToAdmin, getAdminAccessRequests,
   getAllNotifications, markNotificationRead, clearAllNotifications,
   getBillDashboardSummary, getMonthlyReportSchedule, updateMonthlyReportSchedule,
-  updateUserProfile, uploadUserAvatar, getUserLedgers, bulkAssignLedgers,
+  updateUserProfile, uploadUserAvatar, resolveAvatarUrl, getUserLedgers, bulkAssignLedgers,
   bulkUpdateVoucherPermissions, bulkUpdateOrdersPermissions, bulkUpdateLedgerPermissions,
   bulkUpdateInventoryPermissions, bulkUpdateDashboardPermissions, getUserInviteInfo,
   getUserOrders, saveUserOrders, saveBulkUserOrders,
@@ -54,6 +54,7 @@ import BitrixFilterBar from './BitrixFilterBar';
 import AppearanceSettings, { ALL_THEMES_PRESETS } from './AppearanceSettings';
 import AiChatbotIcon from './AiChatbotIcon';
 import BitrixContextMenu from './BitrixContextMenu';
+import CreateLedgerModal from './CreateLedgerModal';
 
 
 /* ---------------- helpers for live data ---------------- */
@@ -275,7 +276,6 @@ const NAV_GROUPS = [
       { id: 'ledger', name: 'Ledgers', icon: <Landmark size={18} />, color: '#34c759' },
       { id: 'vouchers', name: 'Vouchers', icon: <FileText size={18} />, color: '#5856d6' },
       { id: 'bills', name: 'Bills', icon: <Receipt size={18} />, color: '#ff9500' },
-      { id: 'activity', name: 'Activity', icon: <RotateCcw size={18} />, color: '#e11d48' },
       { id: 'monthly', name: 'Reports', icon: <BarChart3 size={18} />, color: '#0ea5e9' },
     ],
   },
@@ -3460,19 +3460,6 @@ const Dashboard = ({ setCurrentTab, companyGuid, syncInfo, onQuickAdd, user }) =
           <p>{companyGuid ? 'Here’s how your business is doing today' : 'Select a company to see your business overview'}</p>
         </div>
         <div className="page-header-actions">
-          {syncInfo && (
-            <div
-              className="sync-pill"
-              title={syncInfo.last_sync_at ? `Last synced on ${new Date(syncInfo.last_sync_at).toLocaleString()}` : 'No sync yet'}
-            >
-              <i className={`sync-dot ${syncInfo.sync_in_progress ? 'syncing' : 'ok'}`} />
-              <span>
-                {syncInfo.sync_in_progress
-                  ? 'Syncing…'
-                  : `Synced ${syncInfo.last_sync_at ? formatSyncTime(syncInfo.last_sync_at) : '—'}`}
-              </span>
-            </div>
-          )}
           <button className="btn-primary" onClick={() => (onQuickAdd ? onQuickAdd() : setCurrentTab('vouchers'))}>
             <Plus size={16} /> Create Voucher
           </button>
@@ -3618,10 +3605,7 @@ const Dashboard = ({ setCurrentTab, companyGuid, syncInfo, onQuickAdd, user }) =
               <ChevronRight size={14} />
               <span>Open</span>
             </button>
-            <button type="button" onClick={handleDragHint}>
-              <Move size={14} />
-              <span>Drag</span>
-            </button>
+
             <button type="button" onClick={() => handleHide(contextMenu.action.id, contextMenu.action.name)}>
               <EyeOff size={14} />
               <span>Hide</span>
@@ -3666,13 +3650,7 @@ const Dashboard = ({ setCurrentTab, companyGuid, syncInfo, onQuickAdd, user }) =
               <ChevronRight size={14} />
               <span>Open</span>
             </button>
-            <button type="button" onClick={() => {
-              setKpiContextMenu(null);
-              showToast('Tile ready: Drag and drop anywhere to reorder');
-            }}>
-              <Move size={14} />
-              <span>Drag</span>
-            </button>
+
             <button type="button" onClick={() => handleKpiHide(kpiContextMenu.kpi)}>
               <EyeOff size={14} />
               <span>Hide</span>
@@ -3908,6 +3886,7 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
 
   const [reminderModalOpen, setReminderModalOpen] = useState(false);
   const [reminderParty, setReminderParty] = useState(null);
+  const [showCreateLedgerModal, setShowCreateLedgerModal] = useState(false);
 
   // Individual Ledger Records drag, pin, and hide states
   const [ledgerOrder, setLedgerOrder] = useState(() => {
@@ -4768,18 +4747,16 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button className="btn-secondary" onClick={refresh} style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Re-fetch from Tally sync">
+          {/* <button className="btn-secondary" onClick={refresh} style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Re-fetch from Tally sync">
             <RefreshCw size={18} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} /> {refreshing ? 'Syncing…' : 'Refresh'}
-          </button>
+          </button> */}
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={() => window.print()} label="Export" />
-          <button className="btn-secondary" onClick={shareList} style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Share a summary of this view">
-            <Share2 size={18} /> Share
+          <button className="btn-secondary" onClick={shareList} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }} title="Share a summary of this view">
+            <Share2 size={16} /> Share
           </button>
-          {onNewSale && (
-            <button className="btn-primary" onClick={() => handleNewSale(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Create a Sales voucher">
-              <Plus size={18} /> New Sale
-            </button>
-          )}
+          <button className="btn-primary" onClick={() => setShowCreateLedgerModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }} title="Create a new ledger account">
+            <Plus size={16} /> Create Ledger
+          </button>
         </div>
       </div>
 
@@ -5311,9 +5288,9 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
               </div>
 
               <div className="party-sheet-actions">
-                <button className="btn-secondary" onClick={refreshDetail} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1', justifyContent: 'center' }} title="Re-fetch this party">
+                {/* <button className="btn-secondary" onClick={refreshDetail} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1', justifyContent: 'center' }} title="Re-fetch this party">
                   <RefreshCw size={15} /> Refresh
-                </button>
+                </button> */}
                 <button className="btn-secondary" onClick={shareDetail} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1', justifyContent: 'center' }} title="Share this party">
                   <Share2 size={15} /> Share
                 </button>
@@ -5769,16 +5746,7 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
               <ChevronRight size={14} />
               <span>Filter View</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                alert('Tip: Drag this card to reorder your ledger stats.');
-                setStatContextMenu(null);
-              }}
-            >
-              <Move size={14} />
-              <span>Drag</span>
-            </button>
+
             <button
               type="button"
               onClick={() => handleStatHide(statContextMenu.card.key)}
@@ -5835,18 +5803,7 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
               <span>Open</span>
             </button>
 
-            <button
-              type="button"
-              className="item-popover-action-btn"
-              onClick={() => {
-                setMenuLedger(null);
-                setLedgerToast('Tile ready: Drag and drop to reorder');
-                setTimeout(() => setLedgerToast(''), 2200);
-              }}
-            >
-              <Move size={18} style={{ color: '#64748b' }} />
-              <span>Drag</span>
-            </button>
+
 
             <button
               type="button"
@@ -5915,6 +5872,17 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
         onClose={() => setReminderModalOpen(false)}
         initialParty={reminderParty}
         companyGuid={companyGuid}
+      />
+
+      {/* Create Ledger Modal */}
+      <CreateLedgerModal
+        isOpen={showCreateLedgerModal}
+        onClose={() => setShowCreateLedgerModal(false)}
+        companyGuid={companyGuid}
+        onSuccess={(created) => {
+          setFeed(`Ledger "${created.name}" created successfully!`);
+          refresh();
+        }}
       />
     </div>
   );
@@ -6672,9 +6640,9 @@ const Inventory = ({ companyGuid, externalQuery, setCurrentTab }) => {
             type="button"
             className="btn-primary"
             onClick={() => { setShowAdd((v) => !v); setFeed(null); }}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}
           >
-            <Plus size={18} /> Add Item
+            <Plus size={16} /> Add Item
           </button>
         </div>
       </div>
@@ -6950,25 +6918,56 @@ const Inventory = ({ companyGuid, externalQuery, setCurrentTab }) => {
         </div>
       )}
 
-      {/* Search Input Bar */}
-      <div className="items-search-container">
-        <Search size={18} color="#94a3b8" />
-        <input
-          type="text"
-          className="items-search-input"
-          placeholder={viewMode === 'by_group' ? 'Search stock group' : 'Search item name'}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+      {/* Bitrix Filter Bar for Inventory */}
+      <div style={{ marginBottom: '16px' }}>
+        <BitrixFilterBar
+          storageKey="tc_items_filter"
+          id="items-search-input"
+          name="items_search"
+          searchQuery={query}
+          onSearchChange={(val) => {
+            setQuery(val);
+            setPage(1);
+          }}
+          placeholder={viewMode === 'by_group' ? 'Search stock group...' : 'Search item name...'}
+          availableFields={[
+            { id: 'search', label: 'Item / Group Name', type: 'text', category: 'General' },
+            { id: 'stock_status', label: 'Stock Status', type: 'select', category: 'General', options: ['Available', 'Low Stock', 'Finished / Out'] }
+          ]}
+          defaultVisibleFieldIds={['search', 'stock_status']}
+          presets={[
+            { id: 'all_items', label: 'All Items', filters: {} },
+            { id: 'available_items', label: 'Available', filters: { stock_status: 'Available' } },
+            { id: 'low_stock_items', label: 'Running Low', filters: { stock_status: 'Low Stock' } },
+            { id: 'finished_items', label: 'Out of Stock', filters: { stock_status: 'Finished / Out' } }
+          ]}
+          activePresetId={filterPill === 'available' ? 'available_items' : (filterPill === 'low' ? 'low_stock_items' : (filterPill === 'finished' ? 'finished_items' : 'all_items'))}
+          onPresetSelect={(pId) => {
+            if (pId === 'available_items') setFilterPill('available');
+            else if (pId === 'low_stock_items') setFilterPill('low');
+            else if (pId === 'finished_items') setFilterPill('finished');
+            else setFilterPill('all');
+            setSelectedGroupDrilldown(null);
+            setPage(1);
+          }}
+          filters={{
+            stock_status: filterPill === 'available' ? 'Available' : (filterPill === 'low' ? 'Low Stock' : (filterPill === 'finished' ? 'Finished / Out' : ''))
+          }}
+          onFilterChange={(next) => {
+            if (next.stock_status === 'Available') setFilterPill('available');
+            else if (next.stock_status === 'Low Stock') setFilterPill('low');
+            else if (next.stock_status === 'Finished / Out') setFilterPill('finished');
+            else if (next.stock_status === '') setFilterPill('all');
+            if (next.search !== undefined) setQuery(next.search);
+            setPage(1);
+          }}
+          onReset={() => {
+            setQuery('');
+            setFilterPill('all');
+            setSelectedGroupDrilldown(null);
+            setPage(1);
+          }}
         />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery('')}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
-          >
-            <X size={16} />
-          </button>
-        )}
       </div>
 
       {/* Hidden Items Banner (if any items hidden) */}
@@ -7289,15 +7288,7 @@ const Inventory = ({ companyGuid, externalQuery, setCurrentTab }) => {
               <span>Open</span>
             </button>
 
-            {/* Action 3: Drag */}
-            <button
-              type="button"
-              className="item-popover-action-btn"
-              onClick={() => handleDragAction(menuItem)}
-            >
-              <Move size={18} style={{ color: '#64748b' }} />
-              <span>Drag</span>
-            </button>
+
 
             {/* Action 4: Hide */}
             <button
@@ -7617,30 +7608,22 @@ const DeleteHistory = ({ externalQuery, setCurrentTab }) => {
         <div style={{ display: 'flex', gap: '8px' }}>
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={exportPDF} />
           {setCurrentTab && (
-            <button className="btn-primary" onClick={() => setCurrentTab('history')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={18} /> View History
+            <button className="btn-primary" onClick={() => setCurrentTab('history')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+              <Clock size={16} /> View History
             </button>
           )}
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-        <div className="header-search" style={{ width: '100%', maxWidth: '400px' }}>
-          <Search size={18} color="var(--text-muted)" />
-          <input
-            id="deleted-search-input"
-            name="deleted_search"
-            type="text"
-            placeholder="Search deleted records..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {query && (
-            <button onClick={() => setQuery('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Clear search">
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <BitrixFilterBar
+          storageKey="tc_deleted_filter"
+          id="deleted-search-input"
+          name="deleted_search"
+          searchQuery={query}
+          onSearchChange={setQuery}
+          placeholder="Search deleted records..."
+        />
       </div>
 
       {feed && (
@@ -7989,8 +7972,8 @@ const Orders = ({ companyGuid, externalQuery, setCurrentTab, user: propUser }) =
         <div style={{ display: 'flex', gap: '8px' }}>
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={exportPDF} />
           {setCurrentTab && (
-            <button className="btn-primary" onClick={() => setCurrentTab('vouchers')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Receipt size={18} /> View Vouchers
+            <button className="btn-primary" onClick={() => setCurrentTab('vouchers')} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+              <Receipt size={16} /> View Vouchers
             </button>
           )}
         </div>
@@ -8957,7 +8940,7 @@ const CompanyManager = ({ companyGuid, setCompanyGuid }) => {
             <Plus size={15} />
             <span>Add Company</span>
           </button>
-          <button
+          {/* <button
             type="button"
             className="btn-secondary"
             onClick={fetchCompanies}
@@ -8967,7 +8950,7 @@ const CompanyManager = ({ companyGuid, setCompanyGuid }) => {
           >
             <RefreshCw size={14} className={loading ? "spin" : ""} />
             <span>Refresh</span>
-          </button>
+          </button> */}
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={exportPDF} />
         </div>
       </div>
@@ -9155,25 +9138,47 @@ const CompanyManager = ({ companyGuid, setCompanyGuid }) => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* Search Input */}
-            <div className="header-search" style={{ width: '220px', background: 'var(--glass-bg)' }}>
-              <Search size={15} color="var(--text-muted)" />
-              <input
-                type="text"
-                placeholder="Search companies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0 4px', color: 'var(--text-muted)' }}
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
+            {/* Bitrix Filter Bar for Companies */}
+            <BitrixFilterBar
+              storageKey="tc_companies_filter"
+              id="companies-search-input"
+              name="companies_search"
+              searchQuery={searchQuery}
+              onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
+              placeholder="Search companies..."
+              availableFields={[
+                { id: 'search', label: 'Company Name / GUID', type: 'text', category: 'General' },
+                { id: 'status', label: 'Status', type: 'select', category: 'General', options: ['Active Workspace', 'Synchronized'] }
+              ]}
+              defaultVisibleFieldIds={['search', 'status']}
+              presets={[
+                { id: 'all_companies', label: 'All companies', filters: {} },
+                { id: 'active_company', label: 'Active Workspace', filters: { status: 'Active Workspace' } },
+                { id: 'synced_companies', label: 'Synchronized', filters: { status: 'Synchronized' } }
+              ]}
+              activePresetId={statusFilter === 'active' ? 'active_company' : (statusFilter === 'synced' ? 'synced_companies' : 'all_companies')}
+              onPresetSelect={(pId) => {
+                if (pId === 'active_company') setStatusFilter('active');
+                else if (pId === 'synced_companies') setStatusFilter('synced');
+                else setStatusFilter('all');
+                setPage(1);
+              }}
+              filters={{
+                status: statusFilter === 'active' ? 'Active Workspace' : (statusFilter === 'synced' ? 'Synchronized' : '')
+              }}
+              onFilterChange={(next) => {
+                if (next.status === 'Active Workspace') setStatusFilter('active');
+                else if (next.status === 'Synchronized') setStatusFilter('synced');
+                else if (next.status === '') setStatusFilter('all');
+                if (next.search !== undefined) setSearchQuery(next.search);
+                setPage(1);
+              }}
+              onReset={() => {
+                setSearchQuery('');
+                setStatusFilter('all');
+                setPage(1);
+              }}
+            />
 
             {/* Filter Pills */}
             <div style={{ display: 'inline-flex', padding: '3px', background: 'rgba(0,0,0,0.05)', borderRadius: '12px', gap: '3px' }}>
@@ -10001,22 +10006,43 @@ function UserProfileModal({ user, onClose, onUserUpdate }) {
               fontSize: '24px', fontWeight: 700, border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={resolveAvatarUrl(avatarUrl)} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 String(username || 'T').charAt(0).toUpperCase()
               )}
             </div>
             <div>
               <input ref={avatarFileRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={uploadingAvatar}
-                onClick={() => avatarFileRef.current?.click()}
-                style={{ padding: '6px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-              >
-                <Upload size={14} /> {uploadingAvatar ? 'Uploading…' : 'Change Avatar'}
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={uploadingAvatar}
+                  onClick={() => avatarFileRef.current?.click()}
+                  style={{ padding: '6px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Upload size={14} /> {uploadingAvatar ? 'Uploading…' : 'Change Avatar'}
+                </button>
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={async () => {
+                      setAvatarUrl('');
+                      try {
+                        await updateUserProfile({ username, email, company, role: user?.role || 'USER', avatar_url: '' });
+                        const updated = { ...user, avatar_url: '' };
+                        setSession(localStorage.getItem('tc_token'), updated);
+                        onUserUpdate && onUserUpdate(updated);
+                        setNotice({ ok: true, msg: 'Avatar removed.' });
+                      } catch {}
+                    }}
+                    style={{ padding: '6px 10px', fontSize: '12px', color: '#ef4444', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Trash2 size={13} /> Remove
+                  </button>
+                )}
+              </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG or WebP image</div>
             </div>
           </div>
@@ -10080,6 +10106,111 @@ function UserProfileModal({ user, onClose, onUserUpdate }) {
   );
 }
 
+/**
+ * Automatically optimizes an uploaded company logo:
+ * - Trims empty/transparent borders around the logo so the actual brand graphic fills the space.
+ * - Scales down oversized files (>1000px) to keep localStorage fast while preserving retina clarity.
+ * - Strips near-white backgrounds and feathers edges if removeWhiteBg is requested.
+ */
+const optimizeCompanyLogo = (dataUrl, { removeWhiteBg = false } = {}) => {
+  return new Promise((resolve) => {
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
+      resolve(dataUrl);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const origW = img.naturalWidth || img.width;
+        const origH = img.naturalHeight || img.height;
+        if (!origW || !origH) {
+          resolve(dataUrl);
+          return;
+        }
+
+        let scale = 1;
+        if (origW > 1000 || origH > 400) {
+          scale = Math.min(1000 / origW, 400 / origH);
+        }
+        const w = Math.round(origW * scale);
+        const h = Math.round(origH * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        if (removeWhiteBg) {
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const minC = Math.min(r, g, b);
+            const maxC = Math.max(r, g, b);
+            // Near-white detection with low saturation
+            if (minC > 230 && (maxC - minC) < 25) {
+              data[i + 3] = 0;
+            } else if (minC > 200 && (maxC - minC) < 30) {
+              const avg = (r + g + b) / 3;
+              const alphaFactor = Math.max(0, Math.min(1, 1 - (avg - 200) / 35));
+              data[i + 3] = Math.round(data[i + 3] * alphaFactor);
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+        }
+
+        // Auto-trim transparent borders
+        let minX = w, minY = h, maxX = 0, maxY = 0;
+        let foundVisible = false;
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            const a = data[idx + 3];
+            if (a > 12) {
+              foundVisible = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (!foundVisible || minX > maxX || minY > maxY) {
+          resolve(dataUrl);
+          return;
+        }
+
+        // Add 2px breathing padding to prevent cutting off antialiased edge pixels
+        const pad = 2;
+        const cropX = Math.max(0, minX - pad);
+        const cropY = Math.max(0, minY - pad);
+        const cropW = Math.min(w - cropX, (maxX - minX + 1) + pad * 2);
+        const cropH = Math.min(h - cropY, (maxY - minY + 1) + pad * 2);
+
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width = cropW;
+        cropCanvas.height = cropH;
+        const cropCtx = cropCanvas.getContext('2d');
+        cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+        resolve(cropCanvas.toDataURL('image/png'));
+      } catch (err) {
+        console.warn('Could not optimize logo:', err);
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+};
+
 /* ---------------- Settings ---------------- */
 const SettingsHub = ({
   primaryColor, setPrimaryColor,
@@ -10095,11 +10226,87 @@ const SettingsHub = ({
   onOpenAdminVisibility,
   setCurrentTab,
   onUserUpdate,
+  companyLogo: propCompanyLogo,
+  setCompanyLogo: propSetCompanyLogo,
 }) => {
   const [hiddenCount, setHiddenCount] = useState(() => getGlobalHiddenCount());
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showVoucherFieldSettingsModal, setShowVoucherFieldSettingsModal] = useState(false);
   const [activeSection, setActiveSection] = useState('appearance');
+  const [localCompanyLogo, setLocalCompanyLogo] = useState(() => {
+    try {
+      return localStorage.getItem('tc_company_logo') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [logoSize, setLogoSize] = useState(() => {
+    try {
+      const v = Number(localStorage.getItem('tc_company_logo_size'));
+      return Number.isFinite(v) && v >= 24 && v <= 52 ? v : 36;
+    } catch {
+      return 36;
+    }
+  });
+  const logoInputRef = useRef(null);
+
+  const activeLogo = propCompanyLogo !== undefined ? propCompanyLogo : localCompanyLogo;
+
+  const handleLogoSizeChange = (newSize) => {
+    const sz = Number(newSize) || 36;
+    setLogoSize(sz);
+    try {
+      localStorage.setItem('tc_company_logo_size', String(sz));
+    } catch {}
+    document.documentElement.style.setProperty('--company-logo-img-height', `${sz}px`);
+    document.documentElement.style.setProperty('--company-logo-pill-height', `${sz + 6}px`);
+    window.dispatchEvent(new CustomEvent('tc-company-logo-size-changed', { detail: { size: sz } }));
+  };
+
+  const saveAndBroadcastLogo = (newLogoUrl) => {
+    setLocalCompanyLogo(newLogoUrl);
+    if (propSetCompanyLogo) propSetCompanyLogo(newLogoUrl);
+    try {
+      if (newLogoUrl) {
+        localStorage.setItem('tc_company_logo', newLogoUrl);
+      } else {
+        localStorage.removeItem('tc_company_logo');
+      }
+    } catch (err) {
+      console.warn('Could not save logo to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('tc-company-logo-changed', { detail: { logo: newLogoUrl } }));
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, SVG, JPG, WebP)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (loadEvt) => {
+      const rawDataUrl = loadEvt.target.result;
+      // Auto-trim transparent borders so the logo graphic fills the bounding box
+      const optimized = await optimizeCompanyLogo(rawDataUrl, { removeWhiteBg: false });
+      saveAndBroadcastLogo(optimized);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveWhiteBg = async () => {
+    if (!activeLogo) return;
+    const optimized = await optimizeCompanyLogo(activeLogo, { removeWhiteBg: true });
+    saveAndBroadcastLogo(optimized);
+  };
+
+  const handleRemoveLogo = () => {
+    saveAndBroadcastLogo('');
+  };
 
   // Monthly Report Schedule state
   const [reportSchedule, setReportSchedule] = useState({
@@ -10836,6 +11043,186 @@ const SettingsHub = ({
               <Sliders size={16} /> Manage User Visibility
             </button>
           </div>
+
+          {/* Company Logo Upload (Admin Option) */}
+          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Building2 size={22} style={{ color: 'var(--primary-color)' }} />
+                  <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                    Company Logo
+                  </h4>
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-muted)', maxWidth: '560px' }}>
+                  Upload your organization's transparent brand logo. It renders seamlessly in the top navigation bar without any card container or border.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              background: 'rgba(0, 122, 255, 0.08)',
+              color: 'var(--primary-color)',
+              fontSize: '13px',
+              fontWeight: 650,
+              marginBottom: '16px'
+            }}>
+              <Info size={16} />
+              <span>Transparent PNG or SVG recommended — displays seamlessly directly on the navbar without any card box</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  Navbar Preview
+                </span>
+                <div style={{
+                  height: '56px',
+                  minWidth: '220px',
+                  maxWidth: '320px',
+                  borderRadius: '16px',
+                  border: '1px solid var(--glass-border, rgba(0,0,0,0.12))',
+                  background: 'rgba(255, 255, 255, 0.45)',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 14px',
+                  boxSizing: 'border-box'
+                }}>
+                  {activeLogo ? (
+                    <div className="header-company-logo" style={{ cursor: 'default' }}>
+                      <img
+                        src={activeLogo}
+                        alt="Company Logo Preview"
+                      />
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      No logo uploaded
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <input
+                  type="file"
+                  ref={logoInputRef}
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  style={{ display: 'none' }}
+                  onChange={handleLogoUpload}
+                />
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => logoInputRef.current?.click()}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px', fontSize: '13px', fontWeight: 650 }}
+                    title="Upload company logo"
+                  >
+                    <Upload size={16} />
+                    <span>Company Logo</span>
+                  </button>
+                  {activeLogo && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={handleRemoveWhiteBg}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 15px', borderRadius: '12px', fontSize: '13px', fontWeight: 600 }}
+                      title="Automatically remove white background and trim edges"
+                    >
+                      <Sparkles size={15} style={{ color: 'var(--primary-color)' }} />
+                      <span>Remove White Background</span>
+                    </button>
+                  )}
+                  {activeLogo && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={handleRemoveLogo}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '12px', fontSize: '13px', color: '#ef4444' }}
+                      title="Remove logo"
+                    >
+                      <Trash2 size={15} />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+                <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                  Auto-optimized on upload. Transparent PNG or SVG recommended.
+                </span>
+              </div>
+            </div>
+
+            {activeLogo && (
+              <div style={{
+                marginTop: '20px',
+                paddingTop: '16px',
+                borderTop: '1px solid var(--glass-border, rgba(0,0,0,0.08))',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)' }}>
+                    Logo Display Size: <span style={{ color: 'var(--primary-color)' }}>{logoSize}px</span> {logoSize === 36 && <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>(Default)</span>}
+                  </label>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleLogoSizeChange(28)}
+                      className="btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px', background: logoSize === 28 ? 'var(--primary-color)' : '', color: logoSize === 28 ? '#fff' : '', fontWeight: 600 }}
+                    >
+                      Small (28px)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLogoSizeChange(36)}
+                      className="btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px', background: logoSize === 36 ? 'var(--primary-color)' : '', color: logoSize === 36 ? '#fff' : '', fontWeight: 600 }}
+                    >
+                      Default (36px)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLogoSizeChange(44)}
+                      className="btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px', background: logoSize === 44 ? 'var(--primary-color)' : '', color: logoSize === 44 ? '#fff' : '', fontWeight: 600 }}
+                    >
+                      Large (44px)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLogoSizeChange(50)}
+                      className="btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px', background: logoSize === 50 ? 'var(--primary-color)' : '', color: logoSize === 50 ? '#fff' : '', fontWeight: 600 }}
+                    >
+                      XL (50px)
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>24px</span>
+                  <input
+                    type="range"
+                    min="24"
+                    max="50"
+                    step="2"
+                    value={logoSize}
+                    onChange={(e) => handleLogoSizeChange(Number(e.target.value))}
+                    style={{ flex: 1, maxWidth: '280px', accentColor: 'var(--primary-color)', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>50px</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -11332,26 +11719,15 @@ const BulkLedgerAssignModal = ({ selectedUserIds, companyGuid, onClose, onSaved 
         </div>
 
         {/* Desktop Toolbar: Search Input + Filter Tabs + Batch Buttons */}
-        <div style={{ padding: '16px 28px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', background: '#ffffff' }}>
+        <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--glass-border, #e2e8f0)', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', background: 'var(--card-bg, #ffffff)' }}>
           {/* Live Search */}
-          <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
-            <Search size={14} style={{ position: 'absolute', left: '12px', top: '10px', color: '#64748b' }} />
-            <input
-              type="text"
+          <div style={{ width: '340px', maxWidth: '100%' }}>
+            <BitrixFilterBar
+              storageKey="tc_party_ledgers_filter"
+              searchQuery={search}
+              onSearchChange={setSearch}
               placeholder="Search party ledgers by name, parent group..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ width: '100%', padding: '8px 30px 8px 34px', borderRadius: 10, border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
             />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                style={{ position: 'absolute', right: '10px', top: '9px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
-              >
-                <X size={12} />
-              </button>
-            )}
           </div>
 
           {/* Scope Filters */}
@@ -11688,11 +12064,17 @@ const UsersManager = ({ companyGuid }) => {
     e.preventDefault();
     e.stopPropagation();
     const isPinned = userPinned.includes(u.id);
+    const isSelected = selectedUserIds.includes(u.id);
     setUserContextMenu({
       x: e.clientX,
       y: e.clientY,
       title: u.username || u.email || `User #${u.id}`,
       items: [
+        {
+          label: isSelected ? 'Deselect User' : 'Select User',
+          icon: isSelected ? CheckCircle2 : Check,
+          onClick: () => handleToggleSelectUser(u.id)
+        },
         {
           label: isPinned ? 'Unpin User from Top' : 'Pin User to Top',
           icon: Pin,
@@ -11934,18 +12316,97 @@ const UsersManager = ({ companyGuid }) => {
   const adminCount = useMemo(() => users.filter(u => String(u.role || '').toUpperCase() === 'ADMIN' || String(u.role || '').toUpperCase() === 'SUPER_ADMIN').length, [users]);
   const staffCount = useMemo(() => users.filter(u => String(u.role || '').toUpperCase() === 'USER').length, [users]);
 
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+
   const handleToggleSelectAll = () => {
     if (filteredUsers.length > 0 && selectedUserIds.length === filteredUsers.length) {
       setSelectedUserIds([]);
+      setIsSelectionMode(false);
     } else {
       setSelectedUserIds(filteredUsers.map(u => u.id));
+      setIsSelectionMode(true);
     }
   };
 
   const handleToggleSelectUser = (id) => {
-    setSelectedUserIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+    setSelectedUserIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      if (next.length === 0) setIsSelectionMode(false);
+      else setIsSelectionMode(true);
+      return next;
+    });
+  };
+
+  const createLongClickHandler = (onLongClick, duration = 500) => {
+    let timer = null;
+    let startX = 0;
+    let startY = 0;
+    let isLong = false;
+
+    const start = (clientX, clientY) => {
+      isLong = false;
+      startX = clientX;
+      startY = clientY;
+      timer = setTimeout(() => {
+        isLong = true;
+        try { navigator.vibrate?.(50); } catch { }
+        onLongClick?.();
+      }, duration);
+    };
+
+    const cancel = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const move = (clientX, clientY) => {
+      if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) {
+        cancel();
+      }
+    };
+
+    return {
+      onMouseDown: (e) => {
+        if (e.button !== 0) return;
+        if (['BUTTON', 'INPUT', 'SELECT', 'A'].includes(e.target.tagName) || e.target.closest('button, input, select, a')) return;
+        start(e.clientX, e.clientY);
+      },
+      onMouseMove: (e) => move(e.clientX, e.clientY),
+      onMouseUp: (e) => {
+        cancel();
+        if (isLong) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      onMouseLeave: () => cancel(),
+      onTouchStart: (e) => {
+        if (['BUTTON', 'INPUT', 'SELECT', 'A'].includes(e.target.tagName) || e.target.closest('button, input, select, a')) return;
+        if (e.touches && e.touches[0]) {
+          start(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      },
+      onTouchMove: (e) => {
+        if (e.touches && e.touches[0]) {
+          move(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      },
+      onTouchEnd: (e) => {
+        cancel();
+        if (isLong) {
+          if (e.cancelable) e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      onTouchCancel: () => cancel()
+    };
+  };
+
+  const handleUserLongClick = (u) => {
+    setIsSelectionMode(true);
+    setSelectedUserIds(prev => prev.includes(u.id) ? prev : [...prev, u.id]);
   };
 
   const handleCreateUser = async (e) => {
@@ -12123,9 +12584,9 @@ const UsersManager = ({ companyGuid }) => {
         </div>
         <div className="header-actions">
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={exportPDF} />
-          <button className="btn-secondary" onClick={fetchUsers}>
+          {/* <button className="btn-secondary" onClick={fetchUsers}>
             <RotateCcw size={16} /> Refresh
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -13143,31 +13604,49 @@ const UsersManager = ({ companyGuid }) => {
 
             {/* Search and Role Filter Pills */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              {/* Search Input */}
-              <div
-                className="header-search"
-                onContextMenu={openUserSearchContextMenu}
-                style={{ width: '220px', background: 'var(--glass-bg)', cursor: 'context-menu' }}
-                title="Right-click for filter options"
-              >
-                <Search size={15} color="var(--text-muted)" />
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  onContextMenu={openUserSearchContextMenu}
-                />
-                {userSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setUserSearch('')}
-                    style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0 4px', color: 'var(--text-muted)' }}
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
+              {/* Bitrix Filter Bar for Registered Users */}
+              <BitrixFilterBar
+                storageKey="tc_users_filter"
+                id="users-search-input"
+                name="users_search"
+                searchQuery={userSearch}
+                onSearchChange={(val) => {
+                  setUserSearch(val);
+                  setPage(1);
+                }}
+                placeholder="Search users..."
+                availableFields={[
+                  { id: 'search', label: 'User / Email', type: 'text', category: 'General' },
+                  { id: 'role', label: 'Role', type: 'select', category: 'General', options: ['Admin', 'Staff'] }
+                ]}
+                defaultVisibleFieldIds={['search', 'role']}
+                presets={[
+                  { id: 'all_users', label: 'All users', filters: {} },
+                  { id: 'admin_users', label: 'Admins', filters: { role: 'Admin' } },
+                  { id: 'staff_users', label: 'Staff members', filters: { role: 'Staff' } }
+                ]}
+                activePresetId={roleFilter === 'ADMIN' ? 'admin_users' : (roleFilter === 'USER' ? 'staff_users' : 'all_users')}
+                onPresetSelect={(pId) => {
+                  if (pId === 'admin_users') setRoleFilter('ADMIN');
+                  else if (pId === 'staff_users') setRoleFilter('USER');
+                  else setRoleFilter('');
+                  setPage(1);
+                }}
+                filters={{
+                  role: roleFilter === 'ADMIN' ? 'Admin' : (roleFilter === 'USER' ? 'Staff' : '')
+                }}
+                onFilterChange={(next) => {
+                  if (next.role === 'Admin') setRoleFilter('ADMIN');
+                  else if (next.role === 'Staff') setRoleFilter('USER');
+                  else setRoleFilter('');
+                  setPage(1);
+                }}
+                onReset={() => {
+                  setUserSearch('');
+                  setRoleFilter('');
+                  setPage(1);
+                }}
+              />
 
               {/* Role Filter Pills */}
               <div style={{ display: 'inline-flex', padding: '3px', background: 'rgba(0,0,0,0.05)', borderRadius: '12px', gap: '3px' }}>
@@ -13304,7 +13783,7 @@ const UsersManager = ({ companyGuid }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedUserIds([])}
+                  onClick={() => { setSelectedUserIds([]); setIsSelectionMode(false); }}
                   style={{ padding: '8px 14px', fontSize: '13px', borderRadius: '12px', background: 'transparent', border: '1px solid var(--glass-border)', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >
                   Clear
@@ -13343,45 +13822,42 @@ const UsersManager = ({ companyGuid }) => {
                     <div
                       key={u.id}
                       className="glass-panel"
-                      draggable={true}
-                      onDragStart={(e) => handleUserDragStart(u.id, e)}
-                      onDragOver={(e) => handleUserDragOver(u.id, e)}
-                      onDrop={(e) => handleUserDrop(u.id, e)}
-                      onDragEnd={() => { setDraggedUserId(null); setDragOverUserId(null); }}
                       onContextMenu={(e) => openUserContextMenu(e, u)}
+                      {...createLongClickHandler(() => handleUserLongClick(u))}
+                      title={selectedUserIds.length > 0 ? undefined : 'Hold / long click to select'}
                       style={{
                         padding: '20px',
                         borderRadius: '18px',
-                        border: isDragOver
-                          ? '2px dashed var(--primary-color)'
-                          : (isPinned
-                            ? '1.5px solid rgba(245, 158, 11, 0.5)'
-                            : (isSelected ? '2px solid var(--primary-color)' : '1px solid var(--glass-border)')),
+                        border: isPinned
+                          ? '1.5px solid rgba(245, 158, 11, 0.5)'
+                          : (isSelected ? '2px solid var(--primary-color)' : '1px solid var(--glass-border)'),
                         background: isSelected ? 'rgba(0, 122, 255, 0.05)' : `rgba(255, 255, 255, ${cardOpacity})`,
                         backdropFilter: 'blur(20px)',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         gap: '16px',
-                        opacity: isDragging ? 0.45 : 1,
-                        cursor: 'grab',
                         transition: 'all 0.2s ease',
+                        cursor: selectedUserIds.length > 0 ? 'pointer' : 'default',
+                        userSelect: selectedUserIds.length > 0 ? 'none' : 'auto',
                         boxShadow: isPinned
                           ? '0 8px 24px rgba(245, 158, 11, 0.12)'
                           : (isSelected ? '0 8px 24px rgba(0, 122, 255, 0.12)' : 'var(--glass-shadow)')
                       }}
                     >
                       <div>
-                        {/* Top Row: Checkbox, Avatar, User Details, Pin & Role Badge */}
+                        {/* Top Row: Selection Checkbox (only when selection active), Avatar, User Details & Role Badge */}
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleToggleSelectUser(u.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary-color)' }}
-                            />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                            {selectedUserIds.length > 0 && (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleSelectUser(u.id)}
+                                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-color)', flexShrink: 0 }}
+                                title={`Select ${u.username || u.email}`}
+                              />
+                            )}
                             <div style={{
                               width: '42px',
                               height: '42px',
@@ -13426,7 +13902,7 @@ const UsersManager = ({ companyGuid }) => {
                                 alignItems: 'center',
                                 gap: '3px'
                               }}>
-                                <Pin size={10} /> Pinned
+                                <Pin size={10} fill="currentColor" /> Pinned
                               </span>
                             )}
                             <span
@@ -13451,44 +13927,6 @@ const UsersManager = ({ companyGuid }) => {
                               {isUserAdmin ? <Crown size={12} /> : <User size={12} />}
                               {isUserAdmin ? 'Admin' : 'Staff'}
                             </span>
-                            <button
-                              type="button"
-                              onClick={(e) => togglePinUser(u.id, e)}
-                              style={{
-                                border: 'none',
-                                background: isPinned ? 'rgba(245, 158, 11, 0.15)' : 'rgba(0,0,0,0.04)',
-                                color: isPinned ? '#d97706' : 'var(--text-muted)',
-                                borderRadius: '8px',
-                                padding: '5px',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.15s ease'
-                              }}
-                              title={isPinned ? 'Unpin user' : 'Pin user to top'}
-                            >
-                              <Pin size={13} fill={isPinned ? 'currentColor' : 'none'} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => handleHideUser(u.id, e)}
-                              style={{
-                                border: 'none',
-                                background: 'rgba(0,0,0,0.04)',
-                                color: 'var(--text-muted)',
-                                borderRadius: '8px',
-                                padding: '5px',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.15s ease'
-                              }}
-                              title="Hide user from list"
-                            >
-                              <EyeOff size={13} />
-                            </button>
                           </div>
                         </div>
 
@@ -13659,15 +14097,18 @@ const UsersManager = ({ companyGuid }) => {
                 <table className="data-table" style={{ width: '100%', margin: 0 }}>
                   <thead>
                     <tr>
-                      <th style={{ width: '40px', padding: '14px 12px 14px 24px', borderBottom: '1px solid var(--glass-border)' }}>
-                        <input
-                          type="checkbox"
-                          checked={filteredUsers.length > 0 && selectedUserIds.length === filteredUsers.length}
-                          onChange={handleToggleSelectAll}
-                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary-color)' }}
-                        />
-                      </th>
-                      <th style={{ padding: '14px 16px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>User</th>
+                      {selectedUserIds.length > 0 && (
+                        <th style={{ width: '48px', padding: '14px 16px', textAlign: 'center', borderBottom: '1px solid var(--glass-border)' }}>
+                          <input
+                            type="checkbox"
+                            checked={filteredUsers.length > 0 && paginatedUsers.length > 0 && paginatedUsers.every(u => selectedUserIds.includes(u.id))}
+                            onChange={handleToggleSelectAll}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-color)' }}
+                            title="Select all users"
+                          />
+                        </th>
+                      )}
+                      <th style={{ padding: '14px 20px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>User</th>
                       <th style={{ padding: '14px 16px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</th>
                       <th style={{ padding: '14px 16px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Role</th>
                       <th style={{ padding: '14px 16px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Access Scope</th>
@@ -13679,8 +14120,6 @@ const UsersManager = ({ companyGuid }) => {
                       const isUserAdmin = u.role === 'ADMIN' || u.role === 'SUPER_ADMIN';
                       const initials = (u.username || u.email || 'U').substring(0, 2).toUpperCase();
                       const isPinned = userPinned.includes(u.id);
-                      const isDragging = draggedUserId === u.id;
-                      const isDragOver = dragOverUserId === u.id;
 
                       const modulesList = [];
                       if (u.dashboard_permissions?.can_view !== false) modulesList.push('Dashboard');
@@ -13692,50 +14131,29 @@ const UsersManager = ({ companyGuid }) => {
                       return (
                         <tr
                           key={u.id}
-                          draggable={true}
-                          onDragStart={(e) => handleUserDragStart(u.id, e)}
-                          onDragOver={(e) => handleUserDragOver(u.id, e)}
-                          onDrop={(e) => handleUserDrop(u.id, e)}
-                          onDragEnd={() => { setDraggedUserId(null); setDragOverUserId(null); }}
                           onContextMenu={(e) => openUserContextMenu(e, u)}
+                          {...createLongClickHandler(() => handleUserLongClick(u))}
+                          title={selectedUserIds.length > 0 ? undefined : 'Hold / long click to select'}
                           style={{
-                            background: isDragOver
-                              ? 'rgba(0, 122, 255, 0.08)'
-                              : (selectedUserIds.includes(u.id) ? 'rgba(0, 122, 255, 0.04)' : 'transparent'),
-                            opacity: isDragging ? 0.45 : 1,
-                            cursor: 'grab',
-                            transition: 'background 0.15s ease'
+                            background: selectedUserIds.includes(u.id) ? 'rgba(0, 122, 255, 0.08)' : 'transparent',
+                            transition: 'background 0.15s ease',
+                            cursor: selectedUserIds.length > 0 ? 'pointer' : 'default',
+                            userSelect: selectedUserIds.length > 0 ? 'none' : 'auto'
                           }}
                         >
-                          <td style={{ width: '40px', padding: '14px 16px 14px 32px', borderBottom: '1px solid var(--glass-border)' }}>
-                            <input
-                              type="checkbox"
-                              checked={selectedUserIds.includes(u.id)}
-                              onChange={() => handleToggleSelectUser(u.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--primary-color)' }}
-                            />
-                          </td>
+                          {selectedUserIds.length > 0 && (
+                            <td style={{ width: '48px', padding: '14px 16px', textAlign: 'center', borderBottom: '1px solid var(--glass-border)' }}>
+                              <input
+                                type="checkbox"
+                                checked={selectedUserIds.includes(u.id)}
+                                onChange={() => handleToggleSelectUser(u.id)}
+                                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-color)' }}
+                                title={`Select ${u.username || u.email}`}
+                              />
+                            </td>
+                          )}
                           <td style={{ padding: '14px 20px', borderBottom: '1px solid var(--glass-border)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <Move size={13} style={{ color: 'var(--text-muted)', opacity: 0.5, flexShrink: 0 }} title="Drag to reorder" />
-                              <button
-                                type="button"
-                                onClick={(e) => togglePinUser(u.id, e)}
-                                style={{
-                                  border: 'none',
-                                  background: 'none',
-                                  cursor: 'pointer',
-                                  color: isPinned ? '#d97706' : 'var(--text-muted)',
-                                  padding: '2px',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  flexShrink: 0
-                                }}
-                                title={isPinned ? 'Unpin' : 'Pin to top'}
-                              >
-                                <Pin size={13} fill={isPinned ? 'currentColor' : 'none'} />
-                              </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <div style={{
                                 width: '32px',
                                 height: '32px',
@@ -13764,9 +14182,12 @@ const UsersManager = ({ companyGuid }) => {
                                   background: 'rgba(245, 158, 11, 0.12)',
                                   padding: '1px 6px',
                                   borderRadius: '4px',
-                                  marginLeft: '2px'
+                                  marginLeft: '2px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px'
                                 }}>
-                                  Pinned
+                                  <Pin size={9} fill="currentColor" /> Pinned
                                 </span>
                               )}
                             </div>
@@ -13884,25 +14305,6 @@ const UsersManager = ({ companyGuid }) => {
                                 }}
                               >
                                 <Trash2 size={12} /> Delete
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => handleHideUser(u.id, e)}
-                                style={{
-                                  padding: '5px 7px',
-                                  borderRadius: '10px',
-                                  background: 'rgba(0,0,0,0.04)',
-                                  color: 'var(--text-muted)',
-                                  border: '1px solid var(--glass-border)',
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  transition: 'all 0.15s ease'
-                                }}
-                                title="Hide user from view"
-                              >
-                                <EyeOff size={12} />
                               </button>
                             </div>
                           </td>
@@ -15109,49 +15511,13 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
                       flexWrap: 'wrap'
                     }}>
                       {/* Search Single Ledger / Item / Order / Voucher */}
-                      <div style={{ position: 'relative', width: '360px', maxWidth: '100%' }}>
-                        <Search size={15} style={{ position: 'absolute', left: '12px', top: '10px', color: '#64748b' }} />
-                        <input
-                          type="text"
+                      <div style={{ width: '360px', maxWidth: '100%' }}>
+                        <BitrixFilterBar
+                          storageKey={`tc_perm_scope_${currentModule}`}
+                          searchQuery={searchQuery}
+                          onSearchChange={setSearchQuery}
                           placeholder={`Search single ${currentMod.singularName} by name, party, group...`}
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '8px 32px 8px 34px',
-                            borderRadius: '12px',
-                            border: '1px solid #cbd5e1',
-                            background: '#ffffff',
-                            fontSize: '13px',
-                            outline: 'none',
-                            color: '#0f172a',
-                            boxSizing: 'border-box'
-                          }}
                         />
-                        {searchQuery && (
-                          <button
-                            type="button"
-                            onClick={() => setSearchQuery('')}
-                            style={{
-                              position: 'absolute',
-                              right: '10px',
-                              top: '9px',
-                              border: 'none',
-                              background: '#e2e8f0',
-                              borderRadius: '50%',
-                              width: '18px',
-                              height: '18px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              padding: 0,
-                              color: '#475569'
-                            }}
-                          >
-                            <X size={11} />
-                          </button>
-                        )}
                       </div>
 
                       {/* Filter Tabs: All | Permitted | Restricted */}
@@ -15974,9 +16340,9 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
 
         <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={exportPDF} />
-          <button className="btn-secondary" onClick={fetchBills} disabled={!companyGuid}>
+          {/* <button className="btn-secondary" onClick={fetchBills} disabled={!companyGuid}>
             <RotateCcw size={16} /> Refresh
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -16092,42 +16458,62 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
 
               {/* Filters & View Switcher */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <div className="header-search" style={{ width: '220px', background: 'var(--glass-bg)' }}>
-                  <Search size={16} color="var(--text-muted)" />
-                  <input
-                    id="bills-search-input"
-                    name="bills_search"
-                    type="text"
-                    placeholder="Search bill or party..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
-
-                <select
-                  id="bills-type-filter"
-                  name="bills_type_filter"
-                  style={selectStyle}
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                >
-                  <option value="">All Types</option>
-                  <option value="RECEIVABLE">Receivables</option>
-                  <option value="PAYABLE">Payables</option>
-                </select>
-
-                <select
-                  id="bills-status-filter"
-                  name="bills_status_filter"
-                  style={selectStyle}
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="">All Statuses</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Cleared">Cleared</option>
-                  <option value="Overdue">Overdue</option>
-                </select>
+                <BitrixFilterBar
+                  storageKey="tc_bills_filter"
+                  id="bills-search-input"
+                  name="bills_search"
+                  searchQuery={search}
+                  onSearchChange={(val) => {
+                    setSearch(val);
+                    setPage(1);
+                  }}
+                  placeholder="Search bill or party..."
+                  availableFields={[
+                    { id: 'search', label: 'Bill / Party Name', type: 'text', category: 'General' },
+                    { id: 'bill_type', label: 'Bill Type', type: 'select', category: 'General', options: ['Receivable', 'Payable'] },
+                    { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Pending', 'Cleared', 'Overdue'] }
+                  ]}
+                  defaultVisibleFieldIds={['search', 'bill_type', 'status']}
+                  presets={[
+                    { id: 'all_bills', label: 'All bills', filters: {} },
+                    { id: 'receivable_bills', label: 'Receivables', filters: { bill_type: 'Receivable' } },
+                    { id: 'payable_bills', label: 'Payables', filters: { bill_type: 'Payable' } },
+                    { id: 'pending_bills', label: 'Pending', filters: { status: 'Pending' } },
+                    { id: 'overdue_bills', label: 'Overdue', filters: { status: 'Overdue' } }
+                  ]}
+                  activePresetId={
+                    typeFilter === 'RECEIVABLE' ? 'receivable_bills' :
+                    (typeFilter === 'PAYABLE' ? 'payable_bills' :
+                    (statusFilter === 'Pending' ? 'pending_bills' :
+                    (statusFilter === 'Overdue' ? 'overdue_bills' : 'all_bills')))
+                  }
+                  onPresetSelect={(pId) => {
+                    if (pId === 'receivable_bills') { setTypeFilter('RECEIVABLE'); setStatusFilter(''); }
+                    else if (pId === 'payable_bills') { setTypeFilter('PAYABLE'); setStatusFilter(''); }
+                    else if (pId === 'pending_bills') { setTypeFilter(''); setStatusFilter('Pending'); }
+                    else if (pId === 'overdue_bills') { setTypeFilter(''); setStatusFilter('Overdue'); }
+                    else { setTypeFilter(''); setStatusFilter(''); }
+                    setPage(1);
+                  }}
+                  filters={{
+                    bill_type: typeFilter === 'RECEIVABLE' ? 'Receivable' : (typeFilter === 'PAYABLE' ? 'Payable' : ''),
+                    status: statusFilter
+                  }}
+                  onFilterChange={(next) => {
+                    if (next.bill_type === 'Receivable') setTypeFilter('RECEIVABLE');
+                    else if (next.bill_type === 'Payable') setTypeFilter('PAYABLE');
+                    else if (next.bill_type === '') setTypeFilter('');
+                    if (next.status !== undefined) setStatusFilter(next.status);
+                    if (next.search !== undefined) setSearch(next.search);
+                    setPage(1);
+                  }}
+                  onReset={() => {
+                    setSearch('');
+                    setTypeFilter('');
+                    setStatusFilter('');
+                    setPage(1);
+                  }}
+                />
 
                 {/* View Mode Switcher */}
                 <div className="glass-panel" style={{
@@ -16561,13 +16947,7 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
               <ChevronRight size={14} />
               <span>Filter View</span>
             </button>
-            <button type="button" onClick={() => {
-              setBillsContextMenu(null);
-              showBillsNotice('Tile ready: Drag and drop anywhere to reorder');
-            }}>
-              <Move size={14} />
-              <span>Drag</span>
-            </button>
+
             <button type="button" onClick={() => handleBillHide(billsContextMenu.card)}>
               <EyeOff size={14} />
               <span>Hide</span>
@@ -16661,17 +17041,7 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
               <span>Open</span>
             </button>
 
-            <button
-              type="button"
-              className="item-popover-action-btn"
-              onClick={() => {
-                setMenuBill(null);
-                showBillsNotice('Tile ready: Drag and drop anywhere to reorder');
-              }}
-            >
-              <Move size={18} style={{ color: '#64748b' }} />
-              <span>Drag</span>
-            </button>
+
 
             <button
               type="button"
@@ -16864,9 +17234,9 @@ const InvoicesManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
         </div>
         <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
           <ExportDropdown onExportCSV={exportCSV} onExportPDF={exportPDF} />
-          <button className="btn-secondary" onClick={fetchInvoices} disabled={!companyGuid}>
+          {/* <button className="btn-secondary" onClick={fetchInvoices} disabled={!companyGuid}>
             <RotateCcw size={16} /> Refresh
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -17466,9 +17836,9 @@ const AdminNotifications = ({ onNavigate }) => {
           >
             <Trash2 size={16} /> Clear All
           </button>
-          <button className="btn-secondary" onClick={fetchNotifications} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          {/* <button className="btn-secondary" onClick={fetchNotifications} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <RotateCcw size={16} /> Refresh
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -17856,8 +18226,67 @@ function App() {
     return localStorage.getItem('tc_text_scale') || '1';
   });
   const [showAppearanceModal, setShowAppearanceModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [autoSync, setAutoSync] = useState(() => localStorage.getItem('tc_autosync') !== '0');
   const [language, setLanguage] = useState(() => localStorage.getItem('tc_lang') || 'English');
+  const [companyLogo, setCompanyLogo] = useState(() => {
+    try {
+      return localStorage.getItem('tc_company_logo') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  React.useEffect(() => {
+    const applyLogoSize = (sz) => {
+      const sizeVal = Number(sz) || 36;
+      const pillHeight = Math.max(34, sizeVal + 6);
+      document.documentElement.style.setProperty('--company-logo-img-height', `${sizeVal}px`);
+      document.documentElement.style.setProperty('--company-logo-pill-height', `${pillHeight}px`);
+    };
+
+    try {
+      const savedSize = localStorage.getItem('tc_company_logo_size') || '36';
+      applyLogoSize(savedSize);
+    } catch {}
+
+    const handleSizeSync = (e) => {
+      const sz = e.detail?.size ?? localStorage.getItem('tc_company_logo_size') ?? '36';
+      applyLogoSize(sz);
+    };
+
+    window.addEventListener('tc-company-logo-size-changed', handleSizeSync);
+    window.addEventListener('storage', handleSizeSync);
+    return () => {
+      window.removeEventListener('tc-company-logo-size-changed', handleSizeSync);
+      window.removeEventListener('storage', handleSizeSync);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const handleLogoSync = (e) => {
+      const newLogo = e.detail?.logo ?? (localStorage.getItem('tc_company_logo') || '');
+      setCompanyLogo(newLogo);
+    };
+    window.addEventListener('tc-company-logo-changed', handleLogoSync);
+    window.addEventListener('storage', handleLogoSync);
+
+    // Auto-trim any empty transparent margins from existing stored logo on startup
+    const stored = localStorage.getItem('tc_company_logo');
+    if (stored && stored.startsWith('data:image/')) {
+      optimizeCompanyLogo(stored, { removeWhiteBg: false }).then((optimized) => {
+        if (optimized && optimized !== stored && optimized.length > 50) {
+          setCompanyLogo(optimized);
+          try { localStorage.setItem('tc_company_logo', optimized); } catch {}
+        }
+      });
+    }
+
+    return () => {
+      window.removeEventListener('tc-company-logo-changed', handleLogoSync);
+      window.removeEventListener('storage', handleLogoSync);
+    };
+  }, []);
 
   /* Dynamic system theme preference synchronization */
   React.useEffect(() => {
@@ -18459,6 +18888,8 @@ function App() {
           onOpenMasterUnhide={() => setShowMasterUnhideModal(true)}
           setCurrentTab={setCurrentTab}
           onUserUpdate={(updated) => setUser(updated)}
+          companyLogo={companyLogo}
+          setCompanyLogo={setCompanyLogo}
         />
       );
       default: return <Dashboard setCurrentTab={setCurrentTab} companyGuid={companyGuid} />;
@@ -18477,23 +18908,147 @@ function App() {
 
       {/* Responsive Glass Sidebar */}
       <div className={`glass-panel glass-sidebar ${sidebarOpen ? 'open' : ''} ${railMode ? 'collapsed' : ''}`}>
+        {/* Brand & Sync Status */}
         <div
-          className="brand"
+          className="sidebar-brand-wrapper"
           style={{
-            cursor: 'pointer',
-            padding: railMode ? '12px 6px' : '16px 14px',
+            padding: railMode ? '12px 6px 14px' : '16px 14px 12px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: railMode ? 'center' : 'flex-start'
+            flexDirection: 'column',
+            gap: '10px',
+            borderBottom: '1px solid var(--glass-border, rgba(0,0,0,0.06))',
+            marginBottom: '8px',
+            flexShrink: 0
           }}
-          onClick={() => setCurrentTab('dashboard')}
-          title="TallyConnect Dashboard"
         >
-          {railMode ? (
-            <img src="/favicon.png" alt="TallyConnect" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          ) : (
-            <TallyConnectLogo height={32} isDarkMode={darkMode} />
-          )}
+          <div
+            className="brand"
+            style={{
+              cursor: 'pointer',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: railMode ? 'center' : 'flex-start'
+            }}
+            onClick={() => setCurrentTab('dashboard')}
+            title="TallyConnect Dashboard"
+          >
+            {railMode ? (
+              <img src="/favicon.png" alt="TallyConnect" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            ) : (
+              <TallyConnectLogo height={32} isDarkMode={darkMode} />
+            )}
+          </div>
+
+          {/* Live Tally Sync Status — Placed directly under TallyConnect Logo */}
+          <div
+            className={`sync-status-badge sidebar-sync ${railMode ? 'rail' : ''}`}
+            title={syncInfo?.last_sync_at ? `Last synced on ${new Date(syncInfo.last_sync_at).toLocaleString()} — Click to open Activity & Connector Hub` : 'Tally Sync Status — Click to open Activity & Connector Hub'}
+            onClick={() => setCurrentTab('activity')}
+            style={railMode ? {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              margin: '0 auto',
+              borderRadius: '50%',
+              background: 'var(--glass-bg, rgba(255,255,255,0.8))',
+              border: '1px solid var(--glass-border, rgba(0,0,0,0.08))',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            } : {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              background: 'var(--glass-bg, rgba(255,255,255,0.8))',
+              border: '1px solid var(--glass-border, rgba(0,0,0,0.08))',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              fontSize: '11.5px',
+              fontWeight: 600,
+              color: 'var(--text-dark)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', minWidth: 0, overflow: 'hidden' }}>
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  background: syncInfo?.sync_in_progress
+                    ? '#ff9500'
+                    : syncInfo?.last_sync_at
+                      ? '#34c759'
+                      : '#64748b',
+                  boxShadow: syncInfo?.sync_in_progress
+                    ? '0 0 8px #ff9500'
+                    : syncInfo?.last_sync_at
+                      ? '0 0 6px #34c759'
+                      : 'none',
+                  animation: (syncInfo?.sync_in_progress || syncRefreshing) ? 'pulse 1.2s infinite ease-in-out' : 'none'
+                }}
+              />
+              {!railMode && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {syncInfo?.sync_in_progress ? (
+                    <strong style={{ color: '#ff9500' }}>Syncing...</strong>
+                  ) : syncInfo?.last_sync_at ? (
+                    <>
+                      <span className="sync-label" style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '11px' }}>Last Sync:</span>
+                      <strong style={{ color: 'var(--text-dark)', fontSize: '11.5px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {formatSyncTime(syncInfo.last_sync_at)}
+                      </strong>
+                    </>
+                  ) : (
+                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>Never</span>
+                  )}
+                </span>
+              )}
+            </div>
+            {/* {!railMode && (
+              <button
+                type="button"
+                className="sync-refresh-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fetchSyncStatus();
+                }}
+                title="Refresh Tally sync status"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '2px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  color: 'var(--text-muted)',
+                  marginLeft: 'auto',
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <RotateCcw
+                  size={12}
+                  style={{
+                    transform: syncRefreshing ? 'rotate(180deg)' : 'none',
+                    transition: 'transform 0.4s ease'
+                  }}
+                />
+              </button>
+            )} */}
+          </div>
         </div>
 
         <div className="nav-menu nav-scroll">
@@ -18560,9 +19115,6 @@ function App() {
               >
                 <Menu size={24} />
               </button>
-              <div className="header-breadcrumb">
-                <span className="breadcrumb-current">{tabMeta(currentTab).name}</span>
-              </div>
               <div className="header-desktop-search">
                 <GlobalSearch
                   companyGuid={companyGuid}
@@ -18571,131 +19123,47 @@ function App() {
                   onNavigate={handleNav}
                 />
               </div>
-            </div>
 
-            <div className="header-actions" style={{ position: 'relative' }}>
-              <button
-                className="icon-btn"
-                title={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
-                style={{ position: 'relative', cursor: 'pointer' }}
-                onClick={() => handleNav('notifications')}
-              >
-                <Bell size={20} />
-                {unread > 0 && (
-                  <span className="bell-dot">{unread > 9 ? '9+' : unread}</span>
-                )}
-              </button>
-              <button
-                className="icon-btn header-feedback-btn"
-                title="Give Feedback"
-                style={{ position: 'relative', cursor: 'pointer' }}
-                onClick={() => setShowFeedbackModal(true)}
-                aria-label="Feedback"
-              >
-                <Megaphone size={18} />
-              </button>
-              <button
-                className="icon-btn header-glass-btn"
-                title="Liquid Glass Customizer"
-                style={{ position: 'relative', cursor: 'pointer' }}
-                onClick={() => setShowGlassModal(true)}
-                aria-label="Liquid Glass Customizer"
-              >
-                <Sparkles size={18} />
-              </button>
-              <button
-                className="icon-btn header-appearance-btn"
-                title="Appearance & Personalization"
-                style={{ position: 'relative', cursor: 'pointer' }}
-                onClick={() => setShowAppearanceModal(true)}
-                aria-label="Appearance & Personalization"
-              >
-                <Palette size={18} />
-              </button>
-              <div className="header-divider" style={{ width: '1px', height: '24px', background: 'var(--glass-border)', margin: '0 8px' }}></div>
-
-              {/* Live Tally Sync Status */}
-              <div
-                className="sync-status-badge header-sync"
-                title={syncInfo?.last_sync_at ? `Last synced on ${new Date(syncInfo.last_sync_at).toLocaleString()} — Click to open Activity & Connector Hub` : 'Tally Sync Status — Click to open Activity & Connector Hub'}
-                onClick={() => setCurrentTab('activity')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  background: 'var(--glass-bg, rgba(255,255,255,0.8))',
-                  border: '1px solid var(--glass-border, rgba(0,0,0,0.08))',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: 'var(--text-dark)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: syncInfo?.sync_in_progress
-                      ? '#ff9500'
-                      : syncInfo?.last_sync_at
-                        ? '#34c759'
-                        : '#64748b',
-                    boxShadow: syncInfo?.sync_in_progress
-                      ? '0 0 8px #ff9500'
-                      : syncInfo?.last_sync_at
-                        ? '0 0 6px #34c759'
-                        : 'none',
-                    animation: (syncInfo?.sync_in_progress || syncRefreshing) ? 'pulse 1.2s infinite ease-in-out' : 'none'
-                  }}
-                />
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  {syncInfo?.sync_in_progress ? (
-                    <strong style={{ color: '#ff9500' }}>Syncing...</strong>
-                  ) : syncInfo?.last_sync_at ? (
-                    <>
-                      <span className="sync-label" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Last Sync:</span>
-                      <strong style={{ color: 'var(--text-dark)' }}>
-                        {formatSyncTime(syncInfo.last_sync_at)}
-                      </strong>
-                    </>
-                  ) : (
-                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>Never</span>
-                  )}
-                </span>
+              {/* Notification and Feedback icons moved toward search bar */}
+              <div className="header-search-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '6px' }}>
                 <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fetchSyncStatus();
-                  }}
-                  title="Refresh Tally sync status"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: '2px',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    color: 'var(--text-muted)',
-                    marginLeft: '2px',
-                    borderRadius: '50%'
-                  }}
+                  className="icon-btn header-notification-btn"
+                  title={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
+                  style={{ position: 'relative', cursor: 'pointer' }}
+                  onClick={() => handleNav('notifications')}
+                  aria-label="Notifications"
                 >
-                  <RotateCcw
-                    size={12}
-                    style={{
-                      transform: syncRefreshing ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.4s ease'
-                    }}
-                  />
+                  <Bell size={18} />
+                  {unread > 0 && (
+                    <span className="bell-dot">{unread > 9 ? '9+' : unread}</span>
+                  )}
+                </button>
+                <button
+                  className="icon-btn header-feedback-btn"
+                  title="Give Feedback"
+                  style={{ position: 'relative', cursor: 'pointer' }}
+                  onClick={() => setShowFeedbackModal(true)}
+                  aria-label="Feedback"
+                >
+                  <Megaphone size={18} />
                 </button>
               </div>
+            </div>
+
+            <div className="header-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* User Company Logo (located beside company dropdown) */}
+              {companyLogo && (
+                <div
+                  className="header-company-logo"
+                  title={user?.role === 'ADMIN' ? 'Company Logo (Click to change in Settings)' : 'Company Logo'}
+                  onClick={() => {
+                    if (user?.role === 'ADMIN') handleNav('settings');
+                  }}
+                  style={{ cursor: user?.role === 'ADMIN' ? 'pointer' : 'default' }}
+                >
+                  <img src={companyLogo} alt="Company Logo" />
+                </div>
+              )}
 
               {user?.role === 'ADMIN' && (
                 <CompanyDropdown companyGuid={companyGuid} setCompanyGuid={setCompanyGuid} setCurrentTab={setCurrentTab} />
@@ -18714,9 +19182,14 @@ function App() {
                       <div className="user-menu-scrim" onClick={() => setUserMenuOpen(false)} />
                       <div className="user-menu-dropdown" style={userMenuStyle}>
                         <div className="user-menu-head">
-                          <div className="user-menu-identity">
+                          <div
+                            className="user-menu-identity"
+                            onClick={() => { setUserMenuOpen(false); setShowProfileModal(true); }}
+                            style={{ cursor: 'pointer' }}
+                            title="Click to edit profile & avatar"
+                          >
                             {user?.avatar_url ? (
-                              <img src={user.avatar_url} alt={user?.username || 'User'} className="user-menu-avatar" />
+                              <img src={resolveAvatarUrl(user.avatar_url)} alt={user?.username || 'User'} className="user-menu-avatar" />
                             ) : (
                               <span className="user-menu-avatar">
                                 {String(user?.name || user?.username || 'T').charAt(0).toUpperCase()}
@@ -18731,8 +19204,15 @@ function App() {
                             {user?.role === 'ADMIN' ? 'Admin' : 'User'}
                           </span>
                         </div>
+                        <button type="button" onClick={() => { setUserMenuOpen(false); setShowProfileModal(true); }}>
+                          <User size={16} /> My Profile &amp; Avatar
+                        </button>
                         <button type="button" onClick={() => handleNav('settings')}><Settings size={16} /> Settings</button>
+                        <button type="button" onClick={() => { setUserMenuOpen(false); setShowAppearanceModal(true); }}>
+                          <Palette size={16} /> Appearance &amp; Themes
+                        </button>
                         <button type="button" onClick={() => handleNav('attendance')}><Clock size={16} /> Attendance</button>
+                        <button type="button" onClick={() => handleNav('activity')}><RotateCcw size={16} /> Activity &amp; Connector Hub</button>
                         {user?.role === 'ADMIN' && (
                           <>
                             <button type="button" onClick={() => handleNav('users')}><UsersIcon size={16} /> Users &amp; Roles</button>
@@ -18953,6 +19433,15 @@ function App() {
         onClose={() => setShowAdminVisibilityModal(false)}
         user={user}
       />
+
+      {/* Centralized User Profile & Avatar Modal */}
+      {showProfileModal && (
+        <UserProfileModal
+          user={user}
+          onClose={() => setShowProfileModal(false)}
+          onUserUpdate={(updated) => setUser(updated)}
+        />
+      )}
     </div>
   );
 }

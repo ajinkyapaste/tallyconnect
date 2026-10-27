@@ -303,25 +303,26 @@ body::after {
 .header-search {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.52) 100%);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 4px 20px 0 rgba(15, 23, 42, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.85);
-  padding: 8px 16px;
-  border-radius: 9999px;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.75));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 4px 12px;
+  min-height: 38px;
+  border-radius: 12px;
   width: 100%;
-  gap: 10px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   box-sizing: border-box;
 }
 
 .header-search:focus-within {
   transform: translateY(-1px);
-  box-shadow: 0 8px 28px rgba(79, 70, 229, 0.16), 0 2px 8px rgba(15, 23, 42, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 1);
-  border-color: rgba(79, 70, 229, 0.45);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.8) 100%);
+  box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.18), 0 4px 14px rgba(0, 0, 0, 0.06);
+  border-color: var(--primary-color, #0080ff);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .header-search input {
@@ -329,7 +330,7 @@ body::after {
   background: transparent;
   width: 100%;
   min-width: 0;
-  font-size: 14px;
+  font-size: 13.5px;
   outline: none;
   font-weight: 500;
   color: var(--text-dark);
@@ -342,6 +343,32 @@ textarea::placeholder {
   color: var(--text-muted);
   font-weight: 500;
   opacity: 0.85;
+}
+
+/* Dark theme search bar styling - prevents glaring white in dark mode */
+[data-theme='dark'] .header-search,
+.dark .header-search {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .header-search:focus-within,
+.dark .header-search:focus-within {
+  background: rgba(20, 28, 48, 0.92) !important;
+  border-color: var(--primary-color, #0080ff) !important;
+  box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.25), 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-theme='dark'] .header-search input,
+.dark .header-search input {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .header-search input::placeholder,
+.dark .header-search input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .header-actions {
@@ -1246,12 +1273,12 @@ textarea::placeholder {
   }
 
   /* Collapse the sync badge to just its coloured status dot. */
-  .sync-status-badge {
+  .sync-status-badge.header-sync {
     padding: 6px 8px !important;
     gap: 0 !important;
   }
 
-  .sync-status-badge>span {
+  .sync-status-badge.header-sync>span {
     display: none !important;
   }
 
@@ -2011,10 +2038,41 @@ button:not(:disabled) {
   pointer-events: none !important;
 }
 
+.glass-sidebar.collapsed .sidebar-brand-wrapper {
+  padding: 12px 4px 10px !important;
+  align-items: center;
+}
+
 .glass-sidebar.collapsed .brand {
-  padding-bottom: 20px;
+  padding-bottom: 0 !important;
   justify-content: center;
   gap: 0;
+}
+
+/* Sidebar Sync Badge */
+.sidebar-sync {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.sidebar-sync:hover {
+  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.95)) !important;
+  border-color: var(--primary-color, #007aff) !important;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.12) !important;
+}
+
+.sidebar-sync .sync-refresh-btn:hover {
+  color: var(--primary-color, #007aff) !important;
+  background: rgba(0, 122, 255, 0.1) !important;
+}
+
+.sidebar-sync.rail {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  border-radius: 50% !important;
+  justify-content: center !important;
 }
 
 .glass-sidebar.collapsed .brand-icon {
@@ -3963,10 +4021,11 @@ button:not(:disabled) {
 /* ==========================================================================
    1. Header Feedback Component Styles
    ========================================================================== */
-.header-feedback-btn {
+.header-feedback-btn,
+.header-notification-btn {
   width: 40px !important;
   height: 40px !important;
-  border-radius: 20px !important;
+  border-radius: 50% !important;
   padding: 0 !important;
   display: inline-flex !important;
   align-items: center;
@@ -3977,11 +4036,30 @@ button:not(:disabled) {
   color: var(--text-dark);
 }
 
-.header-feedback-btn:hover {
+.header-feedback-btn:hover,
+.header-notification-btn:hover {
   background: rgba(255, 255, 255, 0.95);
   transform: translateY(-1px);
   border-color: var(--primary-color);
   color: var(--primary-color);
+}
+
+[data-theme='dark'] .header-feedback-btn,
+[data-theme='dark'] .header-notification-btn,
+.dark .header-feedback-btn,
+.dark .header-notification-btn {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .header-feedback-btn:hover,
+[data-theme='dark'] .header-notification-btn:hover,
+.dark .header-feedback-btn:hover,
+.dark .header-notification-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--primary-color) !important;
+  color: #38bdf8 !important;
 }
 
 .feedback-modal-overlay {
@@ -8621,4 +8699,116 @@ textarea:focus {
 [data-text-scale="2"] .kpi-card {
   height: auto !important;
   min-height: 120px;
+}
+
+/* ==========================================================================
+   Standardized Header Action Buttons (Export, Share, Create Ledger, etc.)
+   Ensures uniform height (42px), padding, border-radius and typography across all views.
+   ========================================================================== */
+.page-header div[style*="display: flex"] > .btn-primary,
+.page-header div[style*="display: flex"] > .btn-secondary,
+.page-header .header-actions > .btn-primary,
+.page-header .header-actions > .btn-secondary,
+.page-header .export-trigger-btn,
+.header-actions > .btn-primary,
+.header-actions > .btn-secondary,
+.header-actions > .export-dropdown-wrapper .export-trigger-btn {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0 18px !important;
+  font-size: 13.5px !important;
+  font-weight: 650 !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.export-dropdown-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+}
+
+.export-trigger-btn {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0 18px !important;
+  font-size: 13.5px !important;
+  font-weight: 650 !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+}
+
+/* Header company logo (cardless, transparent, seamless brand presentation) */
+.header-company-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--company-logo-img-height, 36px);
+  min-height: var(--company-logo-img-height, 36px);
+  max-height: var(--company-logo-img-height, 36px);
+  padding: 0 6px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.header-company-logo:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.header-company-logo img {
+  height: var(--company-logo-img-height, 36px) !important;
+  max-height: var(--company-logo-img-height, 36px) !important;
+  max-width: calc(var(--company-logo-img-height, 36px) * 6) !important;
+  width: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  background: transparent !important;
+  border: none !important;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+}
+
+@media (max-width: 900px) {
+  .header-company-logo {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    padding: 0 4px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .header-company-logo img {
+    height: 30px !important;
+    max-height: 30px !important;
+    max-width: 140px !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .header-company-logo {
+    display: none;
+  }
 }
