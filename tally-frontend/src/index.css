@@ -6623,23 +6623,6 @@ body.dark {
   --glass-inset-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.16);
 }
 
-/* Use one predictable default text color throughout the app. This also
-   overrides component-level inline text colors that otherwise stay dark on
-   dark glass backgrounds (or white on light ones). */
-:root[data-theme='dark'] #root,
-:root[data-theme='dark'] #root *:not(svg):not(path),
-body.dark #root,
-body.dark #root *:not(svg):not(path) {
-  color: #fff !important;
-}
-
-:root[data-theme='light'] #root,
-:root[data-theme='light'] #root *:not(svg):not(path),
-body:not(.dark) #root,
-body:not(.dark) #root *:not(svg):not(path) {
-  color: #000 !important;
-}
-
 /* The account popover is a deliberately solid white surface in either theme,
    so its text stays readable over translucent wallpapers. */
 .user-menu-dropdown,
