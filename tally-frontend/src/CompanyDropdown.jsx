@@ -14,6 +14,8 @@ const dedupeCompanies = (list) => {
   return Array.from(map.values());
 };
 
+const DEMO_COMPANY = { company_guid: 'tc-demo-company', name: 'Demo Company', is_demo: true };
+
 export default function CompanyDropdown({ companyGuid, setCompanyGuid, setCurrentTab }) {
   const [companies, setCompanies] = useState(() => {
     try {
@@ -107,6 +109,17 @@ export default function CompanyDropdown({ companyGuid, setCompanyGuid, setCurren
     }
     if (isSwitching) return;
 
+    if (guid === DEMO_COMPANY.company_guid) {
+      try {
+        localStorage.setItem('tc_active_company', DEMO_COMPANY.company_guid);
+        localStorage.setItem('tc_company_name', DEMO_COMPANY.name);
+      } catch {}
+      api.invalidate('/');
+      setCompanyGuid(DEMO_COMPANY.company_guid);
+      setIsOpen(false);
+      return;
+    }
+
     // Optimistic label: show the target while the request is in flight, but do
     // NOT commit the app's active company until the backend confirms it.
     setIsOpen(false);
@@ -137,6 +150,8 @@ export default function CompanyDropdown({ companyGuid, setCompanyGuid, setCurren
       // Success: persist and switch the app's active company.
       try {
         localStorage.setItem('tc_active_company', next);
+        const selectedCompany = companies.find((company) => company.company_guid === next);
+        if (selectedCompany?.name) localStorage.setItem('tc_company_name', selectedCompany.name);
         localStorage.removeItem('tc_cash_' + next);
       } catch {}
       api.invalidate('/'); // drop any cached reads from the previous company
@@ -157,7 +172,10 @@ export default function CompanyDropdown({ companyGuid, setCompanyGuid, setCurren
     }
   };
 
-  const uniqueCompanies = dedupeCompanies(companies);
+  const uniqueCompanies = dedupeCompanies([
+    ...companies,
+    ...(companies.some((c) => /^demo company$/i.test(String(c?.name || '').trim())) ? [] : [DEMO_COMPANY])
+  ]);
   const displayGuid = switchingGuid || companyGuid;
   const activeCompany = uniqueCompanies.find(c => c.company_guid === displayGuid);
 

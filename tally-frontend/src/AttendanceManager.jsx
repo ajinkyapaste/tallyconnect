@@ -192,7 +192,10 @@ export default function AttendanceManager({ user, companyGuid }) {
   // Fetch My History (Member)
   const fetchMyHistoryData = async () => {
     try {
-      const res = await getAttendanceMyHistory();
+      const res = await getAttendanceMyHistory({
+        from: istDaysAgo(29),
+        to: istToday()
+      });
       if (res?.success && Array.isArray(res.days)) {
         setMyHistory(res.days);
       }

@@ -268,6 +268,17 @@ export const CreateVoucherWizard = ({
   const [bankLedger, setBankLedger] = useState('HDFC Bank Clearing');
   const [paymentRef, setPaymentRef] = useState('');
 
+  const handleVoucherTypeChange = (nextType) => {
+    setVoucherType(nextType);
+    setCurrentStep(1);
+    setErrorMessage('');
+    setAmountReceived('');
+    setPaymentRef('');
+    if (!['Sales', 'Purchase'].includes(nextType)) setPayByDate('');
+    setPaymentMode(nextType === 'Receipt' || nextType === 'Payment' ? 'CASH' : 'UNPAID');
+    setIsTypeDropdownOpen(false);
+  };
+
   // Contra Voucher Specific State
   const [toAccount, setToAccount] = useState('HDFC Bank');
   const [contraAmount, setContraAmount] = useState('');
@@ -315,6 +326,9 @@ export const CreateVoucherWizard = ({
         setPayByDate(initialVoucher.details?.pay_by_date || initialVoucher.details?.due_date || '');
         setSelectedParty(initialVoucher.customer || initialVoucher.party_name || initialVoucher.details?.party_name || '');
         setNote(initialVoucher.details?.narration || initialVoucher.details?.note || '');
+        setAmountReceived(String(initialVoucher.amount_received ?? initialVoucher.amount_paid ?? initialVoucher.payment?.amount_received ?? initialVoucher.payment?.amount_paid ?? ''));
+        setPaymentMode(initialVoucher.payment?.payment_mode || 'CASH');
+        setPaymentRef(initialVoucher.payment?.reference || initialVoucher.payment?.remarks || initialVoucher.reference_no || '');
         if (initialVoucher.voucher_type === 'Contra' || initialVoucher.transfer) {
           setSelectedParty(initialVoucher.transfer?.from_account || initialVoucher.from_account || 'Cash');
           setToAccount(initialVoucher.transfer?.to_account || initialVoucher.to_account || 'HDFC Bank');
@@ -330,7 +344,7 @@ export const CreateVoucherWizard = ({
         }
       } else {
         setVoucherType(initialType);
-        setBillNo(initialType === 'Contra' ? `CONTRA-${Date.now().toString().slice(-4)}` : '');
+        setBillNo('');
         setVoucherDate(new Date().toISOString().slice(0, 10));
         setPayByDate('');
         setSelectedParty(initialType === 'Contra' ? 'Cash' : '');
@@ -338,6 +352,9 @@ export const CreateVoucherWizard = ({
         setContraAmount('');
         setInstrumentNo('');
         setNote('');
+        setAmountReceived('');
+        setPaymentMode(initialType === 'Receipt' || initialType === 'Payment' ? 'CASH' : 'UNPAID');
+        setPaymentRef('');
         setItems([]);
         setLedgerRows([
           { ledger_name: '', is_debit: true, amount: '' },
@@ -551,17 +568,10 @@ export const CreateVoucherWizard = ({
           setErrorMessage('Please enter a valid Date');
           return;
         }
-        if (!billNo.trim()) {
-          setBillNo(`CONTRA-${Date.now().toString().slice(-4)}`);
-        }
         setCurrentStep(2);
         return;
       }
-      if (!billNo.trim()) {
-        setErrorMessage('Please enter a Bill / Invoice number');
-        return;
-      }
-      if (!selectedParty) {
+      if (voucherType !== 'Journal' && !selectedParty) {
         setErrorMessage('Please select or add a Customer / Party');
         return;
       }
@@ -591,6 +601,9 @@ export const CreateVoucherWizard = ({
             return;
           }
         }
+      } else if (voucherType === 'Receipt' || voucherType === 'Payment') {
+        setCurrentStep(3);
+        return;
       } else {
         // Validate Dr / Cr rows
         let dr = 0; let cr = 0;
@@ -607,8 +620,16 @@ export const CreateVoucherWizard = ({
           return;
         }
       }
+      if (voucherType === 'Journal') {
+        setCurrentStep(4);
+        return;
+      }
       setCurrentStep(3);
     } else if (currentStep === 3) {
+      if ((voucherType === 'Receipt' || voucherType === 'Payment') && Number(amountReceived) <= 0) {
+        setErrorMessage(`Please enter an amount ${voucherType === 'Receipt' ? 'received' : 'paid'} greater than 0`);
+        return;
+      }
       setCurrentStep(4);
     }
   };
@@ -617,6 +638,11 @@ export const CreateVoucherWizard = ({
   const handleSaveVoucher = async () => {
     setIsSubmitting(true);
     setErrorMessage('');
+    const voucherAmount = voucherType === 'Contra'
+      ? Number(contraAmount) || 0
+      : (voucherType === 'Receipt' || voucherType === 'Payment')
+        ? Number(amountReceived) || 0
+        : itemCalculations.grandTotal;
 
     try {
       // Build compliant ledger_entries matching voucherCommand.js rules
@@ -661,11 +687,28 @@ export const CreateVoucherWizard = ({
           ];
         }
       } else {
-        ledgerEntries = ledgerRows.map((r) => ({
+        ledgerEntries = voucherType === 'Receipt' || voucherType === 'Payment'
+          ? [
+            {
+              ledger_name: voucherType === 'Receipt'
+                ? (paymentMode === 'BANK' ? bankLedger : 'Cash')
+                : selectedParty,
+              amount: Number(amountReceived) || 0,
+              is_debit: true
+            },
+            {
+              ledger_name: voucherType === 'Receipt'
+                ? selectedParty
+                : (paymentMode === 'BANK' ? bankLedger : 'Cash'),
+              amount: Number(amountReceived) || 0,
+              is_debit: false
+            }
+          ]
+          : ledgerRows.map((r) => ({
           ledger_name: r.ledger_name,
           amount: Number(r.amount) || 0,
           is_debit: Boolean(r.is_debit)
-        }));
+          }));
       }
 
       // Ensure exact balancing for validateEntries()
@@ -689,18 +732,17 @@ export const CreateVoucherWizard = ({
       }
 
       const safeVoucherType = (voucherType === 'Delivery Challan' || voucherType === 'Quotation') ? 'Sales' : voucherType;
-
       const payload = {
         company_guid: effectiveGuid,
         voucher_type: safeVoucherType,
         voucher_date: voucherDate,
-        voucher_no: billNo,
+        voucher_no: billNo || undefined,
         party: selectedParty,
         party_name: selectedParty,
-        due_date: payByDate || null,
+        due_date: ['Sales', 'Purchase'].includes(voucherType) ? payByDate || null : null,
         narration: note || '',
-        reference_no: billNo,
-        invoice_number: billNo,
+        reference_no: paymentRef || initialVoucher?.reference_no || undefined,
+        invoice_number: initialVoucher?.invoice_number || undefined,
         ledger_entries: ledgerEntries,
         items: items.map((it) => ({
           stock_item_name: it.stock_item_name,
@@ -709,30 +751,64 @@ export const CreateVoucherWizard = ({
           unit: it.unit || 'PCS',
           amount: (Number(it.quantity) || 1) * (Number(it.rate) || 0)
         })),
-        subtotal: itemCalculations.subtotal,
+        subtotal: activeConfig.isItemized ? itemCalculations.subtotal : voucherAmount,
         discount_amount: itemCalculations.totalDiscount,
         taxable_amount: itemCalculations.taxableAmount || (itemCalculations.subtotal - itemCalculations.totalDiscount),
         cgst_amount: itemCalculations.cgst,
         sgst_amount: itemCalculations.sgst,
         igst_amount: 0,
         total_tax: itemCalculations.totalTax,
-        invoice_total: itemCalculations.grandTotal,
+        invoice_total: voucherAmount,
         summary: {
-          subtotal: itemCalculations.subtotal,
+          subtotal: activeConfig.isItemized ? itemCalculations.subtotal : voucherAmount,
           discount: itemCalculations.totalDiscount,
           cgst: itemCalculations.cgst,
           sgst: itemCalculations.sgst,
-          total_amount: itemCalculations.grandTotal
+          total_amount: voucherAmount
         },
-        payment: {
-          payment_mode: paymentMode,
-          amount_received: Number(amountReceived) || 0,
-          balance_due: Math.max(0, itemCalculations.grandTotal - (Number(amountReceived) || 0)),
-          bank_ledger: paymentMode === 'BANK' ? bankLedger : null,
-          reference: paymentRef || null
-        },
+        payment: voucherType === 'Payment'
+          ? {
+            payment_mode: paymentMode,
+            amount_paid: Number(amountReceived) || 0,
+            bank_account: paymentMode === 'BANK' ? bankLedger : null,
+            reference: paymentRef || null
+          }
+          : {
+            payment_mode: paymentMode,
+            amount_received: Number(amountReceived) || 0,
+            balance_due: Math.max(0, voucherAmount - (Number(amountReceived) || 0)),
+            bank_ledger: paymentMode === 'BANK' ? bankLedger : null,
+            reference: paymentRef || null
+          },
         custom_fields: customFieldValues
       };
+
+      // Demo Company is an isolated local sandbox: keep its sample entries
+      // available for testing without posting them to the account's real Tally.
+      if (effectiveGuid === 'tc-demo-company') {
+        const demoRecord = {
+          id: `demo-${Date.now()}`,
+          voucher_guid: `demo-${Date.now()}`,
+          voucher_type: voucherType,
+          voucher_no: billNo || `DEMO-${Date.now().toString().slice(-6)}`,
+          reference_no: paymentRef || '',
+          voucher_date: voucherDate,
+          party_name: selectedParty || (voucherType === 'Contra' ? `${selectedParty} → ${toAccount}` : 'Demo account'),
+          amount: voucherAmount,
+          narration: note || '',
+          is_active: true,
+          status: 'Active'
+        };
+        try {
+          const saved = JSON.parse(localStorage.getItem('tc_demo_vouchers') || '[]');
+          localStorage.setItem('tc_demo_vouchers', JSON.stringify([demoRecord, ...saved]));
+        } catch {}
+        window.dispatchEvent(new CustomEvent('tc-voucher-created', { detail: demoRecord }));
+        showToast('Demo voucher saved locally. No Tally data was changed.');
+        if (typeof onSuccess === 'function') onSuccess(demoRecord);
+        onClose();
+        return;
+      }
 
       // Call backend API (Supports edit / alter via /api/mobile-voucher-command/edit as well as standard create)
       let res = null;
@@ -752,10 +828,10 @@ export const CreateVoucherWizard = ({
         if (voucherType === 'Receipt') {
           const receiptPayload = {
             voucher_date: voucherDate,
-            voucher_no: billNo,
+            voucher_no: billNo || undefined,
             party_name: selectedParty,
-            amount_received: Number(amountReceived) || Number(itemCalculations.grandTotal) || 0,
-            reference_no: billNo,
+            amount_received: Number(amountReceived) || 0,
+            reference_no: paymentRef || initialVoucher?.reference_no || undefined,
             narration: note || '',
             payment: {
               payment_mode: paymentMode,
@@ -784,10 +860,10 @@ export const CreateVoucherWizard = ({
         } else if (voucherType === 'Payment') {
           const paymentPayload = {
             voucher_date: voucherDate,
-            voucher_no: billNo,
+            voucher_no: billNo || undefined,
             party_name: selectedParty,
-            amount_paid: Number(amountReceived) || Number(itemCalculations.grandTotal) || 0,
-            reference_no: billNo,
+            amount_paid: Number(amountReceived) || 0,
+            reference_no: paymentRef || initialVoucher?.reference_no || undefined,
             narration: note || '',
             payment: {
               payment_mode: paymentMode,
@@ -816,8 +892,8 @@ export const CreateVoucherWizard = ({
         } else if (voucherType === 'Journal') {
           const journalPayload = {
             voucher_date: voucherDate,
-            voucher_no: billNo,
-            reference_no: billNo,
+            voucher_no: billNo || undefined,
+            reference_no: paymentRef || initialVoucher?.reference_no || undefined,
             narration: note || '',
             ledger_entries: ledgerEntries
           };
@@ -917,8 +993,8 @@ export const CreateVoucherWizard = ({
         date: voucherDate,
         party_name: voucherType === 'Contra' ? `${selectedParty} → ${toAccount}` : selectedParty,
         customer: voucherType === 'Contra' ? `${selectedParty} → ${toAccount}` : selectedParty,
-        amount: voucherType === 'Contra' ? (Number(contraAmount) || 0) : itemCalculations.grandTotal,
-        total_amount: voucherType === 'Contra' ? (Number(contraAmount) || 0) : itemCalculations.grandTotal,
+        amount: voucherAmount,
+        total_amount: voucherAmount,
         status: (res?.success || res?.command_id) ? 'Sent' : 'Waiting',
         action: initialVoucher ? 'EDIT' : 'CREATE',
         created_at: initialVoucher?.created_at || new Date().toISOString(),
@@ -943,9 +1019,9 @@ export const CreateVoucherWizard = ({
       window.dispatchEvent(new CustomEvent('tc-voucher-created', { detail: activityRecord }));
 
       if (res?.success || res?.command_id || res?.voucher_guid) {
-        showToast(initialVoucher ? `Voucher ${billNo} updated and synced with Tally!` : `Voucher ${billNo} created successfully! Synced with Tally.`);
+        showToast(initialVoucher ? 'Voucher updated and synced with Tally!' : 'Voucher created successfully and synced with Tally.');
       } else {
-        showToast(initialVoucher ? `Voucher ${billNo} updated in queue!` : `Voucher ${billNo} saved and queued for sync!`);
+        showToast(initialVoucher ? 'Voucher updated in the sync queue!' : 'Voucher saved and queued for sync.');
       }
 
       if (typeof onSuccess === 'function') onSuccess(activityRecord);
@@ -960,8 +1036,8 @@ export const CreateVoucherWizard = ({
         date: voucherDate,
         party_name: selectedParty,
         customer: selectedParty,
-        amount: itemCalculations.grandTotal,
-        total_amount: itemCalculations.grandTotal,
+        amount: voucherAmount,
+        total_amount: voucherAmount,
         status: 'Waiting',
         action: initialVoucher ? 'EDIT' : 'CREATE',
         created_at: initialVoucher?.created_at || new Date().toISOString()
@@ -979,7 +1055,7 @@ export const CreateVoucherWizard = ({
         localStorage.setItem('tc_user_activity', JSON.stringify(updated));
       } catch {}
       window.dispatchEvent(new CustomEvent('tc-voucher-created', { detail: fallbackRecord }));
-      showToast(initialVoucher ? `Voucher ${billNo} updated in queue!` : `Voucher ${billNo} created and queued!`);
+      showToast(initialVoucher ? 'Voucher updated in the sync queue!' : 'Voucher created and queued for sync.');
       if (typeof onSuccess === 'function') onSuccess(fallbackRecord);
       onClose();
     } finally {
@@ -1362,7 +1438,7 @@ export const CreateVoucherWizard = ({
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-                  <h2 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px' }}>
+                  <h2 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: 'var(--text-dark)', letterSpacing: '-0.4px' }}>
                     {initialVoucher ? `Edit ${activeConfig.id}` : activeConfig.title}
                   </h2>
                   
@@ -1404,7 +1480,7 @@ export const CreateVoucherWizard = ({
                     {/* Liquified Floating Dropdown Menu */}
                     {isTypeDropdownOpen && (
                       <div
-                        className="glass-panel slide-down"
+                        className="glass-panel slide-down cv-voucher-type-menu"
                         style={{
                           position: 'absolute',
                           top: 'calc(100% + 6px)',
@@ -1423,7 +1499,7 @@ export const CreateVoucherWizard = ({
                           gap: '2px'
                         }}
                       >
-                        <div style={{ padding: '6px 10px 4px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', color: '#64748b' }}>
+                        <div className="cv-voucher-type-menu-label" style={{ padding: '6px 10px 4px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--text-muted)' }}>
                           Voucher Type
                         </div>
                         {VOUCHER_TYPES_CONFIG.map((c) => {
@@ -1433,9 +1509,9 @@ export const CreateVoucherWizard = ({
                             <button
                               key={c.id}
                               type="button"
+                              className={`cv-voucher-type-option${isSelected ? ' is-selected' : ''}`}
                               onClick={() => {
-                                setVoucherType(c.id);
-                                setIsTypeDropdownOpen(false);
+                                handleVoucherTypeChange(c.id);
                               }}
                               style={{
                                 display: 'flex',
@@ -1445,16 +1521,9 @@ export const CreateVoucherWizard = ({
                                 padding: '8px 10px',
                                 borderRadius: '12px',
                                 border: 'none',
-                                background: isSelected ? 'rgba(0, 0, 0, 0.06)' : 'transparent',
                                 cursor: 'pointer',
                                 textAlign: 'left',
                                 transition: 'all 0.15s ease'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isSelected) e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)';
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isSelected) e.currentTarget.style.background = 'transparent';
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1473,10 +1542,10 @@ export const CreateVoucherWizard = ({
                                   <IconComp size={14} />
                                 </div>
                                 <div>
-                                  <div style={{ fontSize: '13px', fontWeight: isSelected ? 800 : 600, color: '#0f172a' }}>
+                                  <div className="cv-voucher-type-option-title" style={{ fontSize: '13px', fontWeight: isSelected ? 800 : 600, color: 'var(--text-dark)' }}>
                                     {c.id}
                                   </div>
-                                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                  <div className="cv-voucher-type-option-subtitle" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                                     {c.subtitle}
                                   </div>
                                 </div>
@@ -1573,7 +1642,7 @@ export const CreateVoucherWizard = ({
               {[
                 { step: 1, label: 'Details' },
                 { step: 2, label: 'Items' },
-                { step: 3, label: 'Payment' },
+                ...(!['Journal', 'Contra'].includes(voucherType) ? [{ step: 3, label: 'Payment' }] : []),
                 { step: 4, label: 'Check' }
               ].map((s) => {
                 const isActive = currentStep === s.step;
@@ -1638,7 +1707,7 @@ export const CreateVoucherWizard = ({
           )}
 
           {/* Wizard Body Container */}
-          <div className="cv-wizard-body" style={{ padding: '16px 24px', overflowY: 'auto', flex: 1 }}>
+          <div className="cv-wizard-body" style={{ padding: '16px 24px', overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', minHeight: 0, flex: 1 }}>
             {/* =========================================================================
                 STEP 1: DETAILS (Replicates Screenshot 1 Form Card)
                 ========================================================================= */}
@@ -1658,34 +1727,8 @@ export const CreateVoucherWizard = ({
                   boxShadow: 'var(--glass-shadow)'
                 }}
               >
-                {/* Row 1: # Bill no. & Date * (Responsive 2-column) */}
+                {/* Row 1: Voucher date */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px' }}>
-                  {/* Bill no */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
-                      <Hash size={14} color="#64748b" /> Bill no.
-                    </label>
-                    <input
-                      type="text"
-                      className="cv-input"
-                      placeholder="e.g. INV-1001"
-                      value={billNo}
-                      onChange={(e) => setBillNo(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '13px 16px',
-                        borderRadius: '14px',
-                        border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                        background: 'rgba(255, 255, 255, 0.92)',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                        outline: 'none',
-                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
-                      }}
-                    />
-                  </div>
-
                   {/* Date * */}
                   <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
@@ -1779,7 +1822,7 @@ export const CreateVoucherWizard = ({
                       />
                     </div>
                   </div>
-                ) : (
+                ) : voucherType === 'Journal' ? null : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px' }}>
                     {/* Customer * with Blue Avatar & [+] Button */}
                     <div>
@@ -1790,6 +1833,7 @@ export const CreateVoucherWizard = ({
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {/* Left: Avatar + Select Input Box */}
                         <div
+                          className="cv-party-select-card"
                           style={{
                             flex: 1,
                             minWidth: 0,
@@ -1799,7 +1843,7 @@ export const CreateVoucherWizard = ({
                             padding: '9px 14px',
                             borderRadius: '16px',
                             border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                            background: 'rgba(255, 255, 255, 0.92)',
+                            background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.92))',
                             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                           }}
                         >
@@ -1824,6 +1868,7 @@ export const CreateVoucherWizard = ({
 
                           {/* Dropdown Selector */}
                           <select
+                            className="tc-theme-select cv-party-select"
                             value={selectedParty}
                             onChange={(e) => setSelectedParty(e.target.value)}
                             style={{
@@ -1834,7 +1879,7 @@ export const CreateVoucherWizard = ({
                               background: 'transparent',
                               fontSize: '14px',
                               fontWeight: 700,
-                              color: '#0f172a',
+                              color: 'var(--text-dark, #0f172a)',
                               outline: 'none',
                               cursor: 'pointer',
                               textOverflow: 'ellipsis',
@@ -1878,7 +1923,7 @@ export const CreateVoucherWizard = ({
                     </div>
 
                     {/* Pay by date (optional field toggleable via Field Settings) */}
-                    {fieldSettings.due_date !== false && (
+                    {(voucherType === 'Sales' || voucherType === 'Purchase') && fieldSettings.due_date !== false && (
                       <div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
                           <Calendar size={14} color="#64748b" /> Pay by date
@@ -1906,6 +1951,33 @@ export const CreateVoucherWizard = ({
                     )}
                   </div>
                 )}
+
+                {(voucherType === 'Sales' || voucherType === 'Purchase' || voucherType === 'Journal') &&
+                  fieldSettings.reference_no !== false && (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
+                        {voucherType === 'Journal' ? 'Journal Reference (optional)' : 'Reference (optional)'}
+                      </label>
+                      <input
+                        type="text"
+                        className="cv-input"
+                        value={paymentRef}
+                        onChange={(e) => setPaymentRef(e.target.value)}
+                        placeholder="Enter an optional reference"
+                        style={{
+                          width: '100%',
+                          padding: '13px 16px',
+                          borderRadius: '14px',
+                          border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
+                          background: 'rgba(255, 255, 255, 0.92)',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: '#0f172a',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  )}
 
                 {/* Row 3: Note (optional) */}
                 <div>
@@ -2214,6 +2286,23 @@ export const CreateVoucherWizard = ({
                       </div>
                     </div>
                   </>
+                ) : voucherType === 'Receipt' || voucherType === 'Payment' ? (
+                  <div
+                    className="glass-panel cv-ledger-card"
+                    style={{
+                      padding: '24px',
+                      borderRadius: '20px',
+                      background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
+                      border: '1px solid var(--glass-border, rgba(0,0,0,0.08))'
+                    }}
+                  >
+                    <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                      {voucherType === 'Receipt' ? 'Receipt amount and payment method' : 'Payment amount and payment method'}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--text-muted)' }}>
+                      Enter the {voucherType === 'Receipt' ? 'amount received from' : 'amount paid to'} {selectedParty || 'the selected party'} in the next step. The voucher will use the dedicated {voucherType.toLowerCase()} fields supported by the sync API.
+                    </p>
+                  </div>
                 ) : voucherType === 'Contra' ? (
                   /* Dedicated Contra Transfer Card */
                   <div
@@ -2412,14 +2501,19 @@ export const CreateVoucherWizard = ({
               >
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '10px' }}>
-                    Payment Terms
+                    {voucherType === 'Receipt' ? 'Receipt Details' : voucherType === 'Payment' ? 'Payment Details' : 'Payment Terms'}
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                    {[
+                    {(voucherType === 'Receipt' || voucherType === 'Payment'
+                      ? [
+                        { id: 'CASH', label: 'Cash', icon: Wallet },
+                        { id: 'BANK', label: 'Bank / UPI', icon: CreditCard }
+                      ]
+                      : [
                       { id: 'UNPAID', label: 'Unpaid / Credit', icon: Wallet },
                       { id: 'CASH', label: 'Cash', icon: Wallet },
                       { id: 'BANK', label: 'Bank / UPI', icon: CreditCard }
-                    ].map((m) => {
+                    ]).map((m) => {
                       const active = paymentMode === m.id;
                       return (
                         <button
@@ -2453,9 +2547,10 @@ export const CreateVoucherWizard = ({
                 {paymentMode === 'BANK' && (
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                      Deposit Bank Account
+                      {voucherType === 'Payment' ? 'Paid From Bank Account' : 'Deposit To Bank Account'}
                     </label>
                     <select
+                      className="tc-theme-select"
                       value={bankLedger}
                       onChange={(e) => setBankLedger(e.target.value)}
                       style={{
@@ -2477,15 +2572,19 @@ export const CreateVoucherWizard = ({
                   </div>
                 )}
 
-                {/* Amount Paid Now */}
+                {/* Amount for the active voucher type */}
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                    Amount Paid Now (₹)
+                    {voucherType === 'Receipt'
+                      ? 'Amount Received (₹)'
+                      : voucherType === 'Payment'
+                        ? 'Amount Paid (₹)'
+                        : 'Amount Paid Now (₹)'}
                   </label>
                   <input
                     type="number"
-                    min="0"
-                    max={itemCalculations.grandTotal}
+                    min={voucherType === 'Receipt' || voucherType === 'Payment' ? '0.01' : '0'}
+                    max={activeConfig.isItemized ? itemCalculations.grandTotal : undefined}
                     value={amountReceived}
                     onChange={(e) => setAmountReceived(e.target.value)}
                     style={{
@@ -2501,13 +2600,30 @@ export const CreateVoucherWizard = ({
                   />
                 </div>
 
+                {(voucherType === 'Receipt' || voucherType === 'Payment') && fieldSettings.reference_no !== false && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                      Reference / UTR / Cheque No. (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentRef}
+                      onChange={(e) => setPaymentRef(e.target.value)}
+                      className="cv-input"
+                      placeholder="Enter bank reference or cheque number"
+                    />
+                  </div>
+                )}
+
                 {/* Balance Due */}
+                {activeConfig.isItemized && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '14px', background: 'rgba(254, 242, 242, 0.8)', border: '1px solid rgba(254, 205, 211, 0.6)' }}>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#991b1b' }}>Remaining Balance Due</span>
                   <span style={{ fontSize: '15px', fontWeight: 900, color: '#991b1b' }}>
                     {formatInr(Math.max(0, itemCalculations.grandTotal - (Number(amountReceived) || 0)))}
                   </span>
                 </div>
+                )}
               </div>
             )}
 
@@ -2546,13 +2662,17 @@ export const CreateVoucherWizard = ({
                   </div>
 
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
-                    {activeConfig.title} · #{billNo}
+                    {activeConfig.title} · {voucherDate || 'Date not set'}
                   </div>
                   <div style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: '4px' }}>
-                    {formatInr(itemCalculations.grandTotal)}
+                    {formatInr(voucherType === 'Contra' ? contraAmount : voucherType === 'Receipt' || voucherType === 'Payment' ? amountReceived : itemCalculations.grandTotal)}
                   </div>
                   <div style={{ fontSize: '16px', fontWeight: 800, color: '#1e293b', marginBottom: '12px' }}>
-                    {voucherType === 'Contra' ? `${selectedParty} ➔ ${toAccount}` : selectedParty}
+                    {voucherType === 'Contra'
+                      ? `${selectedParty} ➔ ${toAccount}`
+                      : voucherType === 'Journal'
+                        ? 'Journal entry'
+                        : selectedParty}
                   </div>
 
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '999px', background: 'rgba(16, 185, 129, 0.1)', color: '#059669', fontSize: '12px', fontWeight: 700 }}>
@@ -2575,14 +2695,26 @@ export const CreateVoucherWizard = ({
                     <span style={{ color: '#64748b', fontWeight: 600 }}>Date</span>
                     <span style={{ color: '#0f172a', fontWeight: 700 }}>{voucherDate}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
-                    <span style={{ color: '#64748b', fontWeight: 600 }}>Due Date</span>
-                    <span style={{ color: '#0f172a', fontWeight: 700 }}>{payByDate || '—'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
-                    <span style={{ color: '#64748b', fontWeight: 600 }}>Payment Status</span>
-                    <span style={{ color: '#0f172a', fontWeight: 700 }}>{paymentMode} ({formatInr(amountReceived)} paid)</span>
-                  </div>
+                  {(voucherType === 'Sales' || voucherType === 'Purchase') && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
+                      <span style={{ color: '#64748b', fontWeight: 600 }}>Due Date</span>
+                      <span style={{ color: '#0f172a', fontWeight: 700 }}>{payByDate || '—'}</span>
+                    </div>
+                  )}
+                  {voucherType !== 'Contra' && voucherType !== 'Journal' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
+                      <span style={{ color: '#64748b', fontWeight: 600 }}>
+                        {voucherType === 'Receipt' ? 'Amount Received' : voucherType === 'Payment' ? 'Amount Paid' : 'Payment Status'}
+                      </span>
+                      <span style={{ color: '#0f172a', fontWeight: 700 }}>
+                        {voucherType === 'Receipt'
+                          ? `${formatInr(amountReceived)} received`
+                          : voucherType === 'Payment'
+                            ? `${formatInr(amountReceived)} paid`
+                            : `${paymentMode} (${formatInr(amountReceived)} paid)`}
+                      </span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '13px' }}>
                     <span style={{ color: '#64748b', fontWeight: 600 }}>Company</span>
                     <span style={{ color: '#0f172a', fontWeight: 700 }}>{activeCompanyName}</span>

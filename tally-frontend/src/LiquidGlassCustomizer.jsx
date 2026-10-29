@@ -380,8 +380,8 @@ export const LiquidGlassControls = ({ isDarkMode = false, onSettingsChanged }) =
         </div>
       </div>
 
-      {/* Background Wallpaper Section */}
-      <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+      {/* Background wallpapers remain available from the Appearance settings. */}
+      <div hidden style={{ display: 'none', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <label style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--text-muted)' }}>
             Background Wallpaper & Ambience

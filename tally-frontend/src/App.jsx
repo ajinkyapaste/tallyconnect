@@ -3011,7 +3011,7 @@ const AiAssistantWidget = ({ companyGuid, syncInfo }) => {
 
 
 /* ---------------- Dashboard ---------------- */
-const Dashboard = ({ setCurrentTab, companyGuid, syncInfo, onQuickAdd, user }) => {
+const Dashboard = ({ setCurrentTab, companyGuid, syncInfo, user }) => {
   const [summary, setSummary] = useState(null);
   const [cash, setCash] = useState(() => {
     try {
@@ -3458,11 +3458,6 @@ const Dashboard = ({ setCurrentTab, companyGuid, syncInfo, onQuickAdd, user }) =
           </span>
           <h1>{greeting}</h1>
           <p>{companyGuid ? 'Here’s how your business is doing today' : 'Select a company to see your business overview'}</p>
-        </div>
-        <div className="page-header-actions">
-          <button className="btn-primary" onClick={() => (onQuickAdd ? onQuickAdd() : setCurrentTab('vouchers'))}>
-            <Plus size={16} /> Create Voucher
-          </button>
         </div>
       </div>
 
@@ -4010,7 +4005,7 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
     if (ledgerFilters.parent_group) {
       out = out.filter((l) => String(l.parent_group || '').toLowerCase() === String(ledgerFilters.parent_group).toLowerCase());
     }
-    if (ledgerFilters.closing_balance) {
+    if (ledgerFilters.closing_balance && ledgerFilters.closing_balance_op !== 'range') {
       const targetBal = parseFloat(ledgerFilters.closing_balance);
       const op = ledgerFilters.closing_balance_op || 'exact';
       if (!isNaN(targetBal)) {
@@ -4022,9 +4017,33 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
         });
       }
     }
+    if (ledgerFilters.closing_balance_op === 'range') {
+      const from = parseFloat(ledgerFilters.closing_balance_from);
+      const to = parseFloat(ledgerFilters.closing_balance_to);
+      if (!isNaN(from) || !isNaN(to)) {
+        out = out.filter((l) => {
+          const balance = Math.abs(Number(l.balance) || 0);
+          if (!isNaN(from) && balance < from) return false;
+          if (!isNaN(to) && balance > to) return false;
+          return true;
+        });
+      }
+    }
     if (ledgerFilters.location) {
       const locTerm = String(ledgerFilters.location).toLowerCase();
-      out = out.filter((l) => [l.state, l.city, l.address, l.pincode].some((v) => String(v || '').toLowerCase().includes(locTerm)));
+      out = out.filter((l) => [l.state, l.city, l.address, l.pincode, l.country].some((v) => String(v || '').toLowerCase().includes(locTerm)));
+    }
+    if (ledgerFilters.state) {
+      const stateTerm = String(ledgerFilters.state).toLowerCase();
+      out = out.filter((l) => String(l.state || '').toLowerCase().includes(stateTerm));
+    }
+    if (ledgerFilters.pincode) {
+      const pincodeTerm = String(ledgerFilters.pincode).toLowerCase();
+      out = out.filter((l) => String(l.pincode || '').toLowerCase().includes(pincodeTerm));
+    }
+    if (ledgerFilters.country) {
+      const countryTerm = String(ledgerFilters.country).toLowerCase();
+      out = out.filter((l) => String(l.country || '').toLowerCase().includes(countryTerm));
     }
     if (ledgerFilters.email) {
       const eTerm = String(ledgerFilters.email).toLowerCase();
@@ -4916,6 +4935,9 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
               'Sundry Debtors', 'Sundry Creditors', 'Bank Accounts', 'Cash-in-hand', 'Direct Expenses', 'Indirect Expenses'
             ]},
             { id: 'location', label: 'Location / State', type: 'text', category: 'General' },
+            { id: 'state', label: 'State', type: 'text', category: 'General' },
+            { id: 'pincode', label: 'Pincode', type: 'text', category: 'General' },
+            { id: 'country', label: 'Country', type: 'text', category: 'General' },
             { id: 'email', label: 'Email', type: 'text', category: 'Contact' },
             { id: 'closing_balance', label: 'Closing Balance', type: 'number', category: 'Financial' },
             { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Inactive', 'Overdue'] }
@@ -10691,6 +10713,59 @@ const SettingsHub = ({
               setTextScale={setTextScale}
               showTitle={false}
             />
+            {user?.role === 'ADMIN' && (
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>Company logo</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+                    Upload a logo to display beside the company selector.
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  ref={logoInputRef}
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  style={{ display: 'none' }}
+                  onChange={handleLogoUpload}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                  {activeLogo ? (
+                    <div className="header-company-logo">
+                      <img src={activeLogo} alt="Company logo preview" />
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>No company logo selected</span>
+                  )}
+                  <button type="button" className="btn-primary" onClick={() => logoInputRef.current?.click()}>
+                    <Upload size={15} /> Upload logo
+                  </button>
+                  {activeLogo && (
+                    <>
+                      <button type="button" className="btn-secondary" onClick={handleRemoveWhiteBg}>
+                        <Sparkles size={14} /> Remove white background
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={handleRemoveLogo}>
+                        <Trash2 size={14} /> Remove logo
+                      </button>
+                    </>
+                  )}
+                </div>
+                {activeLogo && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                    Logo size: {logoSize}px
+                    <input
+                      type="range"
+                      min="24"
+                      max="50"
+                      step="2"
+                      value={logoSize}
+                      onChange={(e) => handleLogoSizeChange(Number(e.target.value))}
+                      style={{ width: '220px', accentColor: 'var(--primary-color)' }}
+                    />
+                  </label>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Accent Color & Transparency */}
@@ -11044,8 +11119,8 @@ const SettingsHub = ({
             </button>
           </div>
 
-          {/* Company Logo Upload (Admin Option) */}
-          <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px' }}>
+          {/* Company Logo is managed from Appearance settings. */}
+          <div className="glass-panel" style={{ display: 'none', padding: '24px', borderRadius: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -14664,19 +14739,19 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
         bulkAssignLedgers({
           userIds: [targetUser.id],
           ledgerIds: assignedLedgers.length === 0 ? companyLedgers.map(l => l.ledger_guid).filter(Boolean) : assignedLedgers
-        }).catch(err => console.warn('Ledger assign:', err)),
+        }),
         saveUserOrders(
           targetUser.id,
           assignedOrders.length === 0 ? companyOrders.map(o => o.order_guid || o.id).filter(Boolean) : assignedOrders
-        ).catch(err => console.warn('Order assign:', err)),
+        ),
         saveUserInventory(
           targetUser.id,
           assignedItems.length === 0 ? companyItems.map(i => i.name).filter(Boolean) : assignedItems
-        ).catch(err => console.warn('Inventory assign:', err)),
+        ),
         saveUserVouchers(
           targetUser.id,
           assignedVouchers.length === 0 ? [] : assignedVouchers
-        ).catch(err => console.warn('Voucher assign:', err))
+        )
       ]);
 
       // 3. Dispatch email notification if enabled
@@ -18815,7 +18890,7 @@ function App() {
       );
     }
     switch (currentTab) {
-      case 'dashboard': return <Dashboard setCurrentTab={setCurrentTab} companyGuid={companyGuid} syncInfo={syncInfo} onQuickAdd={openVoucherCreate} user={user} />;
+      case 'dashboard': return <Dashboard setCurrentTab={setCurrentTab} companyGuid={companyGuid} syncInfo={syncInfo} user={user} />;
       case 'ledger':
       case 'ledgers':
         return <LedgerList companyGuid={companyGuid} externalQuery={headerQuery} setCurrentTab={setCurrentTab} onNewSale={setNewSaleParty} />;

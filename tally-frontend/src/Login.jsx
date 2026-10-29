@@ -167,7 +167,7 @@ export default function Login({ onLogin }) {
             <TallyConnectLogo height={52} />
           </div>
 
-          <form onSubmit={submit} noValidate={false}>
+          <form onSubmit={submit} noValidate={false} autoComplete="on">
             <div className="ios-form-group" style={{ marginBottom: '16px', paddingTop: '8px', paddingBottom: '8px' }}>
               {mode === 'login' ? (
                 <>

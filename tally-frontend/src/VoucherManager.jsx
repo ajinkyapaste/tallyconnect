@@ -350,6 +350,17 @@ export const createLumiloDataset = (companyName = 'Lumilo') => {
   return all;
 };
 
+const withLocalDemoVouchers = (vouchers) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('tc_demo_vouchers') || '[]');
+    if (!Array.isArray(saved)) return vouchers;
+    const existing = new Set(vouchers.map((v) => v.voucher_guid || v.id));
+    return [...saved.filter((v) => !existing.has(v.voucher_guid || v.id)), ...vouchers];
+  } catch {
+    return vouchers;
+  }
+};
+
 /* ------------------------------------------------------------------
    VoucherManager Component
    ------------------------------------------------------------------ */
@@ -380,7 +391,7 @@ export const VoucherManager = ({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [companies, setCompanies] = useState([]);
-  const [activeCompanyName, setActiveCompanyName] = useState('Lumilo');
+  const [activeCompanyName, setActiveCompanyName] = useState(() => localStorage.getItem('tc_company_name') || '');
 
   // Search & Sorting
   const [searchQuery, setSearchQuery] = useState('');
@@ -519,6 +530,10 @@ export const VoucherManager = ({
 
   // Fetch Companies to get company name
   useEffect(() => {
+    if (companyGuid === 'tc-demo-company') {
+      setActiveCompanyName('Demo Company');
+      return;
+    }
     (async () => {
       try {
         const res = await api.get('/company');
@@ -530,10 +545,10 @@ export const VoucherManager = ({
             setActiveCompanyName(match.company_name || match.name);
           }
         } else if (list.length > 0) {
-          setActiveCompanyName(list[0].company_name || list[0].name || 'Lumilo');
+          setActiveCompanyName(list[0].company_name || list[0].name || '');
         }
       } catch {
-        setActiveCompanyName('Lumilo');
+        setActiveCompanyName('');
       }
     })();
   }, [companyGuid]);
@@ -542,22 +557,31 @@ export const VoucherManager = ({
   const fetchVouchers = useCallback(async () => {
     setLoading(true);
     setLoadError('');
+    if (companyGuid === 'tc-demo-company') {
+      setVouchers(withLocalDemoVouchers(createLumiloDataset('Demo Company')));
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get('/voucher-entry', companyGuid ? { company_guid: companyGuid } : {});
       const list = Array.isArray(res) ? res : (res?.data || res?.vouchers || []);
       const isStaff = user && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN';
+      const isDemoCompany = /^(lumilo|demo company)$/i.test(String(activeCompanyName || '').trim()) ||
+        companyGuid === 'DEMO-COMPANY-001';
       if (list && list.length > 0) {
         setVouchers(list);
-      } else if (!isStaff) {
-        setVouchers(createLumiloDataset(activeCompanyName));
+      } else if (!isStaff && isDemoCompany) {
+        setVouchers(withLocalDemoVouchers(createLumiloDataset(activeCompanyName)));
       } else {
         setVouchers([]);
       }
     } catch (err) {
       console.warn('Backend voucher API fallback:', err);
       const isStaff = user && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN';
-      if (!isStaff) {
-        setVouchers(createLumiloDataset(activeCompanyName));
+      const isDemoCompany = /^(lumilo|demo company)$/i.test(String(activeCompanyName || '').trim()) ||
+        companyGuid === 'DEMO-COMPANY-001';
+      if (!isStaff && isDemoCompany) {
+        setVouchers(withLocalDemoVouchers(createLumiloDataset(activeCompanyName)));
       } else {
         setVouchers([]);
       }
@@ -600,12 +624,13 @@ export const VoucherManager = ({
 
   // Fetch party ledger list for creation
   useEffect(() => {
-    if (showCreate) {
-      api.get('/ledger', { company_guid: companyGuid })
-        .then((r) => setParties(r?.data || []))
-        .catch(() => setParties([]));
-    }
-  }, [showCreate, companyGuid]);
+    api.get('/ledger', companyGuid ? { company_guid: companyGuid } : {})
+      .then((r) => setParties(Array.isArray(r) ? r : (r?.data || [])))
+      .catch((err) => {
+        console.error('Failed to load party ledgers:', err);
+        setParties([]);
+      });
+  }, [companyGuid]);
 
   // Fetch single voucher details (Dr/Cr entries)
   const openVoucherDetail = async (v) => {
@@ -783,12 +808,12 @@ export const VoucherManager = ({
     if (voucherFilters.voucher_type) {
       list = list.filter((v) => String(v.voucher_type || '').toLowerCase() === String(voucherFilters.voucher_type).toLowerCase());
     }
-    if (voucherFilters.amount) {
+    if (voucherFilters.amount && voucherFilters.amount_op !== 'range') {
       const targetAmt = parseFloat(voucherFilters.amount);
       const op = voucherFilters.amount_op || 'exact';
       if (!isNaN(targetAmt)) {
         list = list.filter((v) => {
-          const amt = Math.abs(Number(v.amount) || 0);
+          const amt = Math.abs(Number(v.amount ?? v.total_amount ?? v.invoice_total) || 0);
           if (op === 'gte') return amt >= targetAmt;
           if (op === 'lte') return amt <= targetAmt;
           return Math.abs(amt - targetAmt) < 0.01;
@@ -800,7 +825,7 @@ export const VoucherManager = ({
       const to = parseFloat(voucherFilters.amount_to);
       if (!isNaN(from) || !isNaN(to)) {
         list = list.filter((v) => {
-          const amt = Math.abs(Number(v.amount) || 0);
+          const amt = Math.abs(Number(v.amount ?? v.total_amount ?? v.invoice_total) || 0);
           if (!isNaN(from) && amt < from) return false;
           if (!isNaN(to) && amt > to) return false;
           return true;
@@ -813,6 +838,24 @@ export const VoucherManager = ({
     if (voucherFilters.narration) {
       const nTerm = String(voucherFilters.narration).toLowerCase();
       list = list.filter((v) => String(v.narration || '').toLowerCase().includes(nTerm));
+    }
+    const partyForVoucher = (voucher) => parties.find((party) => (
+      String(party.name || party.ledger_name || '').trim().toLowerCase() ===
+      String(voucher.party_name || voucher.party || '').trim().toLowerCase()
+    ));
+    for (const [field, keys] of Object.entries({
+      state: ['state', 'party_state'],
+      pincode: ['pincode', 'party_pincode'],
+      country: ['country', 'party_country']
+    })) {
+      const filterValue = String(voucherFilters[field] || '').trim().toLowerCase();
+      if (!filterValue) continue;
+      list = list.filter((voucher) => {
+        const party = partyForVoucher(voucher) || {};
+        const value = keys.map((key) => voucher[key] || party[key])
+          .find((candidate) => candidate !== undefined && candidate !== null);
+        return String(value || '').toLowerCase().includes(filterValue);
+      });
     }
 
     // Sort list
@@ -841,7 +884,7 @@ export const VoucherManager = ({
     });
 
     return list;
-  }, [dateFilteredVouchers, selectedCategory, effectiveSearch, sortBy, categoryTiles, voucherPinned, voucherOrder, voucherFilters]);
+  }, [dateFilteredVouchers, selectedCategory, effectiveSearch, sortBy, categoryTiles, voucherPinned, voucherOrder, voucherFilters, parties]);
 
   // Aggregate stats for currently viewed category list (Screenshot 3 header card)
   const listCategorySummary = useMemo(() => {
@@ -1658,6 +1701,9 @@ export const VoucherManager = ({
                   { id: 'voucher_type', label: 'Voucher Type', type: 'select', category: 'General', options: [
                     'Sales', 'Purchase', 'Payment', 'Receipt', 'Journal', 'Contra', 'Debit Note', 'Credit Note'
                   ]},
+                  { id: 'state', label: 'State', type: 'text', category: 'General' },
+                  { id: 'pincode', label: 'Pincode', type: 'text', category: 'General' },
+                  { id: 'country', label: 'Country', type: 'text', category: 'General' },
                   { id: 'amount', label: 'Total', type: 'number', category: 'Financial' },
                   { id: 'date', label: 'Created on', type: 'date', category: 'Date' },
                   { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Cancelled'] },

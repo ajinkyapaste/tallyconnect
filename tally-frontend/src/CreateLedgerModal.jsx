@@ -211,8 +211,8 @@ export default function CreateLedgerModal({
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+          <div style={{ padding: '24px', overflowY: 'auto', overscrollBehavior: 'contain', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
               <div
                 style={{
@@ -265,6 +265,7 @@ export default function CreateLedgerModal({
                 Parent Group <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <select
+                className="tc-theme-select"
                 value={parentGroup}
                 onChange={(e) => setParentGroup(e.target.value)}
                 style={{

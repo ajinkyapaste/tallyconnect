@@ -877,10 +877,11 @@ export default function AppearanceSettings({
         </div>
       </div>
 
+      <>
       {/* =========================================================================
           4. CARD & COMPONENT CUSTOMIZATION (Bitrix24 Persistence & Restore)
           ========================================================================= */}
-      <div className="tc-appearance-section" style={{ marginTop: '28px' }}>
+      <div hidden className="tc-appearance-section" style={{ display: 'none', marginTop: '28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
           <div>
             <h3 className="tc-appearance-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
@@ -995,6 +996,7 @@ export default function AppearanceSettings({
           ))}
         </div>
       </div>
+      </>
     </div>
   );
 }
