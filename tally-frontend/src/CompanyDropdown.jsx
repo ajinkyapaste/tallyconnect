@@ -176,6 +176,29 @@ export default function CompanyDropdown({ companyGuid, setCompanyGuid, setCurren
     ...companies,
     ...(companies.some((c) => /^demo company$/i.test(String(c?.name || '').trim())) ? [] : [DEMO_COMPANY])
   ]);
+
+  // Prioritize synced or actively syncing company to the very top of the list
+  const sortedCompanies = React.useMemo(() => {
+    return [...uniqueCompanies].sort((a, b) => {
+      const aSync = syncStatusMap[a.company_guid]?.state === 'synced';
+      const bSync = syncStatusMap[b.company_guid]?.state === 'synced';
+      if (aSync && !bSync) return -1;
+      if (!aSync && bSync) return 1;
+
+      const aSyncing = syncStatusMap[a.company_guid]?.state === 'syncing';
+      const bSyncing = syncStatusMap[b.company_guid]?.state === 'syncing';
+      if (aSyncing && !bSyncing) return -1;
+      if (!aSyncing && bSyncing) return 1;
+
+      const aCurrent = a.company_guid === companyGuid;
+      const bCurrent = b.company_guid === companyGuid;
+      if (aCurrent && !bCurrent) return -1;
+      if (!aCurrent && bCurrent) return 1;
+
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }, [uniqueCompanies, syncStatusMap, companyGuid]);
+
   const displayGuid = switchingGuid || companyGuid;
   const activeCompany = uniqueCompanies.find(c => c.company_guid === displayGuid);
 
@@ -237,11 +260,11 @@ export default function CompanyDropdown({ companyGuid, setCompanyGuid, setCurren
               <div style={{ color: 'var(--danger)', marginBottom: '8px', fontWeight: 600 }}>{loadError}</div>
               <button className="btn-secondary" onClick={fetchCompanies}>Retry</button>
             </div>
-          ) : uniqueCompanies.length === 0 ? (
+          ) : sortedCompanies.length === 0 ? (
             <div className="company-pop-empty">No companies available</div>
           ) : (
             <div className="company-pop-list">
-              {uniqueCompanies.map(c => {
+              {sortedCompanies.map(c => {
                 const isCurrent = c.company_guid === companyGuid;
                 const syncInfo = syncStatusMap[c.company_guid];
                 return (

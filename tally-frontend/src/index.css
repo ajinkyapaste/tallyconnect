@@ -4,6 +4,12 @@
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.7);
   --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  --input-bg: rgba(255, 255, 255, 0.92);
+  --input-color: #0f172a;
+  --input-border: rgba(0, 0, 0, 0.12);
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-color: #0f172a;
+  --btn-secondary-border: rgba(0, 0, 0, 0.12);
   --primary-color: #007aff;
   --primary-hover: #0062cc;
   --primary-light: rgba(0, 122, 255, 0.14);
@@ -17,6 +23,28 @@
   --sidebar-width: 258px;
   --ios-easing: cubic-bezier(0.32, 0.72, 0, 1);
   --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+[data-theme='dark'],
+[data-dark-bg='1'],
+body.dark {
+  --text-dark: #f8fafc;
+  --text-muted: #cbd5e1;
+  --input-bg: rgba(15, 23, 42, 0.75);
+  --input-color: #f8fafc;
+  --input-border: rgba(255, 255, 255, 0.2);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.12);
+  --btn-secondary-color: #ffffff;
+  --btn-secondary-border: rgba(255, 255, 255, 0.22);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-dark-bg='1'] h1,
+[data-dark-bg='1'] h2,
+[data-dark-bg='1'] h3,
+[data-dark-bg='1'] .tc-hero-title {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
 
 * {
@@ -2277,36 +2305,90 @@ button:not(:disabled) {
   color: #475569;
 }
 
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(15, 23, 42)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(30, 41, 59)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(51, 65, 85)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(71, 85, 105)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(17, 24, 39)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(31, 41, 55)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(55, 65, 81)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(75, 85, 99)"],
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(0, 0, 0)"] {
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(15, 23, 42)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(30, 41, 59)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(51, 65, 85)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(71, 85, 105)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(17, 24, 39)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(31, 41, 55)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(55, 65, 81)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(75, 85, 99)"],
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(0, 0, 0)"] {
   color: #e2e8f0 !important;
 }
 
 /* Inline form colors need the same dark-theme correction as regular text. */
-[data-theme='dark'] input[style*="color: rgb(15, 23, 42)"],
-[data-theme='dark'] input[style*="color: rgb(30, 41, 59)"],
-[data-theme='dark'] input[style*="color: rgb(51, 65, 85)"],
-[data-theme='dark'] textarea[style*="color: rgb(15, 23, 42)"],
-[data-theme='dark'] textarea[style*="color: rgb(30, 41, 59)"],
-[data-theme='dark'] textarea[style*="color: rgb(51, 65, 85)"],
-body.dark input[style*="color: rgb(15, 23, 42)"],
-body.dark input[style*="color: rgb(30, 41, 59)"],
-body.dark input[style*="color: rgb(51, 65, 85)"],
-body.dark textarea[style*="color: rgb(15, 23, 42)"],
-body.dark textarea[style*="color: rgb(30, 41, 59)"],
-body.dark textarea[style*="color: rgb(51, 65, 85)"] {
+[data-theme='dark'] input:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(15, 23, 42)"],
+[data-theme='dark'] input:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(30, 41, 59)"],
+[data-theme='dark'] input:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(51, 65, 85)"],
+[data-theme='dark'] textarea:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(15, 23, 42)"],
+[data-theme='dark'] textarea:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(30, 41, 59)"],
+[data-theme='dark'] textarea:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(51, 65, 85)"],
+body.dark input:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(15, 23, 42)"],
+body.dark input:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(30, 41, 59)"],
+body.dark input:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(51, 65, 85)"],
+body.dark textarea:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(15, 23, 42)"],
+body.dark textarea:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(30, 41, 59)"],
+body.dark textarea:not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(51, 65, 85)"] {
   color: #e2e8f0 !important;
 }
 
-[data-theme='dark'] :not(input):not(select):not(textarea)[style*="color: rgb(100, 116, 139)"] {
+[data-theme='dark'] :not(input):not(select):not(textarea):not(.light-theme-modal):not(.light-theme-modal *):not([data-theme-surface='light'] *)[style*="color: rgb(100, 116, 139)"] {
   color: #cbd5e1 !important;
+}
+
+/* Explicit protection for light surfaces and modals in dark mode */
+.light-theme-modal,
+.light-theme-modal *,
+[data-theme-surface='light'],
+[data-theme-surface='light'] * {
+  --text-dark: #0f172a !important;
+  --text-muted: #475569 !important;
+  color: #0f172a;
+}
+
+.light-theme-modal h1,
+.light-theme-modal h2,
+.light-theme-modal h3,
+.light-theme-modal h4,
+.light-theme-modal h5,
+.light-theme-modal strong,
+.light-theme-modal b,
+[data-theme-surface='light'] h1,
+[data-theme-surface='light'] h2,
+[data-theme-surface='light'] h3,
+[data-theme-surface='light'] strong {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+.light-theme-modal p,
+.light-theme-modal .text-muted,
+.light-theme-modal span.text-muted {
+  color: #475569 !important;
+}
+
+.light-theme-modal input,
+.light-theme-modal textarea,
+.light-theme-modal select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Ensure account-clock-pill has supreme visibility in dark mode */
+[data-theme='dark'] .account-clock-pill,
+[data-dark-bg='1'] .account-clock-pill,
+body.dark .account-clock-pill {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme='dark'] .account-clock-pill span,
+[data-dark-bg='1'] .account-clock-pill span,
+body.dark .account-clock-pill span {
+  color: #f8fafc !important;
 }
 
 [data-theme='dark'] select,
@@ -2347,6 +2429,135 @@ body.dark select.tc-theme-select {
 body.dark select.tc-theme-select option {
   color: #f8fafc;
   background-color: #0f172a;
+}
+
+/* ==========================================================================
+   Create Voucher & Modal Inputs Universal Theme Adaptability
+   Fixes: In dark mode, inputs with white/light backgrounds turn text invisible,
+   and white buttons have white text. These rules guarantee crisp visibility
+   across ALL themes (dark wallpapers, light themes, black themes).
+   ========================================================================== */
+.cv-input,
+.cv-wizard-card input:not([type="checkbox"]):not([type="radio"]),
+.cv-wizard-card textarea,
+.cv-wizard-card select,
+.cv-modal input,
+.cv-modal textarea,
+.cv-modal select {
+  box-sizing: border-box;
+  background: var(--input-bg, rgba(255, 255, 255, 0.92));
+  color: var(--input-color, #0f172a);
+  border: 1px solid var(--input-border, rgba(0, 0, 0, 0.12));
+}
+
+[data-theme='dark'] .cv-input,
+[data-dark-bg='1'] .cv-input,
+body.dark .cv-input,
+[data-theme='dark'] .cv-wizard-card input:not([type="checkbox"]):not([type="radio"]),
+[data-dark-bg='1'] .cv-wizard-card input:not([type="checkbox"]):not([type="radio"]),
+body.dark .cv-wizard-card input:not([type="checkbox"]):not([type="radio"]),
+[data-theme='dark'] .cv-wizard-card textarea,
+[data-dark-bg='1'] .cv-wizard-card textarea,
+body.dark .cv-wizard-card textarea,
+[data-theme='dark'] .cv-modal input:not([type="checkbox"]):not([type="radio"]),
+[data-dark-bg='1'] .cv-modal input:not([type="checkbox"]):not([type="radio"]),
+body.dark .cv-modal input:not([type="checkbox"]):not([type="radio"]),
+[data-theme='dark'] .cv-modal textarea,
+[data-dark-bg='1'] .cv-modal textarea,
+body.dark .cv-modal textarea {
+  background: rgba(15, 23, 42, 0.75) !important;
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color-scheme: dark;
+}
+
+[data-theme='dark'] .cv-input::placeholder,
+[data-dark-bg='1'] .cv-input::placeholder,
+body.dark .cv-input::placeholder,
+[data-theme='dark'] .cv-wizard-card textarea::placeholder,
+[data-dark-bg='1'] .cv-wizard-card textarea::placeholder,
+body.dark .cv-wizard-card textarea::placeholder,
+[data-theme='dark'] .cv-wizard-card input::placeholder,
+[data-dark-bg='1'] .cv-wizard-card input::placeholder,
+body.dark .cv-wizard-card input::placeholder,
+[data-theme='dark'] .cv-modal textarea::placeholder,
+[data-dark-bg='1'] .cv-modal textarea::placeholder,
+body.dark .cv-modal textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Calendar picker icon on dark backgrounds */
+[data-theme='dark'] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-dark-bg='1'] input[type="date"]::-webkit-calendar-picker-indicator,
+body.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.2);
+  cursor: pointer;
+}
+
+/* Header circular buttons inside wizard */
+.cv-header-btn {
+  background: var(--btn-secondary-bg, #ffffff);
+  color: var(--text-dark, #334155);
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.08));
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .cv-header-btn,
+[data-dark-bg='1'] .cv-header-btn,
+body.dark .cv-header-btn {
+  background: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+[data-theme='dark'] .cv-header-btn:hover,
+[data-dark-bg='1'] .cv-header-btn:hover,
+body.dark .cv-header-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Ensure secondary / cancel buttons inside dark wizard footer are clearly legible */
+.cv-btn-secondary,
+.cv-wizard-footer button:not(.btn-primary):not([style*="background: var(--primary)"]):not([style*="background: rgb(51, 65, 85)"]):not([style*="background: #334155"]) {
+  background: var(--btn-secondary-bg, #ffffff);
+  color: var(--btn-secondary-color, #0f172a);
+  border: 1px solid var(--btn-secondary-border, rgba(0, 0, 0, 0.12));
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .cv-wizard-footer button:not(.btn-primary):not([style*="background: var(--primary)"]):not([style*="background: rgb(51, 65, 85)"]):not([style*="background: #334155"]),
+[data-dark-bg='1'] .cv-wizard-footer button:not(.btn-primary):not([style*="background: var(--primary)"]):not([style*="background: rgb(51, 65, 85)"]):not([style*="background: #334155"]),
+body.dark .cv-wizard-footer button:not(.btn-primary):not([style*="background: var(--primary)"]):not([style*="background: rgb(51, 65, 85)"]):not([style*="background: #334155"]),
+[data-theme='dark'] .cv-btn-secondary,
+[data-dark-bg='1'] .cv-btn-secondary,
+body.dark .cv-btn-secondary {
+  background: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+[data-theme='dark'] .cv-wizard-footer button:not(.btn-primary):hover,
+[data-dark-bg='1'] .cv-wizard-footer button:not(.btn-primary):hover,
+body.dark .cv-wizard-footer button:not(.btn-primary):hover,
+[data-theme='dark'] .cv-btn-secondary:hover,
+[data-dark-bg='1'] .cv-btn-secondary:hover,
+body.dark .cv-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Any white button in dark mode that keeps a white background must have dark text */
+[data-theme='dark'] button[style*="background: #ffffff"],
+[data-theme='dark'] button[style*="background: rgb(255, 255, 255)"],
+[data-dark-bg='1'] button[style*="background: #ffffff"],
+[data-dark-bg='1'] button[style*="background: rgb(255, 255, 255)"],
+body.dark button[style*="background: #ffffff"],
+body.dark button[style*="background: rgb(255, 255, 255)"] {
+  color: #0f172a !important;
 }
 
 .cv-voucher-type-option {

@@ -55,6 +55,7 @@ import AppearanceSettings, { ALL_THEMES_PRESETS } from './AppearanceSettings';
 import AiChatbotIcon from './AiChatbotIcon';
 import BitrixContextMenu from './BitrixContextMenu';
 import CreateLedgerModal from './CreateLedgerModal';
+import GlassSelect from './GlassSelect';
 
 
 /* ---------------- helpers for live data ---------------- */
@@ -101,6 +102,21 @@ const voucherMeta = (type) => {
   const key = String(type || '').toLowerCase().split(' ')[0];
   return VOUCHER_META[key] || { icon: <FileText size={20} />, color: 'var(--text-dark)' };
 };
+
+export const APP_DEMO_LEDGERS = [
+  { ledger_guid: 'demo-led-01', name: 'Acme Infotech Pvt Ltd', parent: 'Sundry Debtors', parent_group: 'Sundry Debtors', closing_balance: 485200, opening_balance: 320000, credit_period: 30, state: 'Maharashtra', is_debit: true },
+  { ledger_guid: 'demo-led-02', name: 'Apex Industrial Supplies', parent: 'Sundry Creditors', parent_group: 'Sundry Creditors', closing_balance: -312400, opening_balance: -200000, credit_period: 45, state: 'Gujarat', is_debit: false },
+  { ledger_guid: 'demo-led-03', name: 'Reliance Retail Enterprises', parent: 'Sundry Debtors', parent_group: 'Sundry Debtors', closing_balance: 890000, opening_balance: 650000, credit_period: 15, state: 'Delhi', is_debit: true },
+  { ledger_guid: 'demo-led-04', name: 'Tata Steel Corp Logistics', parent: 'Sundry Creditors', parent_group: 'Sundry Creditors', closing_balance: -540200, opening_balance: -400000, credit_period: 60, state: 'Jharkhand', is_debit: false },
+  { ledger_guid: 'demo-led-05', name: 'HDFC Bank Ltd (Current A/c)', parent: 'Bank Accounts', parent_group: 'Bank Accounts', closing_balance: 1420500, opening_balance: 1100000, is_debit: true },
+  { ledger_guid: 'demo-led-06', name: 'ICICI Commercial A/c', parent: 'Bank Accounts', parent_group: 'Bank Accounts', closing_balance: 785000, opening_balance: 500000, is_debit: true },
+  { ledger_guid: 'demo-led-07', name: 'Cash in Hand (Main Office)', parent: 'Cash-in-hand', parent_group: 'Cash-in-hand', closing_balance: 145000, opening_balance: 120000, is_debit: true },
+  { ledger_guid: 'demo-led-08', name: 'Petty Cash Register', parent: 'Cash-in-hand', parent_group: 'Cash-in-hand', closing_balance: 24500, opening_balance: 25000, is_debit: true },
+  { ledger_guid: 'demo-led-09', name: 'Sales Account (Domestic GST)', parent: 'Sales Accounts', parent_group: 'Sales Accounts', closing_balance: 9845000, is_debit: false },
+  { ledger_guid: 'demo-led-10', name: 'Purchase Account (Raw Material)', parent: 'Purchase Accounts', parent_group: 'Purchase Accounts', closing_balance: 6240000, is_debit: true },
+  { ledger_guid: 'demo-led-11', name: 'Output CGST 9%', parent: 'Duties & Taxes', parent_group: 'Duties & Taxes', closing_balance: 442000, is_debit: false },
+  { ledger_guid: 'demo-led-12', name: 'Output SGST 9%', parent: 'Duties & Taxes', parent_group: 'Duties & Taxes', closing_balance: 442000, is_debit: false }
+];
 
 const statusStyle = (status) => {
   const t = String(status || '').toLowerCase();
@@ -3932,12 +3948,21 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
       : api.get('/ledger', { company_guid: companyGuid });
     return req
       .then((r) => {
-        const list = (r.data || []).filter((l) =>
+        let list = (r.data || []).filter((l) =>
           !companyGuid || !l.company_guid || l.company_guid === companyGuid
         );
+        if (list.length === 0 && (companyGuid === 'tc-demo-company' || !companyGuid || String(companyGuid).toLowerCase().includes('demo'))) {
+          list = APP_DEMO_LEDGERS;
+        }
         setRows(list);
       })
-      .catch((e) => setLoadError(e.message))
+      .catch((e) => {
+        if (companyGuid === 'tc-demo-company' || String(companyGuid).toLowerCase().includes('demo')) {
+          setRows(APP_DEMO_LEDGERS);
+        } else {
+          setLoadError(e.message);
+        }
+      })
       .finally(() => setLoaded(true));
   };
 
@@ -3947,13 +3972,24 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
     api.get('/ledger', { company_guid: companyGuid })
       .then((r) => {
         if (alive) {
-          const list = (r.data || []).filter((l) =>
+          let list = (r.data || []).filter((l) =>
             !companyGuid || !l.company_guid || l.company_guid === companyGuid
           );
+          if (list.length === 0 && (companyGuid === 'tc-demo-company' || !companyGuid || String(companyGuid).toLowerCase().includes('demo'))) {
+            list = APP_DEMO_LEDGERS;
+          }
           setRows(list);
         }
       })
-      .catch((e) => { if (alive) setLoadError(e.message); })
+      .catch((e) => {
+        if (alive) {
+          if (companyGuid === 'tc-demo-company' || String(companyGuid).toLowerCase().includes('demo')) {
+            setRows(APP_DEMO_LEDGERS);
+          } else {
+            setLoadError(e.message);
+          }
+        }
+      })
       .finally(() => { if (alive) setLoaded(true); });
     return () => { alive = false; };
   }, [companyGuid]);
@@ -4027,6 +4063,31 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
           if (!isNaN(to) && balance > to) return false;
           return true;
         });
+      }
+    }
+    if (ledgerFilters.amount_range) {
+      const rng = ledgerFilters.amount_range;
+      out = out.filter((l) => {
+        const bal = Math.abs(Number(l.balance ?? l.closing_balance ?? l.amount) || 0);
+        if (rng === 'Under ₹1,000') return bal < 1000;
+        if (rng === '₹1,000 - ₹10,000') return bal >= 1000 && bal <= 10000;
+        if (rng === '₹10,000 - ₹50,000') return bal >= 10000 && bal <= 50000;
+        if (rng === '₹50,000 - ₹1,00,000') return bal >= 50000 && bal <= 100000;
+        if (rng === '₹1,00,000 - ₹5,00,000') return bal >= 100000 && bal <= 500000;
+        if (rng === 'Above ₹5,00,000') return bal > 500000;
+        return true;
+      });
+    }
+    if (ledgerFilters.amount_from !== undefined && ledgerFilters.amount_from !== '') {
+      const from = parseFloat(ledgerFilters.amount_from);
+      if (!isNaN(from)) {
+        out = out.filter((l) => Math.abs(Number(l.balance ?? l.closing_balance ?? l.amount) || 0) >= from);
+      }
+    }
+    if (ledgerFilters.amount_to !== undefined && ledgerFilters.amount_to !== '') {
+      const to = parseFloat(ledgerFilters.amount_to);
+      if (!isNaN(to)) {
+        out = out.filter((l) => Math.abs(Number(l.balance ?? l.closing_balance ?? l.amount) || 0) <= to);
       }
     }
     if (ledgerFilters.location) {
@@ -4931,20 +4992,40 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
           placeholder="Search name, group, email, location..."
           availableFields={[
             { id: 'search', label: 'Customer / Party Name', type: 'text', category: 'General' },
-            { id: 'parent_group', label: 'Parent Group', type: 'select', category: 'General', options: [
-              'Sundry Debtors', 'Sundry Creditors', 'Bank Accounts', 'Cash-in-hand', 'Direct Expenses', 'Indirect Expenses'
-            ]},
+            {
+              id: 'parent_group', label: 'Parent Group', type: 'select', category: 'General', options: [
+                'Sundry Debtors', 'Sundry Creditors', 'Bank Accounts', 'Cash-in-hand', 'Direct Expenses', 'Indirect Expenses'
+              ]
+            },
             { id: 'location', label: 'Location / State', type: 'text', category: 'General' },
             { id: 'state', label: 'State', type: 'text', category: 'General' },
             { id: 'pincode', label: 'Pincode', type: 'text', category: 'General' },
             { id: 'country', label: 'Country', type: 'text', category: 'General' },
             { id: 'email', label: 'Email', type: 'text', category: 'Contact' },
             { id: 'closing_balance', label: 'Closing Balance', type: 'number', category: 'Financial' },
+            {
+              id: 'amount_range',
+              label: 'Amount Range (e.g. ₹1K - ₹10K)',
+              type: 'select',
+              category: 'Financial',
+              options: [
+                'Under ₹1,000',
+                '₹1,000 - ₹10,000',
+                '₹10,000 - ₹50,000',
+                '₹50,000 - ₹1,00,000',
+                '₹1,00,000 - ₹5,00,000',
+                'Above ₹5,00,000'
+              ]
+            },
+            { id: 'amount_from', label: 'From Amount (Min ₹)', type: 'number', category: 'Financial' },
+            { id: 'amount_to', label: 'To Amount (Max ₹)', type: 'number', category: 'Financial' },
             { id: 'status', label: 'Status', type: 'select', category: 'Status', options: ['Active', 'Inactive', 'Overdue'] }
           ]}
-          defaultVisibleFieldIds={['search', 'parent_group', 'location', 'closing_balance', 'status']}
+          defaultVisibleFieldIds={['search', 'amount_range', 'parent_group', 'location', 'closing_balance', 'status']}
           presets={[
             { id: 'all_ledgers', label: 'All accounts', filters: {} },
+            { id: 'range_1k_10k', label: '₹1K - ₹10K', filters: { amount_range: '₹1,000 - ₹10,000' } },
+            { id: 'range_10k_50k', label: '₹10K - ₹50K', filters: { amount_range: '₹10,000 - ₹50,000' } },
             { id: 'sundry_debtors', label: 'Sundry Debtors', filters: { parent_group: 'Sundry Debtors' } },
             { id: 'sundry_creditors', label: 'Sundry Creditors', filters: { parent_group: 'Sundry Creditors' } },
             { id: 'overdue_ledgers', label: 'Overdue Balances', filters: { status: 'Overdue' } }
@@ -6094,6 +6175,21 @@ const Inventory = ({ companyGuid, externalQuery, setCurrentTab }) => {
     } catch (err) {
       console.error('Inventory fetch error:', err);
       setLoadError(err.message || 'Failed to fetch inventory');
+      if (companyGuid === 'tc-demo-company' || !companyGuid || String(companyGuid).toLowerCase().includes('demo')) {
+        setRows([
+          { id: 'item-solar-street-light-60w', name: '60W Solar Street Light IP66', group: 'Finished Goods', unit: 'Pcs', opening: 120, inward: 80, outward: 45, closing: 155, rate: 3200, value: 496000, hsn_code: '94054090', gst_rate: 18 },
+          { id: 'item-all-in-one-solar-light-120w', name: 'All-In-One Solar Street Light 120W', group: 'Finished Goods', unit: 'Pcs', opening: 85, inward: 40, outward: 75, closing: 50, rate: 5800, value: 290000, hsn_code: '94054090', gst_rate: 18 },
+          { id: 'item-lithium-lifepo4-battery', name: 'LiFePO4 Battery Pack 12.8V 42Ah', group: 'Raw Materials', unit: 'Nos', opening: 40, inward: 60, outward: 92, closing: 8, rate: 7400, value: 59200, hsn_code: '85076000', gst_rate: 18 },
+          { id: 'item-mono-solar-panel-150w', name: 'Monocrystalline Solar Panel 150W', group: 'Raw Materials', unit: 'Nos', opening: 110, inward: 50, outward: 135, closing: 25, rate: 4100, value: 102500, hsn_code: '85414300', gst_rate: 12 },
+          { id: 'item-mppt-solar-charge-controller', name: 'Smart MPPT Charge Controller 20A', group: 'Finished Goods', unit: 'Pcs', opening: 60, inward: 50, outward: 105, closing: 5, rate: 1950, value: 9750, hsn_code: '90328990', gst_rate: 18 },
+          { id: 'item-galvanized-mounting-pole-6m', name: 'Octagonal Galvanized Pole 6M with Arm', group: 'Hardware', unit: 'Sets', opening: 35, inward: 20, outward: 15, closing: 40, rate: 6500, value: 260000, hsn_code: '73089090', gst_rate: 18 },
+          { id: 'item-led-flood-light-100w', name: 'Commercial LED Flood Light 100W IP65', group: 'Finished Goods', unit: 'Pcs', opening: 90, inward: 110, outward: 60, closing: 140, rate: 2100, value: 294000, hsn_code: '94051090', gst_rate: 18 },
+          { id: 'item-industrial-cables-4sqmm', name: 'Solar DC Cable 4 sq.mm Copper (100m Roll)', group: 'Raw Materials', unit: 'Rolls', opening: 30, inward: 25, outward: 51, closing: 4, rate: 2850, value: 11400, hsn_code: '85444999', gst_rate: 18 }
+        ]);
+        setLoadError('');
+      } else {
+        setLoadError(err.message || 'Failed to fetch inventory');
+      }
     } finally {
       setLoaded(true);
     }
@@ -10057,7 +10153,7 @@ function UserProfileModal({ user, onClose, onUserUpdate }) {
                         setSession(localStorage.getItem('tc_token'), updated);
                         onUserUpdate && onUserUpdate(updated);
                         setNotice({ ok: true, msg: 'Avatar removed.' });
-                      } catch {}
+                      } catch { }
                     }}
                     style={{ padding: '6px 10px', fontSize: '12px', color: '#ef4444', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
@@ -10279,7 +10375,7 @@ const SettingsHub = ({
     setLogoSize(sz);
     try {
       localStorage.setItem('tc_company_logo_size', String(sz));
-    } catch {}
+    } catch { }
     document.documentElement.style.setProperty('--company-logo-img-height', `${sz}px`);
     document.documentElement.style.setProperty('--company-logo-pill-height', `${sz + 6}px`);
     window.dispatchEvent(new CustomEvent('tc-company-logo-size-changed', { detail: { size: sz } }));
@@ -10457,7 +10553,7 @@ const SettingsHub = ({
           let compressed = '';
           try {
             compressed = canvas.toDataURL('image/webp', 0.92);
-          } catch {}
+          } catch { }
           if (!compressed || !compressed.startsWith('data:image/webp')) {
             compressed = canvas.toDataURL('image/jpeg', 0.90);
           }
@@ -11015,33 +11111,32 @@ const SettingsHub = ({
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '8px' }}>
                     Dispatch Day of Month
                   </label>
-                  <select
-                    className="cv-input"
+                  <GlassSelect
                     value={reportSchedule.day_of_month}
-                    onChange={(e) => setReportSchedule(prev => ({ ...prev, day_of_month: Number(e.target.value) }))}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '13px' }}
-                  >
-                    {[1, 2, 3, 5, 7, 10, 15, 20, 25, 28].map(d => (
-                      <option key={d} value={d}>{d === 1 ? '1st of every month' : d === 2 ? '2nd of every month' : d === 3 ? '3rd of every month' : `${d}th of every month`}</option>
-                    ))}
-                  </select>
+                    onChange={(e, val) => setReportSchedule(prev => ({ ...prev, day_of_month: Number(val ?? e?.target?.value) }))}
+                    placeholder="Select dispatch day"
+                    options={[1, 2, 3, 5, 7, 10, 15, 20, 25, 28].map(d => ({
+                      value: d,
+                      label: d === 1 ? '1st of every month' : d === 2 ? '2nd of every month' : d === 3 ? '3rd of every month' : `${d}th of every month`
+                    }))}
+                  />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '8px' }}>
                     Target Delivery Time
                   </label>
-                  <select
-                    className="cv-input"
+                  <GlassSelect
                     value={reportSchedule.report_time}
-                    onChange={(e) => setReportSchedule(prev => ({ ...prev, report_time: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '13px' }}
-                  >
-                    <option value="08:00:00">08:00 AM (Early Morning)</option>
-                    <option value="09:00:00">09:00 AM (Business Start)</option>
-                    <option value="12:00:00">12:00 PM (Midday)</option>
-                    <option value="18:00:00">06:00 PM (Evening Close)</option>
-                    <option value="20:00:00">08:00 PM (Night Summary)</option>
-                  </select>
+                    onChange={(e, val) => setReportSchedule(prev => ({ ...prev, report_time: val ?? e?.target?.value }))}
+                    placeholder="Select delivery time"
+                    options={[
+                      { value: '08:00:00', label: '08:00 AM (Early Morning)' },
+                      { value: '09:00:00', label: '09:00 AM (Business Start)' },
+                      { value: '12:00:00', label: '12:00 PM (Midday)' },
+                      { value: '18:00:00', label: '06:00 PM (Evening Close)' },
+                      { value: '20:00:00', label: '08:00 PM (Night Summary)' }
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -11896,6 +11991,8 @@ const BulkLedgerAssignModal = ({ selectedUserIds, companyGuid, onClose, onSaved 
                         onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = '#ffffff'; }}
                       >
                         <td style={{ width: '40px', padding: '12px 14px', borderBottom: '1px solid #f1f5f9' }}>
+
+                          ... [truncated for diff preview]
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -14060,7 +14157,10 @@ const UsersManager = ({ companyGuid }) => {
                       }}>
                         <button
                           type="button"
-                          onClick={() => setPermissionsUser(u)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPermissionsUser(u);
+                          }}
                           title="Configure module permissions and data restrictions"
                           style={{
                             flex: 1,
@@ -14316,7 +14416,10 @@ const UsersManager = ({ companyGuid }) => {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setPermissionsUser(u)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPermissionsUser(u);
+                                }}
                                 title="Configure module permissions for this user"
                                 style={{
                                   padding: '5px 9px',
@@ -14574,6 +14677,8 @@ const UsersManager = ({ companyGuid }) => {
 
 /* ---------------- Staff Permissions Modal Component (Desktop Web Application) ---------------- */
 const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) => {
+  const targetUserId = targetUser?.id ?? targetUser?._id ?? targetUser?.user_id;
+
   const [saving, setSaving] = useState(false);
   const [notifyUser, setNotifyUser] = useState(true);
   const [activeTab, setActiveTab] = useState('ledgers'); // 'ledgers' | 'orders' | 'vouchers' | 'inventory' | 'dashboard'
@@ -14628,10 +14733,10 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
 
       try {
         const [ledgersRes, ordersRes, invRes, vouchersRes, compLedgRes, compOrdRes, compInvRes, compVouchRes] = await Promise.allSettled([
-          getUserLedgers(targetUser.id),
-          getUserOrders(targetUser.id),
-          getUserInventory(targetUser.id),
-          getUserVouchers(targetUser.id),
+          getUserLedgers(targetUserId),
+          getUserOrders(targetUserId),
+          getUserInventory(targetUserId),
+          getUserVouchers(targetUserId),
           api.get('/ledger', queryParams).catch(() => []),
           api.get('/orders', queryParams).catch(() => []),
           api.get('/inventory', queryParams).catch(() => []),
@@ -14705,7 +14810,7 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
     })();
 
     return () => { active = false; };
-  }, [targetUser.id, companyGuid]);
+  }, [targetUserId, companyGuid]);
 
   const handleSave = async (e) => {
     e && e.preventDefault && e.preventDefault();
@@ -14713,43 +14818,43 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
     try {
       // 1. Update individual module permissions
       await Promise.all([
-        updateUserDashboardPermissions(targetUser.id, {
+        updateUserDashboardPermissions(targetUserId, {
           can_view: canDashboard,
           widgets: targetUser?.dashboard_permissions?.widgets || {}
         }),
-        updateUserVoucherPermissions(targetUser.id, {
+        updateUserVoucherPermissions(targetUserId, {
           can_view: canVouchers,
           can_create: canCreateVouchers,
           columns: targetUser?.vouchers_permissions?.columns || {}
         }),
-        updateUserLedgerPermissions(targetUser.id, {
+        updateUserLedgerPermissions(targetUserId, {
           can_view: canLedgers,
           columns: targetUser?.ledger_permissions?.columns || {}
         }),
-        updateUserOrdersPermissions(targetUser.id, {
+        updateUserOrdersPermissions(targetUserId, {
           can_view: canOrders,
           can_create: canCreateOrders,
           columns: targetUser?.orders_permissions?.columns || {}
         }),
-        updateUserInventoryPermissions(targetUser.id, {
+        updateUserInventoryPermissions(targetUserId, {
           can_view: canInventory,
           columns: targetUser?.inventory_permissions?.columns || {}
         }),
         // 2. Persist granular data restrictions
         bulkAssignLedgers({
-          userIds: [targetUser.id],
+          userIds: [targetUserId],
           ledgerIds: assignedLedgers.length === 0 ? companyLedgers.map(l => l.ledger_guid).filter(Boolean) : assignedLedgers
         }),
         saveUserOrders(
-          targetUser.id,
+          targetUserId,
           assignedOrders.length === 0 ? companyOrders.map(o => o.order_guid || o.id).filter(Boolean) : assignedOrders
         ),
         saveUserInventory(
-          targetUser.id,
+          targetUserId,
           assignedItems.length === 0 ? companyItems.map(i => i.name).filter(Boolean) : assignedItems
         ),
         saveUserVouchers(
-          targetUser.id,
+          targetUserId,
           assignedVouchers.length === 0 ? [] : assignedVouchers
         )
       ]);
@@ -14764,7 +14869,7 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
         if (canInventory) activeModules.push('Inventory & Stock');
 
         await notifyPermissionUpdate({
-          userIds: [targetUser.id],
+          userIds: [targetUserId],
           modules: activeModules.length > 0 ? activeModules : ['Basic View Access']
         }).catch(err => console.warn('Notification notice:', err?.message));
       }
@@ -14919,7 +15024,7 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
   ];
 
   const currentMod = modules.find(m => m.id === activeTab) || modules[0];
-  const initials = (targetUser.username || targetUser.email || 'U').substring(0, 2).toUpperCase();
+  const initials = (targetUser?.username || targetUser?.email || 'U').substring(0, 2).toUpperCase();
 
   // Desktop Granular Filtering for the Active Module
   const currentItems = currentMod.items || [];
@@ -14972,13 +15077,15 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
     currentMod.setSelected(prev => prev.filter(id => !idSet.has(id)));
   };
 
+  if (!targetUser || targetUserId === undefined || targetUserId === null) return null;
+
   return createPortal(
     <div
       className="fade-in modal-overlay"
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 99999,
+        zIndex: 100050,
         background: 'rgba(15, 23, 42, 0.45)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
@@ -15127,13 +15234,13 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
                 </div>
                 <div style={{ overflow: 'hidden' }}>
                   <div style={{ fontWeight: 800, fontSize: '15px', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {targetUser.username || targetUser.email.split('@')[0]}
+                    {targetUser?.username || (targetUser?.email ? targetUser.email.split('@')[0] : 'User')}
                   </div>
                   <div style={{ fontSize: '12px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {targetUser.email}
+                    {targetUser?.email || 'No email registered'}
                   </div>
                   <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
-                    ID: #{String(targetUser.id).substring(0, 8)}
+                    ID: #{String(targetUserId || '').substring(0, 8)}
                   </div>
                 </div>
               </div>
@@ -15588,7 +15695,7 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
                       {/* Search Single Ledger / Item / Order / Voucher */}
                       <div style={{ width: '360px', maxWidth: '100%' }}>
                         <BitrixFilterBar
-                          storageKey={`tc_perm_scope_${currentModule}`}
+                          storageKey={`tc_perm_scope_${currentMod?.id || activeTab}`}
                           searchQuery={searchQuery}
                           onSearchChange={setSearchQuery}
                           placeholder={`Search single ${currentMod.singularName} by name, party, group...`}
@@ -15894,7 +16001,7 @@ const StaffPermissionsModal = ({ targetUser, companyGuid, onClose, onSaved }) =>
               style={{ width: '16px', height: '16px', accentColor: '#007aff', cursor: 'pointer' }}
             />
             <label htmlFor="notify-user-desktop-chk" style={{ fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: '#0f172a' }}>
-              Dispatch automated email notice to <strong>{targetUser.email}</strong> with updated permissions
+              Dispatch automated email notice to <strong>{targetUser?.email || targetUser?.username || 'user'}</strong> with updated permissions
             </label>
           </div>
 
@@ -16558,9 +16665,9 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
                   ]}
                   activePresetId={
                     typeFilter === 'RECEIVABLE' ? 'receivable_bills' :
-                    (typeFilter === 'PAYABLE' ? 'payable_bills' :
-                    (statusFilter === 'Pending' ? 'pending_bills' :
-                    (statusFilter === 'Overdue' ? 'overdue_bills' : 'all_bills')))
+                      (typeFilter === 'PAYABLE' ? 'payable_bills' :
+                        (statusFilter === 'Pending' ? 'pending_bills' :
+                          (statusFilter === 'Overdue' ? 'overdue_bills' : 'all_bills')))
                   }
                   onPresetSelect={(pId) => {
                     if (pId === 'receivable_bills') { setTypeFilter('RECEIVABLE'); setStatusFilter(''); }
@@ -16590,7 +16697,7 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
                   }}
                 />
 
-                {/* View Mode Switcher */}
+                {/* View Mode */}
                 <div className="glass-panel" style={{
                   display: 'flex',
                   padding: '3px',
@@ -16598,23 +16705,6 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
                   boxShadow: 'none',
                   gap: '3px'
                 }}>
-                  <button
-                    onClick={() => setViewMode('table')}
-                    style={{
-                      border: 'none',
-                      padding: '6px 14px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      background: viewMode === 'table' ? 'var(--primary-color)' : 'transparent',
-                      color: viewMode === 'table' ? '#fff' : 'var(--text-muted)',
-                      boxShadow: viewMode === 'table' ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    Table
-                  </button>
                   <button
                     onClick={() => setViewMode('cards')}
                     style={{
@@ -16624,9 +16714,9 @@ const BillsManager = ({ companyGuid, externalQuery, setCurrentTab }) => {
                       fontSize: '13px',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      background: viewMode === 'cards' ? 'var(--primary-color)' : 'transparent',
-                      color: viewMode === 'cards' ? '#fff' : 'var(--text-muted)',
-                      boxShadow: viewMode === 'cards' ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
+                      background: 'var(--primary-color)',
+                      color: '#fff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                       transition: 'all 0.2s ease'
                     }}
                   >
@@ -18323,7 +18413,7 @@ function App() {
     try {
       const savedSize = localStorage.getItem('tc_company_logo_size') || '36';
       applyLogoSize(savedSize);
-    } catch {}
+    } catch { }
 
     const handleSizeSync = (e) => {
       const sz = e.detail?.size ?? localStorage.getItem('tc_company_logo_size') ?? '36';
@@ -18352,7 +18442,7 @@ function App() {
       optimizeCompanyLogo(stored, { removeWhiteBg: false }).then((optimized) => {
         if (optimized && optimized !== stored && optimized.length > 50) {
           setCompanyLogo(optimized);
-          try { localStorage.setItem('tc_company_logo', optimized); } catch {}
+          try { localStorage.setItem('tc_company_logo', optimized); } catch { }
         }
       });
     }
@@ -18607,17 +18697,33 @@ function App() {
         : 'rgba(255, 255, 255, 0)'
     );
 
-    // Auto-switch text colors for dark mode with high-contrast legibility
-    document.documentElement.style.setProperty('--text-dark', darkMode ? '#ffffff' : '#0f172a');
-    document.documentElement.style.setProperty('--text-muted', darkMode ? '#e2e8f0' : '#1e293b');
-    document.documentElement.style.setProperty('--glass-hover', darkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)');
+    const isDarkBg = Boolean(
+      darkMode ||
+      themeMode === 'dark' ||
+      /1451187580459|1506703719100|1518531933037|1534447677768|0f172a|09090e|030712|midnight|cyber|space|vibecoding|dark/i.test(effectiveBg) ||
+      (s.startsWith('#') && (s === '#000' || s === '#000000' || s.startsWith('#0') || s.startsWith('#1') || s.startsWith('#2'))) ||
+      (s.startsWith('linear-gradient') && (/rgb\(0|rgb\(1|rgb\(2|#0|#1|#2|dark|midnight|black|2e0854/i.test(s)))
+    );
+
+    // Auto-switch text colors for dark backgrounds or dark mode with high-contrast legibility
+    document.documentElement.style.setProperty('--text-dark', isDarkBg ? '#ffffff' : '#0f172a');
+    document.documentElement.style.setProperty('--text-muted', isDarkBg ? '#cbd5e1' : '#1e293b');
+    document.documentElement.style.setProperty('--glass-hover', isDarkBg ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)');
+    document.documentElement.style.setProperty('--input-bg', isDarkBg ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.92)');
+    document.documentElement.style.setProperty('--input-color', isDarkBg ? '#f8fafc' : '#0f172a');
+    document.documentElement.style.setProperty('--input-border', isDarkBg ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)');
+    document.documentElement.style.setProperty('--btn-secondary-bg', isDarkBg ? 'rgba(255, 255, 255, 0.12)' : '#ffffff');
+    document.documentElement.style.setProperty('--btn-secondary-color', isDarkBg ? '#ffffff' : '#0f172a');
+    document.documentElement.style.setProperty('--btn-secondary-border', isDarkBg ? 'rgba(255, 255, 255, 0.22)' : 'rgba(0, 0, 0, 0.12)');
+    document.documentElement.style.setProperty('--glass-card-bg', isDarkBg ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.92) 100%)' : 'rgba(255, 255, 255, 0.88)');
 
     // Set theme and text scale attributes on root element
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-dark-bg', isDarkBg ? '1' : '0');
+    document.documentElement.setAttribute('data-theme', darkMode || isDarkBg ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme-mode', themeMode);
     document.documentElement.setAttribute('data-text-scale', textScale);
-    document.documentElement.classList.toggle('dark', darkMode);
-    document.body.classList.toggle('dark', darkMode);
+    document.documentElement.classList.toggle('dark', darkMode || isDarkBg);
+    document.body.classList.toggle('dark', darkMode || isDarkBg);
 
     try {
       localStorage.setItem('tc_color', primaryColor);

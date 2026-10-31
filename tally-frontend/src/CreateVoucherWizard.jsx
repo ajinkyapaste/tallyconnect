@@ -18,6 +18,7 @@ import {
   createMobileContra,
   editMobileVoucher
 } from './api';
+import GlassSelect from './GlassSelect';
 
 /* ------------------------------------------------------------------
    Voucher Type Configurations
@@ -211,6 +212,36 @@ export const CreateVoucherWizard = ({
     return VOUCHER_TYPES_CONFIG.find((c) => c.id === voucherType) || VOUCHER_TYPES_CONFIG[0];
   }, [voucherType]);
 
+  const wizardSteps = useMemo(() => {
+    if (activeConfig.isItemized) {
+      return [
+        { step: 1, label: 'Details' },
+        { step: 2, label: 'Items' },
+        { step: 3, label: 'Payment' },
+        { step: 4, label: 'Check' }
+      ];
+    }
+    if (voucherType === 'Receipt' || voucherType === 'Payment') {
+      return [
+        { step: 1, label: 'Details' },
+        { step: 2, label: 'How Paid' },
+        { step: 3, label: 'Check' }
+      ];
+    }
+    if (voucherType === 'Contra') {
+      return [
+        { step: 1, label: 'Accounts' },
+        { step: 2, label: 'Transfer Details' },
+        { step: 3, label: 'Check' }
+      ];
+    }
+    return [
+      { step: 1, label: 'Details' },
+      { step: 2, label: 'Entries' },
+      { step: 3, label: 'Check' }
+    ];
+  }, [voucherType, activeConfig.isItemized]);
+
   // Form Fields - Step 1: Details (Matches Screenshot 1)
   const [billNo, setBillNo] = useState('');
   const [voucherDate, setVoucherDate] = useState('');
@@ -265,8 +296,13 @@ export const CreateVoucherWizard = ({
   // Form Fields - Step 3: Payment
   const [paymentMode, setPaymentMode] = useState('UNPAID'); // 'UNPAID' | 'CASH' | 'BANK'
   const [amountReceived, setAmountReceived] = useState('');
-  const [bankLedger, setBankLedger] = useState('HDFC Bank Clearing');
+  const [bankLedger, setBankLedger] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
+
+  // Contra Voucher Specific State
+  const [toAccount, setToAccount] = useState('');
+  const [contraAmount, setContraAmount] = useState('');
+  const [instrumentNo, setInstrumentNo] = useState('');
 
   const handleVoucherTypeChange = (nextType) => {
     setVoucherType(nextType);
@@ -276,13 +312,14 @@ export const CreateVoucherWizard = ({
     setPaymentRef('');
     if (!['Sales', 'Purchase'].includes(nextType)) setPayByDate('');
     setPaymentMode(nextType === 'Receipt' || nextType === 'Payment' ? 'CASH' : 'UNPAID');
+    if (nextType === 'Contra') {
+      if (cashBankAccounts.length > 0) {
+        setSelectedParty(cashBankAccounts[0]);
+        setToAccount(cashBankAccounts[1] || cashBankAccounts[0]);
+      }
+    }
     setIsTypeDropdownOpen(false);
   };
-
-  // Contra Voucher Specific State
-  const [toAccount, setToAccount] = useState('HDFC Bank');
-  const [contraAmount, setContraAmount] = useState('');
-  const [instrumentNo, setInstrumentNo] = useState('');
 
   // Add Party Form State
   const [newPartyName, setNewPartyName] = useState('');
@@ -294,18 +331,19 @@ export const CreateVoucherWizard = ({
   const [localParties, setLocalParties] = useState([]);
   const [availableStockItems, setAvailableStockItems] = useState(PRESET_STOCK_ITEMS);
 
-  // Cash / Bank accounts for Contra entry
-  const DEFAULT_CASH_BANK = ['Cash', 'Petty Cash', 'HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Bank of Baroda'];
+  // Cash / Bank accounts for Contra, Payment & Receipt - dynamically pulled from company's backend ledgers
   const cashBankAccounts = useMemo(() => {
-    const set = new Set(DEFAULT_CASH_BANK);
-    (localParties || []).forEach((p) => {
-      const name = p.name || p.ledger_name;
+    const dynamicAccounts = (localParties || []).filter((p) => {
+      const name = String(p.name || p.ledger_name || '');
       const parent = String(p.parent || p.parent_group || p.group_name || '').toLowerCase();
-      if (name && (/bank|cash/i.test(parent) || /bank|cash/i.test(name))) {
-        set.add(name);
-      }
-    });
-    return Array.from(set);
+      return name && (/bank|cash/i.test(parent) || /bank|cash/i.test(name));
+    }).map((p) => p.name || p.ledger_name);
+
+    if (dynamicAccounts.length > 0) {
+      return Array.from(new Set(dynamicAccounts));
+    }
+    // Fallback only if company has no synced bank accounts yet or in fresh demo mode
+    return ['Cash in Hand', 'Petty Cash', 'Primary Bank Account'];
   }, [localParties]);
 
   // Submission state
@@ -584,10 +622,23 @@ export const CreateVoucherWizard = ({
       if (voucherType === 'Contra') {
         const amt = Number(contraAmount);
         if (!amt || amt <= 0) {
-          setErrorMessage('Please enter an amount greater than 0');
+          setErrorMessage('Please enter an amount greater than ₹0');
           return;
         }
-        setCurrentStep(4);
+        setCurrentStep(3);
+        return;
+      }
+      if (voucherType === 'Receipt' || voucherType === 'Payment') {
+        const amt = Number(amountReceived);
+        if (!amt || amt <= 0) {
+          setErrorMessage(`Please enter a valid amount ${voucherType === 'Receipt' ? 'received' : 'paid'} greater than ₹0`);
+          return;
+        }
+        if (!bankLedger) {
+          setErrorMessage('Please select a Bank or Cash Account');
+          return;
+        }
+        setCurrentStep(3);
         return;
       }
       if (activeConfig.isItemized) {
@@ -601,7 +652,6 @@ export const CreateVoucherWizard = ({
             return;
           }
         }
-      } else if (voucherType === 'Receipt' || voucherType === 'Payment') {
         setCurrentStep(3);
         return;
       } else {
@@ -1400,17 +1450,15 @@ export const CreateVoucherWizard = ({
                 if (currentStep > 1) setCurrentStep((s) => s - 1);
                 else onClose();
               }}
+              className="cv-header-btn"
               style={{
                 width: '42px',
                 height: '42px',
                 borderRadius: '50%',
-                border: '1px solid rgba(0, 0, 0, 0.08)',
-                background: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#334155',
                 boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)'
               }}
               title="Back"
@@ -1425,7 +1473,7 @@ export const CreateVoucherWizard = ({
                   width: '44px',
                   height: '44px',
                   borderRadius: '14px',
-                  background: '#ffffff',
+                  background: 'var(--btn-secondary-bg, #ffffff)',
                   border: `1px solid ${activeConfig.color}33`,
                   display: 'flex',
                   alignItems: 'center',
@@ -1568,18 +1616,16 @@ export const CreateVoucherWizard = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 type="button"
+                className="cv-header-btn"
                 onClick={() => setShowFieldSettingsModal(true)}
                 style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '50%',
-                  border: '1px solid rgba(0, 0, 0, 0.08)',
-                  background: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#334155',
                   boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
                   transition: 'all 0.15s ease'
                 }}
@@ -1589,18 +1635,17 @@ export const CreateVoucherWizard = ({
               </button>
 
               <button
+                type="button"
+                className="cv-header-btn"
                 onClick={() => setShowHelp(true)}
                 style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '50%',
-                  border: '1px solid rgba(0, 0, 0, 0.08)',
-                  background: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  color: '#334155',
                   boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)'
                 }}
                 title="Help & FAQs"
@@ -1639,12 +1684,7 @@ export const CreateVoucherWizard = ({
                 }}
               />
 
-              {[
-                { step: 1, label: 'Details' },
-                { step: 2, label: 'Items' },
-                ...(!['Journal', 'Contra'].includes(voucherType) ? [{ step: 3, label: 'Payment' }] : []),
-                { step: 4, label: 'Check' }
-              ].map((s) => {
+              {wizardSteps.map((s) => {
                 const isActive = currentStep === s.step;
                 const isPassed = currentStep > s.step;
 
@@ -1668,16 +1708,16 @@ export const CreateVoucherWizard = ({
                         width: '34px',
                         height: '34px',
                         borderRadius: '50%',
-                        background: isActive ? '#1e293b' : isPassed ? '#3b82f6' : '#ffffff',
-                        color: isActive || isPassed ? '#ffffff' : '#64748b',
-                        border: isActive || isPassed ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
+                        background: isActive ? 'var(--primary-color, #2563eb)' : isPassed ? '#3b82f6' : 'var(--btn-secondary-bg, #ffffff)',
+                        color: isActive || isPassed ? '#ffffff' : 'var(--text-muted, #64748b)',
+                        border: isActive || isPassed ? 'none' : '1px solid var(--glass-border, rgba(0, 0, 0, 0.12))',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 800,
                         fontSize: '14px',
                         marginBottom: '6px',
-                        boxShadow: isActive ? '0 4px 10px rgba(30, 41, 59, 0.25)' : 'none',
+                        boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.35)' : 'none',
                         transition: 'all 0.2s ease'
                       }}
                     >
@@ -1687,7 +1727,7 @@ export const CreateVoucherWizard = ({
                       style={{
                         fontSize: '12px',
                         fontWeight: isActive ? 800 : 600,
-                        color: isActive ? '#0f172a' : '#64748b',
+                        color: isActive ? 'var(--text-dark, #0f172a)' : 'var(--text-muted, #64748b)',
                         transition: 'color 0.2s ease'
                       }}
                     >
@@ -1744,11 +1784,11 @@ export const CreateVoucherWizard = ({
                         width: '100%',
                         padding: '13px 16px',
                         borderRadius: '14px',
-                        border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                        background: 'rgba(255, 255, 255, 0.92)',
+                        border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                        background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
                         fontSize: '14px',
                         fontWeight: 600,
-                        color: '#0f172a',
+                        color: 'var(--input-color, #0f172a)',
                         outline: 'none',
                         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                       }}
@@ -1765,21 +1805,13 @@ export const CreateVoucherWizard = ({
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
                           From Account (Money out - Cash / Bank) <span style={{ color: '#e11d48' }}>*</span>
                         </label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: '16px', border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))', background: 'rgba(255, 255, 255, 0.92)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)' }}>
-                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#be123c', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px', flexShrink: 0 }}>
-                            {selectedParty ? selectedParty.charAt(0).toUpperCase() : 'C'}
-                          </div>
-                          <select
-                            value={selectedParty}
-                            onChange={(e) => setSelectedParty(e.target.value)}
-                            style={{ flex: 1, minWidth: 0, width: '100%', border: 'none', background: 'transparent', fontSize: '14px', fontWeight: 700, color: '#0f172a', outline: 'none', cursor: 'pointer' }}
-                          >
-                            <option value="" disabled>Select source account...</option>
-                            {cashBankAccounts.map((acc, idx) => (
-                              <option key={idx} value={acc}>{acc}</option>
-                            ))}
-                          </select>
-                        </div>
+                        <GlassSelect
+                          value={selectedParty}
+                          onChange={(e, val) => setSelectedParty(val)}
+                          options={cashBankAccounts}
+                          placeholder="Select source account..."
+                          searchable={true}
+                        />
                       </div>
 
                       {/* To Account (Money in - Cash/Bank) */}
@@ -1787,23 +1819,13 @@ export const CreateVoucherWizard = ({
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
                           To Account (Money in - Cash / Bank) <span style={{ color: '#e11d48' }}>*</span>
                         </label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: '16px', border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))', background: 'rgba(255, 255, 255, 0.92)', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)' }}>
-                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#059669', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px', flexShrink: 0 }}>
-                            {toAccount ? toAccount.charAt(0).toUpperCase() : 'B'}
-                          </div>
-                          <select
-                            value={toAccount}
-                            onChange={(e) => setToAccount(e.target.value)}
-                            style={{ flex: 1, minWidth: 0, width: '100%', border: 'none', background: 'transparent', fontSize: '14px', fontWeight: 700, color: '#0f172a', outline: 'none', cursor: 'pointer' }}
-                          >
-                            <option value="" disabled>Select destination account...</option>
-                            {cashBankAccounts.map((acc, idx) => (
-                              <option key={idx} value={acc} disabled={acc === selectedParty}>
-                                {acc} {acc === selectedParty ? '(Same account)' : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        <GlassSelect
+                          value={toAccount}
+                          onChange={(e, val) => setToAccount(val)}
+                          options={cashBankAccounts.filter(acc => acc !== selectedParty)}
+                          placeholder="Select destination account..."
+                          searchable={true}
+                        />
                       </div>
                     </div>
 
@@ -1818,82 +1840,42 @@ export const CreateVoucherWizard = ({
                         placeholder="e.g. CHQ-491204 or UTR-9821872"
                         value={instrumentNo}
                         onChange={(e) => setInstrumentNo(e.target.value)}
-                        style={{ width: '100%', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))', background: 'rgba(255, 255, 255, 0.92)', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)' }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          borderRadius: '14px',
+                          border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                          background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: 'var(--input-color, #0f172a)',
+                          outline: 'none',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
+                        }}
                       />
                     </div>
                   </div>
                 ) : voucherType === 'Journal' ? null : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px' }}>
-                    {/* Customer * with Blue Avatar & [+] Button */}
+                    {/* Customer * with Glass Select & [+] Button */}
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
                         {activeConfig.partyLabel} <span style={{ color: '#e11d48' }}>*</span>
                       </label>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {/* Left: Avatar + Select Input Box */}
-                        <div
-                          className="cv-party-select-card"
-                          style={{
-                            flex: 1,
-                            minWidth: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '9px 14px',
-                            borderRadius: '16px',
-                            border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                            background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.92))',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
-                          }}
-                        >
-                          {/* Dark Blue Avatar Circle */}
-                          <div
-                            style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '50%',
-                              background: '#1e3a8a',
-                              color: '#ffffff',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 800,
-                              fontSize: '14px',
-                              flexShrink: 0
-                            }}
-                          >
-                            {getPartyInitial(selectedParty)}
-                          </div>
-
-                          {/* Dropdown Selector */}
-                          <select
-                            className="tc-theme-select cv-party-select"
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <GlassSelect
                             value={selectedParty}
-                            onChange={(e) => setSelectedParty(e.target.value)}
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              width: '100%',
-                              border: 'none',
-                              background: 'transparent',
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              color: 'var(--text-dark, #0f172a)',
-                              outline: 'none',
-                              cursor: 'pointer',
-                              textOverflow: 'ellipsis',
-                              overflow: 'hidden',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            <option value="" disabled>Select customer / party...</option>
-                            {localParties.map((p, idx) => (
-                              <option key={idx} value={p.name || p.ledger_name}>
-                                {p.name || p.ledger_name}
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(e, val) => setSelectedParty(val)}
+                            options={localParties.map((p) => ({
+                              value: p.name || p.ledger_name,
+                              label: p.name || p.ledger_name,
+                              subtitle: p.parent_group || p.parent || ''
+                            }))}
+                            placeholder={`Select ${activeConfig.partyLabel.toLowerCase()}...`}
+                            searchable={true}
+                          />
                         </div>
 
                         {/* Right: [+] Button to Add New Customer */}
@@ -1901,23 +1883,22 @@ export const CreateVoucherWizard = ({
                           type="button"
                           onClick={() => setShowAddPartyModal(true)}
                           style={{
-                            width: '48px',
-                            height: '48px',
+                            width: '44px',
+                            height: '44px',
                             flexShrink: 0,
-                            borderRadius: '16px',
+                            borderRadius: '14px',
                             border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                            background: 'rgba(255, 255, 255, 0.95)',
+                            background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.95))',
                             color: '#0f172a',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
-                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
-                            transition: 'all 0.15s ease'
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                           }}
-                          title="Add new customer"
+                          title={`Add New ${activeConfig.partyLabel}`}
                         >
-                          <Plus size={22} />
+                          <Plus size={18} color="#2563eb" />
                         </button>
                       </div>
                     </div>
@@ -1938,11 +1919,11 @@ export const CreateVoucherWizard = ({
                             width: '100%',
                             padding: '13px 16px',
                             borderRadius: '14px',
-                            border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                            background: 'rgba(255, 255, 255, 0.92)',
+                            border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                            background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
                             fontSize: '14px',
                             fontWeight: 600,
-                            color: '#0f172a',
+                            color: 'var(--input-color, #0f172a)',
                             outline: 'none',
                             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                           }}
@@ -1968,11 +1949,11 @@ export const CreateVoucherWizard = ({
                           width: '100%',
                           padding: '13px 16px',
                           borderRadius: '14px',
-                          border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                          background: 'rgba(255, 255, 255, 0.92)',
+                          border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                          background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
                           fontSize: '14px',
                           fontWeight: 600,
-                          color: '#0f172a',
+                          color: 'var(--input-color, #0f172a)',
                           outline: 'none'
                         }}
                       />
@@ -1986,6 +1967,7 @@ export const CreateVoucherWizard = ({
                   </label>
                   <textarea
                     rows={3}
+                    className="cv-input"
                     placeholder="Add an optional note or remarks..."
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -1993,10 +1975,10 @@ export const CreateVoucherWizard = ({
                       width: '100%',
                       padding: '12px 16px',
                       borderRadius: '14px',
-                      border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.1))',
-                      background: 'rgba(255, 255, 255, 0.92)',
+                      border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                      background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
                       fontSize: '14px',
-                      color: '#0f172a',
+                      color: 'var(--input-color, #0f172a)',
                       outline: 'none',
                       resize: 'vertical',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
@@ -2022,28 +2004,16 @@ export const CreateVoucherWizard = ({
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                       {customFields.filter(cf => cf.enabled !== false).map(cf => (
                         <div key={cf.field_key}>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '6px' }}>
                             {cf.field_name}
                           </label>
                           {cf.field_type === 'SELECT' && Array.isArray(cf.options) && cf.options.length > 0 ? (
-                            <select
-                              className="cv-input"
+                            <GlassSelect
                               value={customFieldValues[cf.field_key] || ''}
-                              onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [cf.field_key]: e.target.value }))}
-                              style={{
-                                width: '100%',
-                                padding: '11px 14px',
-                                borderRadius: '12px',
-                                border: '1px solid var(--glass-border)',
-                                background: '#fff',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                outline: 'none'
-                              }}
-                            >
-                              <option value="">Select option</option>
-                              {cf.options.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
-                            </select>
+                              onChange={(val) => setCustomFieldValues(prev => ({ ...prev, [cf.field_key]: val }))}
+                              placeholder="Select option"
+                              options={cf.options.map((opt) => ({ value: opt, label: opt }))}
+                            />
                           ) : (
                             <input
                               type={cf.field_type === 'NUMBER' ? 'number' : cf.field_type === 'DATE' ? 'date' : 'text'}
@@ -2055,8 +2025,9 @@ export const CreateVoucherWizard = ({
                                 width: '100%',
                                 padding: '11px 14px',
                                 borderRadius: '12px',
-                                border: '1px solid var(--glass-border)',
-                                background: '#fff',
+                                border: '1px solid var(--input-border, rgba(0,0,0,0.12))',
+                                background: 'var(--input-bg, #fff)',
+                                color: 'var(--input-color, #0f172a)',
                                 fontSize: '13px',
                                 fontWeight: 600,
                                 outline: 'none'
@@ -2152,26 +2123,19 @@ export const CreateVoucherWizard = ({
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                              <select
-                                value={it.stock_item_name}
-                                onChange={(e) => handleUpdateItem(idx, 'stock_item_name', e.target.value)}
-                                style={{
-                                  flex: 1,
-                                  border: '1px solid rgba(0, 0, 0, 0.1)',
-                                  borderRadius: '10px',
-                                  padding: '8px 10px',
-                                  fontSize: '14px',
-                                  fontWeight: 700,
-                                  color: '#0f172a',
-                                  background: '#f8fafc'
-                                }}
-                              >
-                                {availableStockItems.map((s, sIdx) => (
-                                  <option key={sIdx} value={s.name}>
-                                    {s.name} (₹{s.rate})
-                                  </option>
-                                ))}
-                              </select>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <GlassSelect
+                                  value={it.stock_item_name}
+                                  onChange={(e, val) => handleUpdateItem(idx, 'stock_item_name', val)}
+                                  options={availableStockItems.map((s) => ({
+                                    value: s.name,
+                                    label: s.name,
+                                    subtitle: `₹${s.rate}`
+                                  }))}
+                                  placeholder="Select item..."
+                                  searchable={true}
+                                />
+                              </div>
 
                               {true && (
                                 <button
@@ -2288,20 +2252,151 @@ export const CreateVoucherWizard = ({
                   </>
                 ) : voucherType === 'Receipt' || voucherType === 'Payment' ? (
                   <div
-                    className="glass-panel cv-ledger-card"
+                    className="glass-panel cv-payment-card"
                     style={{
-                      padding: '24px',
-                      borderRadius: '20px',
-                      background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
-                      border: '1px solid var(--glass-border, rgba(0,0,0,0.08))'
+                      padding: '26px 24px',
+                      borderRadius: '24px',
+                      background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.88))',
+                      backdropFilter: 'blur(var(--glass-blur, 20px))',
+                      WebkitBackdropFilter: 'blur(var(--glass-blur, 20px))',
+                      border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.9))',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px',
+                      boxShadow: 'var(--glass-shadow)'
                     }}
                   >
-                    <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 800, color: 'var(--text-dark)' }}>
-                      {voucherType === 'Receipt' ? 'Receipt amount and payment method' : 'Payment amount and payment method'}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--text-muted)' }}>
-                      Enter the {voucherType === 'Receipt' ? 'amount received from' : 'amount paid to'} {selectedParty || 'the selected party'} in the next step. The voucher will use the dedicated {voucherType.toLowerCase()} fields supported by the sync API.
-                    </p>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: 'var(--text-dark, #0f172a)' }}>
+                        {voucherType === 'Receipt' ? 'How was this amount received?' : 'How is this payment disbursed?'}
+                      </h3>
+                      <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted, #64748b)' }}>
+                        {voucherType === 'Receipt'
+                          ? `Recording funds received from ${selectedParty || 'customer'}`
+                          : `Recording funds disbursed to ${selectedParty || 'vendor'}`}
+                      </p>
+                    </div>
+
+                    {/* Amount Input */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
+                        {voucherType === 'Receipt' ? 'Amount Received (₹)' : 'Amount Paid (₹)'} <span style={{ color: '#e11d48' }}>*</span>
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', fontSize: '22px', fontWeight: 900, color: activeConfig.color }}>₹</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="0.00"
+                          value={amountReceived}
+                          onChange={(e) => setAmountReceived(e.target.value)}
+                          className="cv-input"
+                          style={{
+                            width: '100%',
+                            padding: '16px 20px 16px 42px',
+                            borderRadius: '16px',
+                            border: `2px solid ${activeConfig.color}40`,
+                            background: 'var(--input-bg, #ffffff)',
+                            fontSize: '24px',
+                            fontWeight: 900,
+                            color: 'var(--input-color, #0f172a)',
+                            outline: 'none',
+                            boxShadow: `0 4px 16px ${activeConfig.color}15`
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Payment Mode Selector */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
+                        Payment Method
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                        {[
+                          { id: 'CASH', label: 'Cash in Hand', icon: Wallet, color: '#059669' },
+                          { id: 'BANK', label: 'Bank Account', icon: Building2, color: '#2563eb' },
+                          { id: 'UPI', label: 'UPI Transfer', icon: Sparkles, color: '#7c3aed' },
+                          { id: 'CHEQUE', label: 'Cheque / DD', icon: CreditCard, color: '#d97706' }
+                        ].map((m) => {
+                          const isSel = paymentMode === m.id || (m.id === 'BANK' && paymentMode === 'BANK') || (m.id === 'CASH' && paymentMode === 'CASH');
+                          const IconComp = m.icon;
+                          return (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() => {
+                                setPaymentMode(m.id);
+                                if ((m.id === 'BANK' || m.id === 'UPI' || m.id === 'CHEQUE') && (!bankLedger || /cash/i.test(bankLedger))) {
+                                  const bankAcc = cashBankAccounts.find(a => /bank/i.test(a)) || cashBankAccounts[0];
+                                  if (bankAcc) setBankLedger(bankAcc);
+                                } else if (m.id === 'CASH' && (!bankLedger || /bank/i.test(bankLedger))) {
+                                  const cashAcc = cashBankAccounts.find(a => /cash/i.test(a)) || cashBankAccounts[0];
+                                  if (cashAcc) setBankLedger(cashAcc);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 14px',
+                                borderRadius: '12px',
+                                border: isSel ? `2px solid ${m.color}` : '1px solid var(--glass-border, rgba(0,0,0,0.1))',
+                                background: isSel ? `${m.color}15` : 'var(--glass-card-bg, rgba(255,255,255,0.8))',
+                                cursor: 'pointer',
+                                fontWeight: 700,
+                                fontSize: '13px',
+                                color: isSel ? m.color : 'var(--text-dark, #334155)',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              <IconComp size={16} />
+                              <span>{m.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Bank / Cash Account Selector */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
+                        {voucherType === 'Receipt' ? 'Deposit Into Account' : 'Paid From Account'} <span style={{ color: '#e11d48' }}>*</span>
+                      </label>
+                      <GlassSelect
+                        value={bankLedger}
+                        onChange={(e, val) => setBankLedger(val)}
+                        options={cashBankAccounts}
+                        placeholder="Select bank or cash account..."
+                        searchable={true}
+                      />
+                    </div>
+
+                    {/* Instrument / Cheque / UTR Ref */}
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
+                        <Hash size={14} color="#64748b" /> Reference / Cheque / UTR No. (optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="cv-input"
+                        placeholder="e.g. UTR-89218491 or Cheque #004921"
+                        value={paymentRef}
+                        onChange={(e) => setPaymentRef(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--input-border, rgba(0,0,0,0.1))',
+                          background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
+                          fontSize: '13.5px',
+                          fontWeight: 600,
+                          color: 'var(--input-color, #0f172a)',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
                   </div>
                 ) : voucherType === 'Contra' ? (
                   /* Dedicated Contra Transfer Card */
@@ -2347,15 +2442,16 @@ export const CreateVoucherWizard = ({
                           placeholder="0.00"
                           value={contraAmount}
                           onChange={(e) => setContraAmount(e.target.value)}
+                          className="cv-input"
                           style={{
                             width: '100%',
                             padding: '16px 20px 16px 42px',
                             borderRadius: '16px',
                             border: '2px solid rgba(13, 148, 136, 0.35)',
-                            background: '#ffffff',
+                            background: 'var(--input-bg, #ffffff)',
                             fontSize: '24px',
                             fontWeight: 900,
-                            color: '#0f172a',
+                            color: 'var(--input-color, #0f172a)',
                             outline: 'none',
                             boxShadow: '0 4px 16px rgba(13, 148, 136, 0.08)'
                           }}
@@ -2484,9 +2580,9 @@ export const CreateVoucherWizard = ({
             )}
 
             {/* =========================================================================
-                STEP 3: PAYMENT (Mode, Bank Account & Terms)
+                STEP 3: PAYMENT (Mode, Bank Account & Terms - for Itemized vouchers)
                 ========================================================================= */}
-            {currentStep === 3 && (
+            {currentStep === 3 && activeConfig.isItemized && (
               <div
                 className="glass-panel cv-payment-card"
                 style={{
@@ -2501,19 +2597,14 @@ export const CreateVoucherWizard = ({
               >
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '10px' }}>
-                    {voucherType === 'Receipt' ? 'Receipt Details' : voucherType === 'Payment' ? 'Payment Details' : 'Payment Terms'}
+                    Payment Terms &amp; Settlement
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                    {(voucherType === 'Receipt' || voucherType === 'Payment'
-                      ? [
-                        { id: 'CASH', label: 'Cash', icon: Wallet },
-                        { id: 'BANK', label: 'Bank / UPI', icon: CreditCard }
-                      ]
-                      : [
+                    {[
                       { id: 'UNPAID', label: 'Unpaid / Credit', icon: Wallet },
                       { id: 'CASH', label: 'Cash', icon: Wallet },
                       { id: 'BANK', label: 'Bank / UPI', icon: CreditCard }
-                    ]).map((m) => {
+                    ].map((m) => {
                       const active = paymentMode === m.id;
                       return (
                         <button
@@ -2547,28 +2638,15 @@ export const CreateVoucherWizard = ({
                 {paymentMode === 'BANK' && (
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                      {voucherType === 'Payment' ? 'Paid From Bank Account' : 'Deposit To Bank Account'}
+                      Deposit / Settlement Bank Account
                     </label>
-                    <select
-                      className="tc-theme-select"
+                    <GlassSelect
                       value={bankLedger}
-                      onChange={(e) => setBankLedger(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
-                        background: '#ffffff',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: '#0f172a'
-                      }}
-                    >
-                      <option value="HDFC Bank Clearing">HDFC Bank Clearing</option>
-                      <option value="ICICI Commercial Account">ICICI Commercial Account</option>
-                      <option value="Axis Settlement">Axis Settlement</option>
-                      <option value="State Bank of India">State Bank of India</option>
-                    </select>
+                      onChange={(e, val) => setBankLedger(val)}
+                      options={cashBankAccounts}
+                      placeholder="Select bank account..."
+                      searchable={true}
+                    />
                   </div>
                 )}
 
@@ -2587,15 +2665,16 @@ export const CreateVoucherWizard = ({
                     max={activeConfig.isItemized ? itemCalculations.grandTotal : undefined}
                     value={amountReceived}
                     onChange={(e) => setAmountReceived(e.target.value)}
+                    className="cv-input"
                     style={{
                       width: '100%',
                       padding: '12px 14px',
                       borderRadius: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      background: '#ffffff',
+                      border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                      background: 'var(--input-bg, #ffffff)',
                       fontSize: '16px',
                       fontWeight: 800,
-                      color: '#0f172a'
+                      color: 'var(--input-color, #0f172a)'
                     }}
                   />
                 </div>
@@ -2628,9 +2707,9 @@ export const CreateVoucherWizard = ({
             )}
 
             {/* =========================================================================
-                STEP 4: CHECK (Review & Confirm Before Save)
+                CHECK & CONFIRM BEFORE SAVE
                 ========================================================================= */}
-            {currentStep === 4 && (
+            {((currentStep === 4 && activeConfig.isItemized) || (currentStep === 3 && !activeConfig.isItemized)) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div
                   className="glass-panel cv-check-card"
@@ -2738,28 +2817,35 @@ export const CreateVoucherWizard = ({
               gap: '12px'
             }}
           >
-            {/* Cancel Button */}
+            {/* Cancel / Back Button */}
             <button
               type="button"
-              onClick={onClose}
+              className="cv-btn-secondary"
+              onClick={() => {
+                if (currentStep > 1) {
+                  setCurrentStep(currentStep - 1);
+                } else {
+                  onClose();
+                }
+              }}
               style={{
                 flex: 1,
                 padding: '14px 20px',
                 borderRadius: '16px',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                background: '#ffffff',
-                color: '#0f172a',
+                border: '1px solid var(--btn-secondary-border, rgba(0, 0, 0, 0.1))',
+                background: 'var(--btn-secondary-bg, #ffffff)',
+                color: 'var(--btn-secondary-color, #0f172a)',
                 fontSize: '15px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 boxShadow: '0 2px 6px rgba(0, 0, 0, 0.03)'
               }}
             >
-              Cancel
+              {currentStep > 1 ? 'Back' : 'Cancel'}
             </button>
 
             {/* Next / Save Button */}
-            {currentStep < 4 ? (
+            {currentStep < wizardSteps.length ? (
               <button
                 type="button"
                 onClick={handleNextStep}
@@ -2861,12 +2947,13 @@ export const CreateVoucherWizard = ({
                   placeholder="e.g. FitLife Retailers Ltd"
                   value={newPartyName}
                   onChange={(e) => setNewPartyName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)', fontSize: '14px', fontWeight: 600 }}
+                  className="cv-input"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--input-border, rgba(0,0,0,0.15))', background: 'var(--input-bg, #ffffff)', color: 'var(--input-color, #0f172a)', fontSize: '14px', fontWeight: 600 }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-dark, #475569)', marginBottom: '6px' }}>
                   Phone / Mobile
                 </label>
                 <input
@@ -2874,33 +2961,30 @@ export const CreateVoucherWizard = ({
                   placeholder="+91 98765 43210"
                   value={newPartyPhone}
                   onChange={(e) => setNewPartyPhone(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)', fontSize: '14px', fontWeight: 600 }}
+                  className="cv-input"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--input-border, rgba(0,0,0,0.15))', background: 'var(--input-bg, #ffffff)', color: 'var(--input-color, #0f172a)', fontSize: '14px', fontWeight: 600 }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-dark, #475569)', marginBottom: '6px' }}>
                   State
                 </label>
-                <select
+                <GlassSelect
                   value={newPartyState}
-                  onChange={(e) => setNewPartyState(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)', fontSize: '14px', fontWeight: 600 }}
-                >
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Karnataka">Karnataka</option>
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Tamil Nadu">Tamil Nadu</option>
-                  <option value="Haryana">Haryana</option>
-                </select>
+                  onChange={(e, val) => setNewPartyState(val)}
+                  options={['Maharashtra', 'Delhi', 'Karnataka', 'Gujarat', 'Tamil Nadu', 'Haryana', 'Uttar Pradesh', 'West Bengal', 'Rajasthan']}
+                  placeholder="Select state..."
+                  searchable={true}
+                />
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button
                   type="button"
+                  className="cv-btn-secondary"
                   onClick={() => setShowAddPartyModal(false)}
-                  style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.1)', background: '#f8fafc', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid var(--btn-secondary-border, rgba(0,0,0,0.1))', background: 'var(--btn-secondary-bg, #f8fafc)', color: 'var(--btn-secondary-color, #0f172a)', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
@@ -3283,16 +3367,16 @@ export function VoucherFieldSettingsModal({
                     required
                     style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--glass-border)', fontSize: '13px', outline: 'none' }}
                   />
-                  <select
+                  <GlassSelect
                     value={newFieldType}
-                    onChange={(e) => setNewFieldType(e.target.value)}
-                    style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--glass-border)', fontSize: '13px', outline: 'none' }}
-                  >
-                    <option value="TEXT">Text</option>
-                    <option value="NUMBER">Number</option>
-                    <option value="DATE">Date</option>
-                    <option value="SELECT">Dropdown Select</option>
-                  </select>
+                    onChange={setNewFieldType}
+                    options={[
+                      { value: 'TEXT', label: 'Text' },
+                      { value: 'NUMBER', label: 'Number' },
+                      { value: 'DATE', label: 'Date' },
+                      { value: 'SELECT', label: 'Dropdown Select' }
+                    ]}
+                  />
                 </div>
                 {newFieldType === 'SELECT' && (
                   <input

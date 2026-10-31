@@ -15,7 +15,7 @@ import { RowsDropdown } from './RowsDropdown';
  */
 export const DisplayPreferencesBar = ({
   storageKey = 'tc_display_prefs',
-  viewMode = 'card', // 'table' | 'card'
+  viewMode = 'cards', // cards view standard
   onViewModeChange,
   pageSize = 10,
   onPageSizeChange,
@@ -33,8 +33,15 @@ export const DisplayPreferencesBar = ({
 }) => {
   const [showColMenu, setShowColMenu] = useState(false);
 
-  const isCardMode = String(viewMode || '').toLowerCase().startsWith('card');
-  const isTableMode = String(viewMode || '').toLowerCase() === 'table';
+  // Eliminate table mode across the app in favor of modern Liquid Glass Cards
+  React.useEffect(() => {
+    if (viewMode === 'table' && onViewModeChange) {
+      onViewModeChange('cards');
+    }
+  }, [viewMode, onViewModeChange]);
+
+  const isCardMode = true;
+  const isTableMode = false;
 
   return (
     <div
@@ -96,31 +103,6 @@ export const DisplayPreferencesBar = ({
             >
               <LayoutGrid size={13} />
               <span>Cards</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onViewModeChange('table')}
-              className={`seg-btn ${isTableMode ? 'active' : ''}`}
-              style={{
-                padding: '4px 10px',
-                borderRadius: '8px',
-                border: 'none',
-                fontSize: '12px',
-                fontWeight: isTableMode ? 700 : 500,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                background: isTableMode ? 'var(--primary-color)' : 'transparent',
-                color: isTableMode ? '#ffffff' : 'var(--text-muted)',
-                boxShadow: isTableMode ? '0 2px 6px var(--primary-border)' : 'none',
-                transition: 'all 0.16s ease'
-              }}
-              title="Dense table layout"
-            >
-              <Table size={13} />
-              <span>Table</span>
             </button>
           </div>
         )}

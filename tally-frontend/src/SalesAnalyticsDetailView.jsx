@@ -75,7 +75,8 @@ export default function SalesAnalyticsDetailView({
   companyName = 'Lumilo',
   companyGuid,
   onBack,
-  onExportCSV
+  onExportCSV,
+  onOpenSchedule
 }) {
   // Live API Connection state & auto-fetch
   const [internalVouchers, setInternalVouchers] = useState([]);
@@ -507,7 +508,9 @@ export default function SalesAnalyticsDetailView({
             if (window.print) window.print();
             else if (window.__tc_show_toast) window.__tc_show_toast('PDF Export requested');
           }} />
-          <ScheduleButton onClick={() => window.__tc_show_toast ? window.__tc_show_toast('Schedule email configured for Sales Analytics') : alert('Schedule email configured for Sales Analytics')} />
+          <ScheduleButton onClick={onOpenSchedule || (() => {
+            if (window.__tc_show_toast) window.__tc_show_toast('Schedule email configured for Sales Analytics');
+          })} />
         </div>
       </div>
 

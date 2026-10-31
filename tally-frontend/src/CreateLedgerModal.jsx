@@ -5,6 +5,7 @@ import {
   Building, Mail, Phone, MapPin, Hash, Plus
 } from 'lucide-react';
 import { api } from './api';
+import GlassSelect from './GlassSelect';
 
 const TALLY_GROUPS = [
   'Sundry Debtors',
@@ -264,28 +265,13 @@ export default function CreateLedgerModal({
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-dark, #1e293b)', marginBottom: '6px' }}>
                 Parent Group <span style={{ color: '#ef4444' }}>*</span>
               </label>
-              <select
-                className="tc-theme-select"
+              <GlassSelect
                 value={parentGroup}
-                onChange={(e) => setParentGroup(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
-                  background: 'var(--input-bg, rgba(255,255,255,0.8))',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--text-dark, #1e293b)',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer'
-                }}
-              >
-                {TALLY_GROUPS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
+                onChange={(e, val) => setParentGroup(val)}
+                options={TALLY_GROUPS}
+                placeholder="Select parent group..."
+                searchable={true}
+              />
             </div>
 
             {/* Opening Balance */}

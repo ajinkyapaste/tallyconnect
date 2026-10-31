@@ -113,7 +113,7 @@ export const ActivityManager = ({
   const [activeFilter, setActiveFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
-  const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' card view default
   const [lastSyncDate, setLastSyncDate] = useState(() => {
     if (syncInfo?.last_sync_at) return formatSyncTimeDisplay(syncInfo.last_sync_at);
     return 'Synchronized';
@@ -981,32 +981,10 @@ export const ActivityManager = ({
             >
               <button
                 type="button"
-                onClick={() => setViewMode('table')}
-                style={{
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '9px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  background: viewMode === 'table' ? 'var(--glass-card-bg, #ffffff)' : 'transparent',
-                  color: viewMode === 'table' ? 'var(--text-dark, #0f172a)' : 'var(--text-muted, #64748b)',
-                  boxShadow: viewMode === 'table' ? '0 2px 6px rgba(0, 0, 0, 0.08)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-                title="Desktop Table View"
-              >
-                <List size={14} /> Table
-              </button>
-              <button
-                type="button"
                 onClick={() => setViewMode('grid')}
                 style={{
                   border: 'none',
-                  padding: '6px 12px',
+                  padding: '6px 14px',
                   borderRadius: '9px',
                   fontSize: '12px',
                   fontWeight: 700,
@@ -1014,14 +992,14 @@ export const ActivityManager = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  background: viewMode === 'grid' ? 'var(--glass-card-bg, #ffffff)' : 'transparent',
-                  color: viewMode === 'grid' ? 'var(--text-dark, #0f172a)' : 'var(--text-muted, #64748b)',
-                  boxShadow: viewMode === 'grid' ? '0 2px 6px rgba(0, 0, 0, 0.08)' : 'none',
+                  background: 'var(--glass-card-bg, #ffffff)',
+                  color: 'var(--text-dark, #0f172a)',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
                   transition: 'all 0.15s ease'
                 }}
                 title="Cards Grid View"
               >
-                <LayoutGrid size={14} /> Grid
+                <LayoutGrid size={14} /> Cards
               </button>
             </div>
 

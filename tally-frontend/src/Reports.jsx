@@ -31,6 +31,7 @@ import SalesAnalyticsDetailView from './SalesAnalyticsDetailView';
 import ErrorBoundary from './ErrorBoundary';
 import StandardDateFilter, { isWithinStandardDateRange, getStandardDateRangeLabel } from './StandardDateFilter';
 import { isVisibleToUser } from './adminVisibility';
+import GlassSelect from './GlassSelect';
 
 /* ---------------- Helpers & Formatting ---------------- */
 const inr = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
@@ -4031,6 +4032,7 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                     companyGuid={companyGuid}
                     onBack={() => setActiveReport(null)}
                     onExportCSV={handleExportCSV}
+                    onOpenSchedule={() => setShowScheduleModal(true)}
                   />
                 </ErrorBoundary>
               )}
@@ -4272,28 +4274,6 @@ export default function Reports({ companyGuid, setCurrentTab, user }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                     <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-dark)' }}>
                       Ranked Customer Breakdown
-                    </div>
-                    <div className="glass-panel" style={{ display: 'flex', padding: '2px', borderRadius: '10px', gap: '2px' }}>
-                      <button
-                        onClick={() => setTopCustViewMode('cards')}
-                        style={{
-                          border: 'none', padding: '4px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
-                          background: topCustViewMode === 'cards' ? 'var(--primary-color)' : 'transparent',
-                          color: topCustViewMode === 'cards' ? '#fff' : 'var(--text-muted)'
-                        }}
-                      >
-                        Cards View
-                      </button>
-                      <button
-                        onClick={() => setTopCustViewMode('table')}
-                        style={{
-                          border: 'none', padding: '4px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
-                          background: topCustViewMode === 'table' ? 'var(--primary-color)' : 'transparent',
-                          color: topCustViewMode === 'table' ? '#fff' : 'var(--text-muted)'
-                        }}
-                      >
-                        Table View
-                      </button>
                     </div>
                   </div>
 
@@ -6607,14 +6587,26 @@ function MonthlyReportScheduleModal({ onClose, onToast }) {
     }
   };
 
+  const dayOptions = useMemo(() => {
+    return Array.from({ length: 28 }, (_, i) => {
+      const d = i + 1;
+      const suffix = d === 1 ? '1st' : d === 2 ? '2nd' : d === 3 ? '3rd' : `${d}th`;
+      return {
+        value: d,
+        label: `${suffix} of every month`,
+        subtitle: d === 1 ? 'Start of month cycle' : d === 15 ? 'Mid-month snapshot' : d === 28 ? 'Month-end closing' : ''
+      };
+    });
+  }, []);
+
   return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
+      position: 'fixed', inset: 0, zIndex: 100050,
       background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
     }}>
       <div className="glass-panel" style={{
-        width: '100%', maxWidth: '480px', borderRadius: '24px', overflow: 'hidden',
+        width: '100%', maxWidth: '520px', borderRadius: '24px', overflow: 'hidden',
         boxShadow: '0 24px 60px rgba(0,0,0,0.18)', border: '1px solid var(--glass-border)'
       }}>
         {/* Header */}
@@ -6624,16 +6616,18 @@ function MonthlyReportScheduleModal({ onClose, onToast }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
-              width: '44px', height: '44px', borderRadius: '14px',
-              background: 'rgba(0,122,255,0.12)', color: 'var(--primary-color)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
+              width: '46px', height: '46px', borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(0,122,255,0.2) 0%, rgba(99,102,241,0.2) 100%)',
+              color: 'var(--primary-color)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0,122,255,0.15)'
             }}>
-              <Clock size={22} />
+              <Clock size={24} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Automated Report Delivery</h3>
-              <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Email monthly P&L and Balance Sheet reports
+              <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: 'var(--text-dark)' }}>Automated Report Delivery</h3>
+              <p style={{ margin: '3px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+                Scheduled compilation &amp; email delivery of monthly financial reports
               </p>
             </div>
           </div>
@@ -6650,19 +6644,31 @@ function MonthlyReportScheduleModal({ onClose, onToast }) {
           </div>
         ) : (
           <form onSubmit={handleSave} style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Toggle Card */}
+            {/* Status Switch Card */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 18px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)',
-              border: '1px solid var(--glass-border)'
+              padding: '16px 20px', borderRadius: '18px',
+              background: enabled ? 'rgba(16, 185, 129, 0.08)' : 'rgba(0,0,0,0.03)',
+              border: `1px solid ${enabled ? 'rgba(16, 185, 129, 0.25)' : 'var(--glass-border)'}`,
+              transition: 'all 0.2s ease'
             }}>
-              <div>
-                <strong style={{ fontSize: '14px', display: 'block', color: 'var(--text-dark)' }}>
-                  Monthly Report Automation
-                </strong>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  {enabled ? 'Active — email will be dispatched automatically' : 'Disabled — no automatic emails sent'}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '38px', height: '38px', borderRadius: '12px',
+                  background: enabled ? 'rgba(16, 185, 129, 0.18)' : 'rgba(148, 163, 184, 0.15)',
+                  color: enabled ? '#10b981' : '#64748b',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <strong style={{ fontSize: '14.5px', display: 'block', color: 'var(--text-dark)' }}>
+                    {enabled ? 'Schedule Active' : 'Schedule Paused'}
+                  </strong>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                    {enabled ? 'Statements automatically compiled & emailed' : 'Automated monthly dispatch is disabled'}
+                  </span>
+                </div>
               </div>
               <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px', cursor: 'pointer' }}>
                 <input
@@ -6673,7 +6679,7 @@ function MonthlyReportScheduleModal({ onClose, onToast }) {
                 />
                 <span style={{
                   position: 'absolute', inset: 0, borderRadius: '26px',
-                  background: enabled ? 'var(--primary-color)' : '#d1d5db',
+                  background: enabled ? '#10b981' : '#cbd5e1',
                   transition: 'background 0.25s ease'
                 }}>
                   <span style={{
@@ -6685,49 +6691,99 @@ function MonthlyReportScheduleModal({ onClose, onToast }) {
               </label>
             </div>
 
-            {/* Inputs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', opacity: enabled ? 1 : 0.45, pointerEvents: enabled ? 'auto' : 'none', transition: 'opacity 0.2s ease' }}>
-              <div className="auth-field">
-                <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>
-                  Day of Month
+            {/* Quick Presets */}
+            {enabled && (
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  QUICK TIMING PRESETS
                 </label>
-                <select
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                  {[
+                    { label: '1st of Month', sub: '9:00 AM', day: 1, time: '09:00' },
+                    { label: 'Mid-Month', sub: '15th · 10:00 AM', day: 15, time: '10:00' },
+                    { label: 'Month-End', sub: '28th · 6:00 PM', day: 28, time: '18:00' }
+                  ].map((p, i) => {
+                    const isSelected = dayOfMonth === p.day && reportTime === p.time;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setDayOfMonth(p.day);
+                          setReportTime(p.time);
+                        }}
+                        style={{
+                          padding: '10px 8px',
+                          borderRadius: '12px',
+                          border: isSelected ? '1.5px solid var(--primary-color)' : '1px solid var(--glass-border)',
+                          background: isSelected ? 'rgba(0, 122, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                          color: isSelected ? 'var(--primary-color)' : 'var(--text-dark)',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div style={{ fontSize: '12px', fontWeight: 750 }}>{p.label}</div>
+                        <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{p.sub}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Custom Day and Time Inputs */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '14px', opacity: enabled ? 1 : 0.45, pointerEvents: enabled ? 'auto' : 'none', transition: 'opacity 0.2s ease' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '6px', display: 'block' }}>
+                  Dispatch Day of Month
+                </label>
+                <GlassSelect
                   value={dayOfMonth}
-                  onChange={(e) => setDayOfMonth(Number(e.target.value))}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.85)', fontSize: '14px', fontWeight: 600 }}
-                >
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
-                    <option key={d} value={d}>{d === 1 ? '1st of every month' : d === 2 ? '2nd of every month' : d === 3 ? '3rd of every month' : `${d}th of every month`}</option>
-                  ))}
-                </select>
+                  onChange={(val) => setDayOfMonth(Number(val))}
+                  options={dayOptions}
+                  placeholder="Select day..."
+                  searchable={false}
+                />
               </div>
 
-              <div className="auth-field">
-                <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '6px', display: 'block' }}>
                   Delivery Time
                 </label>
                 <input
                   type="time"
+                  className="cv-input"
                   value={reportTime}
                   onChange={(e) => setReportTime(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.85)', fontSize: '14px', fontWeight: 600 }}
+                  style={{
+                    width: '100%',
+                    padding: '11px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--glass-border)',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
             </div>
 
             <div style={{
               padding: '12px 14px', borderRadius: '12px', background: 'rgba(0,122,255,0.06)',
-              fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5
+              fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5,
+              border: '1px solid rgba(0, 122, 255, 0.12)'
             }}>
               💡 TallyConnect packages your latest financial statements and dispatches them straight to your registered email address on schedule.
             </div>
 
             {/* Actions */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
-              <button type="button" className="btn-secondary" onClick={onClose} disabled={saving} style={{ padding: '10px 20px', borderRadius: '12px' }}>
+              <button type="button" className="cv-btn-secondary btn-secondary" onClick={onClose} disabled={saving} style={{ padding: '10px 20px', borderRadius: '12px', cursor: 'pointer' }}>
                 Cancel
               </button>
-              <button type="submit" className="btn-primary" disabled={saving} style={{ padding: '10px 24px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <button type="submit" className="btn-primary" disabled={saving} style={{ padding: '10px 24px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                 <Check size={16} /> {saving ? 'Saving…' : 'Save Schedule'}
               </button>
             </div>
