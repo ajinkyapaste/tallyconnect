@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X, Landmark, CheckCircle2, AlertCircle, Loader2,
-  Building, Mail, Phone, MapPin, Hash, Plus
+  Building, Mail, Phone, MapPin, Hash, Plus, Check
 } from 'lucide-react';
 import { api } from './api';
 import GlassSelect from './GlassSelect';
@@ -37,7 +37,8 @@ export default function CreateLedgerModal({
   isOpen,
   onClose,
   companyGuid,
-  onSuccess
+  onSuccess,
+  ledgerToEdit = null
 }) {
   const [name, setName] = useState('');
   const [parentGroup, setParentGroup] = useState('Sundry Debtors');
@@ -50,6 +51,34 @@ export default function CreateLedgerModal({
   const [pincode, setPincode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const isEdit = Boolean(ledgerToEdit && (ledgerToEdit.ledger_guid || ledgerToEdit.id));
+
+  useEffect(() => {
+    if (ledgerToEdit) {
+      setName(ledgerToEdit.name || '');
+      setParentGroup(ledgerToEdit.parent_group || ledgerToEdit.type || 'Sundry Debtors');
+      const bal = Number(ledgerToEdit.opening_balance ?? ledgerToEdit.balance ?? 0);
+      setOpeningBalance(bal !== 0 ? String(Math.abs(bal)) : '');
+      setBalanceType(bal < 0 ? 'Cr' : 'Dr');
+      setEmail(ledgerToEdit.email || '');
+      setPhone(ledgerToEdit.phone || '');
+      setAddress(ledgerToEdit.address || '');
+      setStateName(ledgerToEdit.state || '');
+      setPincode(ledgerToEdit.pincode || '');
+    } else {
+      setName('');
+      setParentGroup('Sundry Debtors');
+      setOpeningBalance('');
+      setBalanceType('Dr');
+      setEmail('');
+      setPhone('');
+      setAddress('');
+      setStateName('');
+      setPincode('');
+    }
+    setError('');
+  }, [ledgerToEdit, isOpen]);
 
   if (!isOpen) return null;
 
@@ -70,7 +99,9 @@ export default function CreateLedgerModal({
     setLoading(true);
 
     try {
-      const ledgerGuid = `tc_ledger_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const ledgerGuid = isEdit
+        ? (ledgerToEdit.ledger_guid || ledgerToEdit.id)
+        : `tc_ledger_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const numBalance = Number(openingBalance) || 0;
       const signedBalance = balanceType === 'Cr' ? -Math.abs(numBalance) : Math.abs(numBalance);
 
@@ -80,7 +111,7 @@ export default function CreateLedgerModal({
         name: name.trim(),
         parent_group: parentGroup,
         opening_balance: signedBalance,
-        closing_balance: signedBalance,
+        closing_balance: isEdit && ledgerToEdit.closing_balance !== undefined ? Number(ledgerToEdit.closing_balance) : signedBalance,
         type: parentGroup,
         email: email.trim() || null,
         phone: phone.trim() || null,
@@ -90,18 +121,18 @@ export default function CreateLedgerModal({
         country: 'India'
       };
 
-      // 1. Send to backend ledger sync endpoint
+      // 1. Send to backend ledger sync endpoint (handles insert or update via ON CONFLICT)
       const res = await api.post('/ledger/sync', payload);
       if (res && res.success === false) {
-        throw new Error(res.error || res.message || 'Failed to create ledger');
+        throw new Error(res.error || res.message || 'Failed to save ledger');
       }
 
-      // 2. Also register sync event in queue for desktop agent if available
+      // 2. Also register sync event in queue for desktop agent
       api.post('/sync/event', {
         entity_type: 'LEDGER',
         entity_guid: ledgerGuid,
         company_guid: companyGuid,
-        operation: 'CREATE',
+        operation: isEdit ? 'UPDATE' : 'CREATE',
         source: 'WEB_APP',
         payload
       }).catch(() => {});
@@ -112,12 +143,12 @@ export default function CreateLedgerModal({
       } catch {}
 
       if (onSuccess) {
-        onSuccess(payload);
+        onSuccess({ ...payload, isEdit });
       }
       onClose();
     } catch (err) {
-      console.error('Create ledger error:', err);
-      setError(err?.message || 'Failed to create ledger. Please try again.');
+      console.error('Save ledger error:', err);
+      setError(err?.message || 'Failed to save ledger. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -139,10 +170,11 @@ export default function CreateLedgerModal({
       onClick={onClose}
     >
       <div
+        className="glass-panel"
         style={{
           width: '100%',
           maxWidth: '560px',
-          background: 'var(--glass-bg, #ffffff)',
+          background: 'var(--glass-card-bg, #ffffff)',
           borderRadius: '24px',
           border: '1px solid var(--glass-border, rgba(0,0,0,0.1))',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)',
@@ -183,10 +215,10 @@ export default function CreateLedgerModal({
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-dark, #1e293b)' }}>
-                Create New Ledger
+                {isEdit ? 'Edit Ledger Details' : 'Create New Ledger'}
               </h2>
               <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>
-                Add a new customer, supplier, bank, or expense account
+                {isEdit ? `Update fields for ${name || 'ledger'}` : 'Add a new customer, supplier, bank, or expense account'}
               </p>
             </div>
           </div>
@@ -249,11 +281,11 @@ export default function CreateLedgerModal({
                   width: '100%',
                   padding: '10px 14px',
                   borderRadius: '12px',
-                  border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                  border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                   background: 'var(--input-bg, rgba(255,255,255,0.8))',
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: 'var(--text-dark, #1e293b)',
+                  color: 'var(--input-color, var(--text-dark, #1e293b))',
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}
@@ -290,16 +322,16 @@ export default function CreateLedgerModal({
                     flex: 1,
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                    border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                     background: 'var(--input-bg, rgba(255,255,255,0.8))',
                     fontSize: '14px',
                     fontWeight: 600,
-                    color: 'var(--text-dark, #1e293b)',
+                    color: 'var(--input-color, var(--text-dark, #1e293b))',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
                 />
-                <div style={{ display: 'inline-flex', padding: '3px', background: 'rgba(0,0,0,0.06)', borderRadius: '12px', gap: '3px' }}>
+                <div style={{ display: 'inline-flex', padding: '3px', background: 'var(--btn-secondary-bg, rgba(0,0,0,0.06))', borderRadius: '12px', gap: '3px', border: '1px solid var(--glass-border, rgba(0,0,0,0.08))' }}>
                   <button
                     type="button"
                     onClick={() => setBalanceType('Dr')}
@@ -353,10 +385,10 @@ export default function CreateLedgerModal({
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                    border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                     background: 'var(--input-bg, rgba(255,255,255,0.8))',
                     fontSize: '13px',
-                    color: 'var(--text-dark, #1e293b)',
+                    color: 'var(--input-color, var(--text-dark, #1e293b))',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -375,10 +407,10 @@ export default function CreateLedgerModal({
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                    border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                     background: 'var(--input-bg, rgba(255,255,255,0.8))',
                     fontSize: '13px',
-                    color: 'var(--text-dark, #1e293b)',
+                    color: 'var(--input-color, var(--text-dark, #1e293b))',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -400,10 +432,10 @@ export default function CreateLedgerModal({
                   width: '100%',
                   padding: '10px 14px',
                   borderRadius: '12px',
-                  border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                  border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                   background: 'var(--input-bg, rgba(255,255,255,0.8))',
                   fontSize: '13px',
-                  color: 'var(--text-dark, #1e293b)',
+                  color: 'var(--input-color, var(--text-dark, #1e293b))',
                   outline: 'none',
                   boxSizing: 'border-box',
                   fontFamily: 'inherit',
@@ -427,10 +459,10 @@ export default function CreateLedgerModal({
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                    border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                     background: 'var(--input-bg, rgba(255,255,255,0.8))',
                     fontSize: '13px',
-                    color: 'var(--text-dark, #1e293b)',
+                    color: 'var(--input-color, var(--text-dark, #1e293b))',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -449,10 +481,10 @@ export default function CreateLedgerModal({
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    border: '1px solid var(--glass-border, rgba(0,0,0,0.15))',
+                    border: '1px solid var(--input-border, var(--glass-border, rgba(0,0,0,0.15)))',
                     background: 'var(--input-bg, rgba(255,255,255,0.8))',
                     fontSize: '13px',
-                    color: 'var(--text-dark, #1e293b)',
+                    color: 'var(--input-color, var(--text-dark, #1e293b))',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -470,7 +502,7 @@ export default function CreateLedgerModal({
               alignItems: 'center',
               justifyContent: 'flex-end',
               gap: '12px',
-              background: 'rgba(0,0,0,0.02)'
+              background: 'var(--glass-card-bg, rgba(0,0,0,0.02))'
             }}
           >
             <button
@@ -496,8 +528,14 @@ export default function CreateLedgerModal({
                 gap: '8px'
               }}
             >
-              {loading ? <Loader2 size={16} className="spin" /> : <Plus size={16} />}
-              {loading ? 'Creating...' : 'Create Ledger'}
+              {loading ? (
+                <Loader2 size={16} className="spin" />
+              ) : isEdit ? (
+                <Check size={16} />
+              ) : (
+                <Plus size={16} />
+              )}
+              {loading ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save Changes' : 'Create Ledger')}
             </button>
           </div>
         </form>

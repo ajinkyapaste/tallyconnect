@@ -10,7 +10,7 @@ import {
   ChevronDown, Inbox, Upload,
   Star, Sparkles, Bot, Pin, Move, ExternalLink, MessageSquare, Send, EyeOff, MoreVertical, Mic,
   Megaphone, LayoutGrid, AlertTriangle, Shield, ShieldCheck, Sliders, Copy, Key,
-  List, User, ShieldAlert, Crown, Gift, MapPin, Palette
+  List, User, ShieldAlert, Crown, Gift, MapPin, Palette, Edit3
 } from 'lucide-react';
 import './index.css';
 import Login from './Login';
@@ -3898,6 +3898,7 @@ const LedgerList = ({ companyGuid, externalQuery, setCurrentTab, onNewSale }) =>
   const [reminderModalOpen, setReminderModalOpen] = useState(false);
   const [reminderParty, setReminderParty] = useState(null);
   const [showCreateLedgerModal, setShowCreateLedgerModal] = useState(false);
+  const [editLedgerTarget, setEditLedgerTarget] = useState(null);
 
   // Individual Ledger Records drag, pin, and hide states
   const [ledgerOrder, setLedgerOrder] = useState(() => {
@@ -4834,7 +4835,7 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
           <button className="btn-secondary" onClick={shareList} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }} title="Share a summary of this view">
             <Share2 size={16} /> Share
           </button>
-          <button className="btn-primary" onClick={() => setShowCreateLedgerModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }} title="Create a new ledger account">
+          <button className="btn-primary" onClick={() => { setEditLedgerTarget(null); setShowCreateLedgerModal(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }} title="Create a new ledger account">
             <Plus size={16} /> Create Ledger
           </button>
         </div>
@@ -5400,6 +5401,17 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
                 <button className="btn-secondary" onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1', justifyContent: 'center' }} title="Print this party">
                   <FileText size={15} /> Print
                 </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setEditLedgerTarget(dRow || detail);
+                    setShowCreateLedgerModal(true);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1', justifyContent: 'center' }}
+                  title="Edit or change this ledger account details"
+                >
+                  <Edit3 size={15} /> Edit
+                </button>
                 {onNewSale && (
                   <button className="btn-primary" onClick={() => handleNewSale(dRow?.name || detail.name)} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1', justifyContent: 'center' }} title="Create a Sales voucher for this party">
                     <Plus size={15} /> New Sale
@@ -5467,7 +5479,21 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
 
                   {dRow && (
                     <>
-                      <div className="block-title">Ledger Information</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div className="block-title" style={{ margin: 0 }}>Ledger Information</div>
+                        <button
+                          type="button"
+                          className="cv-change-btn"
+                          onClick={() => {
+                            setEditLedgerTarget(dRow || detail);
+                            setShowCreateLedgerModal(true);
+                          }}
+                          style={{ padding: '4px 10px', fontSize: '12px' }}
+                          title="Change ledger fields"
+                        >
+                          <Edit3 size={13} /> Change
+                        </button>
+                      </div>
                       <div style={{ background: 'var(--glass-bg, rgba(255,255,255,0.55))', borderRadius: '16px', padding: '2px 16px', border: '1px solid var(--glass-border, rgba(0,0,0,0.07))' }}>
                         <div className="info-row">
                           <span className="info-label"><Tag size={14} /> Name</span>
@@ -5906,6 +5932,20 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
               <span>Open</span>
             </button>
 
+            <button
+              type="button"
+              className="item-popover-action-btn"
+              onClick={() => {
+                const target = menuLedger;
+                setMenuLedger(null);
+                setEditLedgerTarget(target);
+                setShowCreateLedgerModal(true);
+              }}
+            >
+              <Edit3 size={18} style={{ color: '#0ea5e9' }} />
+              <span>Edit Ledger Details</span>
+            </button>
+
 
 
             <button
@@ -5977,14 +6017,24 @@ Pending bills: ${inr(pending)} • Transactions: ${dEntries.length} • Items: $
         companyGuid={companyGuid}
       />
 
-      {/* Create Ledger Modal */}
+      {/* Create / Edit Ledger Modal */}
       <CreateLedgerModal
         isOpen={showCreateLedgerModal}
-        onClose={() => setShowCreateLedgerModal(false)}
+        onClose={() => {
+          setShowCreateLedgerModal(false);
+          setEditLedgerTarget(null);
+        }}
         companyGuid={companyGuid}
-        onSuccess={(created) => {
-          setFeed(`Ledger "${created.name}" created successfully!`);
+        ledgerToEdit={editLedgerTarget}
+        onSuccess={(saved) => {
+          const isEdit = Boolean(editLedgerTarget);
+          setFeed(`Ledger "${saved.name}" ${isEdit ? 'updated' : 'created'} successfully!`);
           refresh();
+          if (isEdit && detail) {
+            setDRow((prev) => ({ ...prev, ...saved }));
+            setDetail((prev) => ({ ...prev, ...saved }));
+          }
+          setEditLedgerTarget(null);
         }}
       />
     </div>

@@ -123,6 +123,7 @@ export default function GlassSelect({
 
   const isDarkMode = typeof document !== 'undefined' && (
     document.documentElement.getAttribute('data-theme') === 'dark' ||
+    document.documentElement.getAttribute('data-dark-bg') === '1' ||
     document.documentElement.classList.contains('dark') ||
     document.body.classList.contains('dark')
   );

@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, X, HelpCircle, Check, CheckCircle2,
   AlertCircle, Building2, Laptop, ChevronDown, ChevronUp, Mail,
   Globe, Percent, Trash2, CreditCard, Wallet, FileText, Sparkles, Sliders,
-  ArrowLeftRight
+  ArrowLeftRight, Package, Clock, Edit3
 } from 'lucide-react';
 import {
   api,
@@ -187,6 +187,16 @@ export const CreateVoucherWizard = ({
 }) => {
   // Current step in the 4-step wizard: 1 | 2 | 3 | 4
   const [currentStep, setCurrentStep] = useState(1);
+  const [maxVisitedStep, setMaxVisitedStep] = useState(1);
+
+  useEffect(() => {
+    setMaxVisitedStep((prev) => Math.max(prev, currentStep));
+  }, [currentStep]);
+
+  useEffect(() => {
+    setCurrentStep(1);
+    setMaxVisitedStep(1);
+  }, [voucherType]);
   const [showHelp, setShowHelp] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState('faq-1');
   const [showAddPartyModal, setShowAddPartyModal] = useState(false);
@@ -312,6 +322,9 @@ export const CreateVoucherWizard = ({
     setPaymentRef('');
     if (!['Sales', 'Purchase'].includes(nextType)) setPayByDate('');
     setPaymentMode(nextType === 'Receipt' || nextType === 'Payment' ? 'CASH' : 'UNPAID');
+    const isSupplierType = nextType === 'Purchase' || nextType === 'Payment';
+    setPartyTypeOption(isSupplierType ? 'supplier' : 'customer');
+    setNewPartyGroup(isSupplierType ? 'Sundry Creditors' : 'Sundry Debtors');
     if (nextType === 'Contra') {
       if (cashBankAccounts.length > 0) {
         setSelectedParty(cashBankAccounts[0]);
@@ -321,11 +334,27 @@ export const CreateVoucherWizard = ({
     setIsTypeDropdownOpen(false);
   };
 
-  // Add Party Form State
+  // Dark mode detector
+  const isDark = typeof document !== 'undefined' && (
+    document.documentElement.getAttribute('data-dark-bg') === '1' ||
+    document.documentElement.getAttribute('data-theme') === 'dark' ||
+    document.body.classList.contains('dark')
+  );
+
+  // Add Party Form State (Customer vs Supplier)
+  const [partyTypeOption, setPartyTypeOption] = useState(() => (initialVoucher?.voucher_type || initialType) === 'Purchase' || (initialVoucher?.voucher_type || initialType) === 'Payment' ? 'supplier' : 'customer');
   const [newPartyName, setNewPartyName] = useState('');
-  const [newPartyGroup, setNewPartyGroup] = useState('Sundry Debtors');
+  const [newPartyGroup, setNewPartyGroup] = useState(() => (initialVoucher?.voucher_type || initialType) === 'Purchase' || (initialVoucher?.voucher_type || initialType) === 'Payment' ? 'Sundry Creditors' : 'Sundry Debtors');
   const [newPartyState, setNewPartyState] = useState('Maharashtra');
   const [newPartyPhone, setNewPartyPhone] = useState('');
+
+  // Quick Add Item Modal State
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemRate, setNewItemRate] = useState('');
+  const [newItemUnit, setNewItemUnit] = useState('PCS');
+  const [newItemGstRate, setNewItemGstRate] = useState(18);
+  const [activeItemIndexForModal, setActiveItemIndexForModal] = useState(null);
 
   // Local list of parties
   const [localParties, setLocalParties] = useState([]);
@@ -511,7 +540,7 @@ export const CreateVoucherWizard = ({
     return clean.charAt(0).toUpperCase();
   };
 
-  // Add Item to list
+  // Add Item to list (Starts empty - no hardcoded or default item)
   const handleAddItem = (preset) => {
     if (preset) {
       setItems((prev) => [
@@ -522,16 +551,16 @@ export const CreateVoucherWizard = ({
           rate: preset.rate,
           unit: preset.unit || 'PCS',
           discount_pct: 0,
-          tax_rate: preset.tax_rate || 18
+          tax_rate: preset.tax_rate ?? 18
         }
       ]);
     } else {
       setItems((prev) => [
         ...prev,
         {
-          stock_item_name: availableStockItems[0]?.name || 'Standard Item',
+          stock_item_name: '',
           quantity: 1,
-          rate: availableStockItems[0]?.rate || 1000,
+          rate: '',
           unit: 'PCS',
           discount_pct: 0,
           tax_rate: 18
@@ -564,15 +593,20 @@ export const CreateVoucherWizard = ({
     });
   };
 
-  // Save new party
-  // Save new party
+  // Save new party (Customer / Sundry Debtors OR Supplier / Sundry Creditors)
   const handleSaveNewParty = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    const inputEl = document.querySelector('input[placeholder*="FitLife"]');
-    const name = newPartyName.trim() || inputEl?.value?.trim() || 'FitLife Sports Club (Bandra)';
+    const isSupplier = partyTypeOption === 'supplier';
+    const group = isSupplier ? 'Sundry Creditors' : 'Sundry Debtors';
+    const name = newPartyName.trim();
+    if (!name) {
+      showToast('Please enter a party name', 'error');
+      return;
+    }
     const newEntry = {
       name,
-      parent_group: newPartyGroup,
+      parent_group: group,
+      parent: group,
       state: newPartyState,
       phone: newPartyPhone,
       closing_balance: 0
@@ -580,9 +614,57 @@ export const CreateVoucherWizard = ({
     setLocalParties((prev) => [newEntry, ...prev]);
     setSelectedParty(newEntry.name);
     setShowAddPartyModal(false);
-    showToast(`Added ${newEntry.name} to parties!`);
+    showToast(`Added ${isSupplier ? 'Supplier' : 'Customer'} "${newEntry.name}"!`);
     setNewPartyName('');
     setNewPartyPhone('');
+  };
+
+  // Quick save new stock item
+  const handleSaveNewItem = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const name = newItemName.trim();
+    if (!name) {
+      showToast('Please enter an item name', 'error');
+      return;
+    }
+    const rate = Number(newItemRate) || 0;
+    const taxRate = Number(newItemGstRate) || 0;
+    const unit = newItemUnit || 'PCS';
+    const newStockItem = {
+      name,
+      rate,
+      unit,
+      tax_rate: taxRate
+    };
+
+    setAvailableStockItems((prev) => [newStockItem, ...prev.filter((i) => i.name !== name)]);
+
+    if (activeItemIndexForModal !== null && activeItemIndexForModal < items.length) {
+      handleUpdateItem(activeItemIndexForModal, 'stock_item_name', name);
+      handleUpdateItem(activeItemIndexForModal, 'rate', rate);
+      handleUpdateItem(activeItemIndexForModal, 'unit', unit);
+      handleUpdateItem(activeItemIndexForModal, 'tax_rate', taxRate);
+    } else {
+      setItems((prev) => [
+        ...prev,
+        {
+          stock_item_name: name,
+          quantity: 1,
+          rate,
+          unit,
+          discount_pct: 0,
+          tax_rate: taxRate
+        }
+      ]);
+    }
+
+    setShowAddItemModal(false);
+    setActiveItemIndexForModal(null);
+    setNewItemName('');
+    setNewItemRate('');
+    setNewItemUnit('PCS');
+    setNewItemGstRate(18);
+    showToast(`Added item "${name}"!`);
   };
 
   // Validate and advance step
@@ -1687,12 +1769,13 @@ export const CreateVoucherWizard = ({
               {wizardSteps.map((s) => {
                 const isActive = currentStep === s.step;
                 const isPassed = currentStep > s.step;
+                const isClickable = s.step <= maxVisitedStep;
 
                 return (
                   <div
                     key={s.step}
                     onClick={() => {
-                      if (s.step < currentStep) setCurrentStep(s.step);
+                      if (isClickable) setCurrentStep(s.step);
                     }}
                     style={{
                       display: 'flex',
@@ -1700,17 +1783,19 @@ export const CreateVoucherWizard = ({
                       alignItems: 'center',
                       position: 'relative',
                       zIndex: 1,
-                      cursor: s.step < currentStep ? 'pointer' : 'default'
+                      cursor: isClickable ? 'pointer' : 'default',
+                      opacity: isClickable || isActive ? 1 : 0.65
                     }}
+                    title={isClickable ? `Jump to ${s.label}` : `${s.label} (complete previous steps first)`}
                   >
                     <div
                       style={{
                         width: '34px',
                         height: '34px',
                         borderRadius: '50%',
-                        background: isActive ? 'var(--primary-color, #2563eb)' : isPassed ? '#3b82f6' : 'var(--btn-secondary-bg, #ffffff)',
-                        color: isActive || isPassed ? '#ffffff' : 'var(--text-muted, #64748b)',
-                        border: isActive || isPassed ? 'none' : '1px solid var(--glass-border, rgba(0, 0, 0, 0.12))',
+                        background: isActive ? 'var(--primary-color, #2563eb)' : isPassed ? '#3b82f6' : (isClickable ? 'rgba(59, 130, 246, 0.15)' : 'var(--btn-secondary-bg, #ffffff)'),
+                        color: isActive || isPassed ? '#ffffff' : (isClickable ? '#2563eb' : 'var(--text-muted, #64748b)'),
+                        border: isActive || isPassed ? 'none' : (isClickable ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid var(--glass-border, rgba(0, 0, 0, 0.12))'),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1726,9 +1811,8 @@ export const CreateVoucherWizard = ({
                     <span
                       style={{
                         fontSize: '12px',
-                        fontWeight: isActive ? 800 : 600,
-                        color: isActive ? 'var(--text-dark, #0f172a)' : 'var(--text-muted, #64748b)',
-                        transition: 'color 0.2s ease'
+                        fontWeight: isActive ? 800 : (isClickable ? 700 : 600),
+                        color: isActive ? 'var(--text-dark, #0f172a)' : (isClickable ? 'var(--text-dark, #334155)' : 'var(--text-muted, #64748b)')
                       }}
                     >
                       {s.label}
@@ -1772,7 +1856,7 @@ export const CreateVoucherWizard = ({
                   {/* Date * */}
                   <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
-                      <Calendar size={14} color="#64748b" /> Date <span style={{ color: '#e11d48' }}>*</span>
+                      <Calendar size={14} color={isDark ? '#94a3b8' : '#64748b'} /> Date <span style={{ color: '#e11d48' }}>*</span>
                     </label>
                     <input
                       type="date"
@@ -1784,11 +1868,11 @@ export const CreateVoucherWizard = ({
                         width: '100%',
                         padding: '13px 16px',
                         borderRadius: '14px',
-                        border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
-                        background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
+                        border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                        background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, rgba(255, 255, 255, 0.92))',
                         fontSize: '14px',
                         fontWeight: 600,
-                        color: 'var(--input-color, #0f172a)',
+                        color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
                         outline: 'none',
                         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                       }}
@@ -1963,7 +2047,7 @@ export const CreateVoucherWizard = ({
                 {/* Row 3: Note (optional) */}
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
-                    <FileText size={14} color="#64748b" /> Note (optional)
+                    <FileText size={14} color={isDark ? '#94a3b8' : '#64748b'} /> Note (optional)
                   </label>
                   <textarea
                     rows={3}
@@ -1975,10 +2059,10 @@ export const CreateVoucherWizard = ({
                       width: '100%',
                       padding: '12px 16px',
                       borderRadius: '14px',
-                      border: '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
-                      background: 'var(--input-bg, rgba(255, 255, 255, 0.92))',
+                      border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--input-border, rgba(0, 0, 0, 0.1))',
+                      background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, rgba(255, 255, 255, 0.92))',
                       fontSize: '14px',
-                      color: 'var(--input-color, #0f172a)',
+                      color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
                       outline: 'none',
                       resize: 'vertical',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
@@ -2050,25 +2134,13 @@ export const CreateVoucherWizard = ({
                 {activeConfig.isItemized ? (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#334155' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-dark, #334155)' }}>
                         Line Items ({items.length})
                       </span>
                       <button
                         type="button"
                         onClick={() => handleAddItem()}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '6px 14px',
-                          borderRadius: '10px',
-                          border: '1px solid rgba(37, 99, 235, 0.2)',
-                          background: 'rgba(37, 99, 235, 0.06)',
-                          color: '#2563eb',
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
+                        className="cv-add-item-btn"
                       >
                         <Plus size={14} /> Add Item
                       </button>
@@ -2077,30 +2149,23 @@ export const CreateVoucherWizard = ({
                     {/* Items List */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {items.length === 0 ? (
-                        <div style={{
-                          textAlign: 'center',
-                          padding: '32px 20px',
-                          background: 'rgba(255, 255, 255, 0.7)',
-                          borderRadius: '16px',
-                          border: '1px dashed rgba(0, 0, 0, 0.15)'
-                        }}>
+                        <div
+                          className="cv-empty-items-box"
+                          style={{
+                            textAlign: 'center',
+                            padding: '32px 20px',
+                            background: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+                            borderRadius: '16px',
+                            border: isDark ? '1px dashed rgba(255, 255, 255, 0.15)' : '1px dashed rgba(0, 0, 0, 0.15)'
+                          }}
+                        >
                           <p style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>
-                            No items added yet. Click "+ Add Item" above or select a preset below.
+                            No items added yet. Click "+ Add Item" above or pick a suggested item below.
                           </p>
                           <button
                             type="button"
                             onClick={() => handleAddItem()}
-                            className="btn-primary"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '8px 16px',
-                              borderRadius: '10px',
-                              fontSize: '13px',
-                              fontWeight: 700,
-                              cursor: 'pointer'
-                            }}
+                            className="cv-add-item-btn"
                           >
                             <Plus size={14} /> Add First Item
                           </button>
@@ -2115,77 +2180,134 @@ export const CreateVoucherWizard = ({
                             style={{
                               padding: '14px 16px',
                               borderRadius: '18px',
-                              background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
-                              border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))',
+                              background: isDark ? 'rgba(15, 23, 42, 0.7)' : 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
+                              border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))',
                               display: 'flex',
                               flexDirection: 'column',
                               gap: '10px'
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <GlassSelect
-                                  value={it.stock_item_name}
-                                  onChange={(e, val) => handleUpdateItem(idx, 'stock_item_name', val)}
-                                  options={availableStockItems.map((s) => ({
-                                    value: s.name,
-                                    label: s.name,
-                                    subtitle: `₹${s.rate}`
-                                  }))}
-                                  placeholder="Select item..."
-                                  searchable={true}
-                                />
-                              </div>
-
-                              {true && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <GlassSelect
+                                    value={it.stock_item_name}
+                                    onChange={(e, val) => handleUpdateItem(idx, 'stock_item_name', val)}
+                                    options={availableStockItems.map((s) => ({
+                                      value: s.name,
+                                      label: s.name,
+                                      subtitle: `₹${s.rate} • GST ${s.tax_rate ?? 18}%`
+                                    }))}
+                                    placeholder="Select or enter item name..."
+                                    searchable={true}
+                                  />
+                                </div>
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveItem(idx)}
-                                  style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                                  onClick={() => {
+                                    setActiveItemIndexForModal(idx);
+                                    setShowAddItemModal(true);
+                                  }}
+                                  className="cv-btn-secondary"
+                                  style={{
+                                    width: '38px',
+                                    height: '38px',
+                                    flexShrink: 0,
+                                    borderRadius: '10px',
+                                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
+                                    background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.95)',
+                                    color: isDark ? '#60a5fa' : '#2563eb',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Add New Stock Item"
                                 >
-                                  <Trash2 size={16} />
+                                  <Plus size={16} />
                                 </button>
-                              )}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveItem(idx)}
+                                style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                                title="Delete item"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1.2fr 1.4fr', gap: '8px' }}>
                               <div>
-                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Qty</span>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>Qty</span>
                                 <input
                                   type="number"
                                   min="1"
                                   value={it.quantity}
                                   onChange={(e) => handleUpdateItem(idx, 'quantity', e.target.value)}
+                                  className="cv-input"
                                   style={{
                                     width: '100%',
-                                    padding: '6px 8px',
+                                    padding: '7px 8px',
                                     borderRadius: '8px',
-                                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
+                                    background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                                    color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
                                     fontSize: '13px',
                                     fontWeight: 700
                                   }}
                                 />
                               </div>
                               <div>
-                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Rate (₹)</span>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>Rate (₹)</span>
                                 <input
                                   type="number"
                                   min="0"
+                                  placeholder="0.00"
                                   value={it.rate}
                                   onChange={(e) => handleUpdateItem(idx, 'rate', e.target.value)}
+                                  className="cv-input"
                                   style={{
                                     width: '100%',
-                                    padding: '6px 8px',
+                                    padding: '7px 8px',
                                     borderRadius: '8px',
-                                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
+                                    background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                                    color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
                                     fontSize: '13px',
                                     fontWeight: 700
                                   }}
                                 />
                               </div>
+                              <div>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>GST %</span>
+                                <select
+                                  value={it.tax_rate ?? 18}
+                                  onChange={(e) => handleUpdateItem(idx, 'tax_rate', Number(e.target.value))}
+                                  className="cv-input"
+                                  style={{
+                                    width: '100%',
+                                    padding: '7px 6px',
+                                    borderRadius: '8px',
+                                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
+                                    background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                                    color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <option value={0}>0% (Nil)</option>
+                                  <option value={5}>5%</option>
+                                  <option value={12}>12%</option>
+                                  <option value={18}>18%</option>
+                                  <option value={28}>28%</option>
+                                </select>
+                              </div>
                               <div style={{ textAlign: 'right' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Amount</span>
-                                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', paddingTop: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>Amount</span>
+                                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-dark, #0f172a)', paddingTop: '6px' }}>
                                   {formatInr(lineAmount)}
                                 </div>
                               </div>
@@ -2202,19 +2324,20 @@ export const CreateVoucherWizard = ({
                           key={idx}
                           type="button"
                           onClick={() => handleAddItem(s)}
+                          className="cv-item-chip"
                           style={{
                             padding: '4px 10px',
                             borderRadius: '999px',
-                            background: 'rgba(255, 255, 255, 0.7)',
-                            border: '1px solid rgba(0, 0, 0, 0.08)',
+                            background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.7)',
+                            border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.08)',
                             fontSize: '12px',
                             fontWeight: 600,
-                            color: '#475569',
+                            color: isDark ? '#f8fafc' : '#475569',
                             whiteSpace: 'nowrap',
                             cursor: 'pointer'
                           }}
                         >
-                          + {s.name}
+                          + {s.name} ({s.tax_rate ?? 18}%)
                         </button>
                       ))}
                     </div>
@@ -2225,28 +2348,34 @@ export const CreateVoucherWizard = ({
                       style={{
                         padding: '16px 20px',
                         borderRadius: '20px',
-                        background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
-                        border: '1px solid var(--glass-border, rgba(255, 255, 255, 0.95))',
+                        background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
+                        border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid var(--glass-border, rgba(255, 255, 255, 0.95))',
                         marginTop: '8px'
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#64748b' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted, #64748b)' }}>
                         <span>Subtotal</span>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{formatInr(itemCalculations.subtotal)}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.subtotal)}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#64748b' }}>
-                        <span>GST (18%)</span>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>{formatInr(itemCalculations.totalTax)}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted, #64748b)' }}>
+                        <span>Total Tax (GST)</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.totalTax)}</span>
                       </div>
-                      {itemCalculations.roundOff !== 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#64748b' }}>
-                          <span>Round off</span>
-                          <span style={{ fontWeight: 700, color: '#0f172a' }}>{formatInr(itemCalculations.roundOff)}</span>
+                      {itemCalculations.totalTax > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: 'var(--text-muted, #64748b)', paddingLeft: '8px' }}>
+                          <span>↳ CGST ({formatInr(itemCalculations.cgst)}) + SGST ({formatInr(itemCalculations.sgst)})</span>
+                          <span></span>
                         </div>
                       )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid rgba(0, 0, 0, 0.08)', fontSize: '17px', fontWeight: 900, color: '#0f172a' }}>
+                      {itemCalculations.roundOff !== 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted, #64748b)' }}>
+                          <span>Round off</span>
+                          <span style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.roundOff)}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.08)', fontSize: '17px', fontWeight: 900, color: 'var(--text-dark, #0f172a)' }}>
                         <span>Total Amount</span>
-                        <span style={{ color: '#be123c' }}>{formatInr(itemCalculations.grandTotal)}</span>
+                        <span style={{ color: activeConfig.color || '#be123c' }}>{formatInr(itemCalculations.grandTotal)}</span>
                       </div>
                     </div>
                   </>
@@ -2297,10 +2426,10 @@ export const CreateVoucherWizard = ({
                             padding: '16px 20px 16px 42px',
                             borderRadius: '16px',
                             border: `2px solid ${activeConfig.color}40`,
-                            background: 'var(--input-bg, #ffffff)',
+                            background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
                             fontSize: '24px',
                             fontWeight: 900,
-                            color: 'var(--input-color, #0f172a)',
+                            color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
                             outline: 'none',
                             boxShadow: `0 4px 16px ${activeConfig.color}15`
                           }}
@@ -2343,11 +2472,12 @@ export const CreateVoucherWizard = ({
                                 padding: '10px 14px',
                                 borderRadius: '12px',
                                 border: isSel ? `2px solid ${m.color}` : '1px solid var(--glass-border, rgba(0,0,0,0.1))',
-                                background: isSel ? `${m.color}15` : 'var(--glass-card-bg, rgba(255,255,255,0.8))',
+                                background: isSel ? `${m.color}22` : (isDark ? 'rgba(15, 23, 42, 0.65)' : 'var(--glass-card-bg, rgba(255,255,255,0.8))'),
                                 cursor: 'pointer',
                                 fontWeight: 700,
                                 fontSize: '13px',
                                 color: isSel ? m.color : 'var(--text-dark, #334155)',
+                                boxShadow: isSel ? `0 4px 12px ${m.color}25` : 'none',
                                 transition: 'all 0.15s ease'
                               }}
                             >
@@ -2448,10 +2578,10 @@ export const CreateVoucherWizard = ({
                             padding: '16px 20px 16px 42px',
                             borderRadius: '16px',
                             border: '2px solid rgba(13, 148, 136, 0.35)',
-                            background: 'var(--input-bg, #ffffff)',
+                            background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
                             fontSize: '24px',
                             fontWeight: 900,
-                            color: 'var(--input-color, #0f172a)',
+                            color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
                             outline: 'none',
                             boxShadow: '0 4px 16px rgba(13, 148, 136, 0.08)'
                           }}
@@ -2464,8 +2594,8 @@ export const CreateVoucherWizard = ({
                       style={{
                         padding: '20px',
                         borderRadius: '20px',
-                        background: 'rgba(240, 253, 250, 0.85)',
-                        border: '1px solid rgba(204, 251, 241, 0.95)',
+                        background: isDark ? 'rgba(13, 148, 136, 0.12)' : 'rgba(240, 253, 250, 0.85)',
+                        border: isDark ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(204, 251, 241, 0.95)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -2474,10 +2604,12 @@ export const CreateVoucherWizard = ({
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#be123c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>Cr</div>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: '#be123c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>
+                          {/cash/i.test(selectedParty) ? <Wallet size={18} /> : <Building2 size={18} />}
+                        </div>
                         <div>
-                          <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>SOURCE (OUT)</div>
-                          <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{selectedParty || 'From Account'}</div>
+                          <div style={{ fontSize: '11px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>SOURCE (Cr • OUT)</div>
+                          <div style={{ fontSize: '15px', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a' }}>{selectedParty || 'From Account'}</div>
                         </div>
                       </div>
 
@@ -2485,16 +2617,18 @@ export const CreateVoucherWizard = ({
                         <span style={{ fontSize: '14px', fontWeight: 900, color: '#0d9488' }}>
                           {contraAmount ? formatInr(contraAmount) : '₹0.00'}
                         </span>
-                        <div style={{ padding: '4px 14px', borderRadius: '999px', background: 'rgba(13, 148, 136, 0.15)', color: '#0d9488', fontSize: '11px', fontWeight: 700 }}>
+                        <div style={{ padding: '4px 14px', borderRadius: '999px', background: 'rgba(13, 148, 136, 0.2)', color: '#0d9488', fontSize: '11px', fontWeight: 700 }}>
                           Transfers To ➔
                         </div>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#059669', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>Dr</div>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: '#059669', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>
+                          {/cash/i.test(toAccount) ? <Wallet size={18} /> : <Building2 size={18} />}
+                        </div>
                         <div>
-                          <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>DESTINATION (IN)</div>
-                          <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{toAccount || 'To Account'}</div>
+                          <div style={{ fontSize: '11px', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase' }}>DESTINATION (Dr • IN)</div>
+                          <div style={{ fontSize: '15px', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a' }}>{toAccount || 'To Account'}</div>
                         </div>
                       </div>
                     </div>
@@ -2599,34 +2733,46 @@ export const CreateVoucherWizard = ({
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '10px' }}>
                     Payment Terms &amp; Settlement
                   </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
                     {[
-                      { id: 'UNPAID', label: 'Unpaid / Credit', icon: Wallet },
-                      { id: 'CASH', label: 'Cash', icon: Wallet },
-                      { id: 'BANK', label: 'Bank / UPI', icon: CreditCard }
+                      { id: 'UNPAID', label: 'Unpaid / Credit', icon: FileText, color: '#64748b' },
+                      { id: 'CASH', label: 'Cash in Hand', icon: Wallet, color: '#059669' },
+                      { id: 'BANK', label: 'Bank Account', icon: Building2, color: '#2563eb' },
+                      { id: 'UPI', label: 'UPI Transfer', icon: Sparkles, color: '#7c3aed' },
+                      { id: 'CHEQUE', label: 'Cheque / DD', icon: CreditCard, color: '#d97706' }
                     ].map((m) => {
                       const active = paymentMode === m.id;
+                      const IconComp = m.icon;
                       return (
                         <button
                           key={m.id}
                           type="button"
-                          onClick={() => setPaymentMode(m.id)}
+                          onClick={() => {
+                            setPaymentMode(m.id);
+                            if ((m.id === 'BANK' || m.id === 'UPI' || m.id === 'CHEQUE') && (!bankLedger || /cash/i.test(bankLedger))) {
+                              const bankAcc = cashBankAccounts.find(a => /bank/i.test(a)) || cashBankAccounts[0];
+                              if (bankAcc) setBankLedger(bankAcc);
+                            } else if (m.id === 'CASH' && (!bankLedger || /bank/i.test(bankLedger))) {
+                              const cashAcc = cashBankAccounts.find(a => /cash/i.test(a)) || cashBankAccounts[0];
+                              if (cashAcc) setBankLedger(cashAcc);
+                            }
+                          }}
                           style={{
                             padding: '14px 10px',
                             borderRadius: '16px',
-                            border: active ? '2px solid #1e293b' : '1px solid rgba(0, 0, 0, 0.08)',
-                            background: active ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                            border: active ? `2px solid ${m.color}` : '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))',
+                            background: active ? `${m.color}18` : (isDark ? 'rgba(15, 23, 42, 0.65)' : 'rgba(255, 255, 255, 0.65)'),
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
                             gap: '8px',
                             cursor: 'pointer',
-                            boxShadow: active ? '0 4px 12px rgba(0, 0, 0, 0.08)' : 'none',
+                            boxShadow: active ? `0 4px 14px ${m.color}25` : 'none',
                             transition: 'all 0.15s ease'
                           }}
                         >
-                          <m.icon size={20} color={active ? '#0f172a' : '#64748b'} />
-                          <span style={{ fontSize: '12px', fontWeight: active ? 800 : 600, color: active ? '#0f172a' : '#64748b' }}>
+                          <IconComp size={20} color={active ? m.color : (isDark ? '#cbd5e1' : '#64748b')} />
+                          <span style={{ fontSize: '12px', fontWeight: active ? 800 : 600, color: active ? m.color : 'var(--text-dark, #334155)' }}>
                             {m.label}
                           </span>
                         </button>
@@ -2635,9 +2781,9 @@ export const CreateVoucherWizard = ({
                   </div>
                 </div>
 
-                {paymentMode === 'BANK' && (
+                {(paymentMode === 'BANK' || paymentMode === 'UPI' || paymentMode === 'CHEQUE') && (
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: 'var(--text-dark, #334155)', marginBottom: '8px' }}>
                       Deposit / Settlement Bank Account
                     </label>
                     <GlassSelect
@@ -2707,10 +2853,11 @@ export const CreateVoucherWizard = ({
             )}
 
             {/* =========================================================================
-                CHECK & CONFIRM BEFORE SAVE
+                CHECK & CONFIRM BEFORE SAVE WITH DEDICATED CHANGE BUTTONS
                 ========================================================================= */}
             {((currentStep === 4 && activeConfig.isItemized) || (currentStep === 3 && !activeConfig.isItemized)) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Hero Summary Card */}
                 <div
                   className="glass-panel cv-check-card"
                   style={{
@@ -2727,7 +2874,7 @@ export const CreateVoucherWizard = ({
                       width: '56px',
                       height: '56px',
                       borderRadius: '18px',
-                      background: '#ffffff',
+                      background: 'var(--glass-card-bg, #ffffff)',
                       border: `1px solid ${activeConfig.color}33`,
                       color: activeConfig.color,
                       display: 'flex',
@@ -2740,13 +2887,13 @@ export const CreateVoucherWizard = ({
                     <activeConfig.icon size={26} />
                   </div>
 
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted, #64748b)', marginBottom: '4px' }}>
                     {activeConfig.title} · {voucherDate || 'Date not set'}
                   </div>
-                  <div style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: 900, color: 'var(--text-dark, #0f172a)', letterSpacing: '-0.5px', marginBottom: '4px' }}>
                     {formatInr(voucherType === 'Contra' ? contraAmount : voucherType === 'Receipt' || voucherType === 'Payment' ? amountReceived : itemCalculations.grandTotal)}
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#1e293b', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-dark, #1e293b)', marginBottom: '12px' }}>
                     {voucherType === 'Contra'
                       ? `${selectedParty} ➔ ${toAccount}`
                       : voucherType === 'Journal'
@@ -2760,7 +2907,7 @@ export const CreateVoucherWizard = ({
                   </div>
                 </div>
 
-                {/* Overview Details */}
+                {/* Section 1: Details (Step 1) with "Change" button */}
                 <div
                   className="glass-panel cv-overview-card"
                   style={{
@@ -2770,33 +2917,276 @@ export const CreateVoucherWizard = ({
                     border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
-                    <span style={{ color: '#64748b', fontWeight: 600 }}>Date</span>
-                    <span style={{ color: '#0f172a', fontWeight: 700 }}>{voucherDate}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid var(--glass-border, rgba(0,0,0,0.06))', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Calendar size={16} style={{ color: activeConfig.color }} />
+                      <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-dark, #0f172a)' }}>
+                        {voucherType === 'Contra' ? 'Account Details (Step 1)' : 'Voucher Details (Step 1)'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="cv-change-btn"
+                      onClick={() => setCurrentStep(1)}
+                      title="Change Step 1 details"
+                    >
+                      <Edit3 size={13} /> Change
+                    </button>
                   </div>
-                  {(voucherType === 'Sales' || voucherType === 'Purchase') && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Due Date</span>
-                      <span style={{ color: '#0f172a', fontWeight: 700 }}>{payByDate || '—'}</span>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                      <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Date</span>
+                      <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{voucherDate}</span>
                     </div>
-                  )}
-                  {voucherType !== 'Contra' && voucherType !== 'Journal' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: '13px' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>
-                        {voucherType === 'Receipt' ? 'Amount Received' : voucherType === 'Payment' ? 'Amount Paid' : 'Payment Status'}
-                      </span>
-                      <span style={{ color: '#0f172a', fontWeight: 700 }}>
-                        {voucherType === 'Receipt'
-                          ? `${formatInr(amountReceived)} received`
-                          : voucherType === 'Payment'
-                            ? `${formatInr(amountReceived)} paid`
-                            : `${paymentMode} (${formatInr(amountReceived)} paid)`}
+                    {voucherType === 'Contra' ? (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>From Account</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{selectedParty}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>To Account</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{toAccount}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                        <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>
+                          {voucherType === 'Sales' ? 'Customer' : voucherType === 'Purchase' ? 'Supplier' : voucherType === 'Receipt' ? 'Received From' : voucherType === 'Payment' ? 'Paid To' : 'Party'}
+                        </span>
+                        <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{selectedParty || '—'}</span>
+                      </div>
+                    )}
+                    {(voucherType === 'Sales' || voucherType === 'Purchase') && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                        <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Due Date</span>
+                        <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{payByDate || '—'}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                      <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Reference / Bill No</span>
+                      <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{referenceNo || billNo || 'Auto'}</span>
+                    </div>
+                    {note && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                        <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Note</span>
+                        <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 600, maxWidth: '280px', textAlign: 'right' }}>{note}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 2: Items & Taxes (Step 2 - Only for Sales & Purchase) */}
+                {activeConfig.isItemized && (
+                  <div
+                    className="glass-panel cv-overview-card"
+                    style={{
+                      padding: '16px 20px',
+                      borderRadius: '20px',
+                      background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
+                      border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid var(--glass-border, rgba(0,0,0,0.06))', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Package size={16} style={{ color: activeConfig.color }} />
+                        <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-dark, #0f172a)' }}>
+                          Items ({items.length}) & Taxes (Step 2)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="cv-change-btn"
+                        onClick={() => setCurrentStep(2)}
+                        title="Add, remove, or edit items and rates"
+                      >
+                        <Edit3 size={13} /> Change
+                      </button>
+                    </div>
+
+                    {/* Items Mini List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {items.map((it, idx) => {
+                        const lineSub = (Number(it.quantity) || 0) * (Number(it.rate) || 0);
+                        const disc = Number(it.discount) || 0;
+                        const lineAfterDisc = Math.max(0, lineSub - (lineSub * disc / 100));
+                        const gstRate = Number(it.gstRate ?? (taxBreakdown.cgstRate + taxBreakdown.sgstRate)) || 18;
+                        const lineTotal = lineAfterDisc * (1 + gstRate / 100);
+                        return (
+                          <div
+                            key={it.id || idx}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 12px',
+                              borderRadius: '12px',
+                              background: 'rgba(0, 0, 0, 0.02)',
+                              border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.05))',
+                              fontSize: '13px'
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{it.item_name || 'Unnamed Item'}</div>
+                              <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #64748b)', marginTop: '2px' }}>
+                                {it.quantity || 1} {it.unit || 'PCS'} × {formatInr(it.rate || 0)}
+                                {disc > 0 && ` (-${disc}%)`}
+                                {' · GST '}{gstRate}%
+                              </div>
+                            </div>
+                            <div style={{ fontWeight: 800, color: 'var(--text-dark, #0f172a)' }}>
+                              {formatInr(lineTotal)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Taxes & Subtotal Breakdown */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '8px', borderTop: '1px dashed var(--glass-border, rgba(0,0,0,0.1))', fontSize: '12.5px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted, #64748b)' }}>Subtotal</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.subtotal)}</span>
+                      </div>
+                      {taxType === 'intrastate' ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)' }}>CGST ({taxBreakdown.cgstRate}%)</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.cgst)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)' }}>SGST ({taxBreakdown.sgstRate}%)</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.sgst)}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)' }}>IGST ({taxBreakdown.igstRate}%)</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.igst)}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', fontWeight: 800, fontSize: '13.5px', color: 'var(--text-dark, #0f172a)' }}>
+                        <span>Total Items Value</span>
+                        <span>{formatInr(itemCalculations.grandTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 3: Payment / Transfer / How Paid Card */}
+                <div
+                  className="glass-panel cv-overview-card"
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: '20px',
+                    background: 'var(--glass-card-bg, rgba(255, 255, 255, 0.85))',
+                    border: '1px solid var(--glass-border, rgba(0, 0, 0, 0.08))'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid var(--glass-border, rgba(0,0,0,0.06))', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {voucherType === 'Contra' ? (
+                        <ArrowLeftRight size={16} style={{ color: activeConfig.color }} />
+                      ) : voucherType === 'Receipt' || voucherType === 'Payment' ? (
+                        <Wallet size={16} style={{ color: activeConfig.color }} />
+                      ) : (
+                        <CreditCard size={16} style={{ color: activeConfig.color }} />
+                      )}
+                      <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-dark, #0f172a)' }}>
+                        {voucherType === 'Contra'
+                          ? 'Transfer Details (Step 2)'
+                          : voucherType === 'Receipt' || voucherType === 'Payment'
+                            ? 'How Paid & Account (Step 2)'
+                            : 'Payment & Settlement (Step 3)'}
                       </span>
                     </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '13px' }}>
-                    <span style={{ color: '#64748b', fontWeight: 600 }}>Company</span>
-                    <span style={{ color: '#0f172a', fontWeight: 700 }}>{activeCompanyName}</span>
+                    <button
+                      type="button"
+                      className="cv-change-btn"
+                      onClick={() => setCurrentStep(activeConfig.isItemized ? 3 : 2)}
+                      title="Change payment details"
+                    >
+                      <Edit3 size={13} /> Change
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {voucherType === 'Contra' ? (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Transfer Amount</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 800, fontSize: '14px' }}>{formatInr(contraAmount)}</span>
+                        </div>
+                        {contraChequeNo && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Cheque / Ref No</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{contraChequeNo}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : voucherType === 'Receipt' || voucherType === 'Payment' ? (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>
+                            {voucherType === 'Receipt' ? 'Amount Received' : 'Amount Paid'}
+                          </span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 800, fontSize: '14px' }}>
+                            {formatInr(amountReceived)}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Payment Mode</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{paymentMode}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Account / Ledger</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankLedger || selectedBankLedger || '—'}</span>
+                        </div>
+                        {bankTxnRef && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Cheque / UTR Ref</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankTxnRef}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Payment Method</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{paymentMode}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Amount Settled Now</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 800 }}>{formatInr(amountReceived)}</span>
+                        </div>
+                        {paymentMode !== 'Cash' && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Bank Account / Ledger</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{selectedBankLedger || bankLedger || '—'}</span>
+                          </div>
+                        )}
+                        {bankTxnRef && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Txn / Cheque Ref</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankTxnRef}</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
+                          <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Balance Due</span>
+                          <span style={{
+                            color: itemCalculations.grandTotal - (Number(amountReceived) || 0) > 0 ? '#e11d48' : '#10b981',
+                            fontWeight: 800
+                          }}>
+                            {formatInr(Math.max(0, itemCalculations.grandTotal - (Number(amountReceived) || 0)))}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px', borderTop: '1px solid var(--glass-border, rgba(0,0,0,0.06))', marginTop: '4px' }}>
+                      <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Company</span>
+                      <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{activeCompanyName}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2832,9 +3222,9 @@ export const CreateVoucherWizard = ({
                 flex: 1,
                 padding: '14px 20px',
                 borderRadius: '16px',
-                border: '1px solid var(--btn-secondary-border, rgba(0, 0, 0, 0.1))',
-                background: 'var(--btn-secondary-bg, #ffffff)',
-                color: 'var(--btn-secondary-color, #0f172a)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid var(--btn-secondary-border, rgba(0, 0, 0, 0.1))',
+                background: isDark ? 'rgba(255, 255, 255, 0.12)' : 'var(--btn-secondary-bg, #ffffff)',
+                color: isDark ? '#ffffff' : 'var(--btn-secondary-color, #0f172a)',
                 fontSize: '15px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -2898,14 +3288,16 @@ export const CreateVoucherWizard = ({
       )}
 
       {/* =========================================================================
-          ADD CUSTOMER MODAL (Opened from [+] Button in Step 1)
+          ADD CUSTOMER / SUPPLIER MODAL (Opened from [+] Button in Step 1)
           ========================================================================= */}
       {showAddPartyModal && (
         <div
           style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0, 0, 0, 0.4)',
+            background: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
             zIndex: 100005,
             display: 'flex',
             alignItems: 'center',
@@ -2914,21 +3306,23 @@ export const CreateVoucherWizard = ({
           }}
         >
           <div
-            className="glass-panel"
+            className="glass-panel cv-modal-card"
             style={{
               width: '100%',
-              maxWidth: '420px',
-              background: '#ffffff',
+              maxWidth: '440px',
+              background: isDark ? '#0f172a' : '#ffffff',
               borderRadius: '24px',
               padding: '24px',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)'
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
-                Add New Customer
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                Add New {partyTypeOption === 'supplier' ? 'Supplier / Vendor' : 'Customer'}
               </h3>
               <button
+                type="button"
                 onClick={() => setShowAddPartyModal(false)}
                 style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
               >
@@ -2936,24 +3330,87 @@ export const CreateVoucherWizard = ({
               </button>
             </div>
 
+            {/* Segmented Switcher: Customer vs Supplier */}
+            <div style={{ display: 'flex', gap: '6px', padding: '4px', borderRadius: '14px', background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)', marginBottom: '14px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setPartyTypeOption('customer');
+                  setNewPartyGroup('Sundry Debtors');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 10px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: partyTypeOption === 'customer' ? '#2563eb' : 'transparent',
+                  color: partyTypeOption === 'customer' ? '#ffffff' : (isDark ? '#cbd5e1' : '#475569'),
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <User size={14} /> Customer (Sundry Debtors)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPartyTypeOption('supplier');
+                  setNewPartyGroup('Sundry Creditors');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '8px 10px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: partyTypeOption === 'supplier' ? '#2563eb' : 'transparent',
+                  color: partyTypeOption === 'supplier' ? '#ffffff' : (isDark ? '#cbd5e1' : '#475569'),
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Building2 size={14} /> Supplier (Sundry Creditors)
+              </button>
+            </div>
+
             <form onSubmit={handleSaveNewParty} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
-                  Customer Name *
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
+                  {partyTypeOption === 'supplier' ? 'Supplier / Vendor Name *' : 'Customer Name *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. FitLife Retailers Ltd"
+                  placeholder={partyTypeOption === 'supplier' ? 'e.g. Apex Wholesale Supplies' : 'e.g. FitLife Retailers Ltd'}
                   value={newPartyName}
                   onChange={(e) => setNewPartyName(e.target.value)}
                   className="cv-input"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--input-border, rgba(0,0,0,0.15))', background: 'var(--input-bg, #ffffff)', color: 'var(--input-color, #0f172a)', fontSize: '14px', fontWeight: 600 }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--input-border, rgba(0,0,0,0.15))',
+                    background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                    color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-dark, #475569)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
                   Phone / Mobile
                 </label>
                 <input
@@ -2962,12 +3419,21 @@ export const CreateVoucherWizard = ({
                   value={newPartyPhone}
                   onChange={(e) => setNewPartyPhone(e.target.value)}
                   className="cv-input"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--input-border, rgba(0,0,0,0.15))', background: 'var(--input-bg, #ffffff)', color: 'var(--input-color, #0f172a)', fontSize: '14px', fontWeight: 600 }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--input-border, rgba(0,0,0,0.15))',
+                    background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                    color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-dark, #475569)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
                   State
                 </label>
                 <GlassSelect
@@ -2984,15 +3450,207 @@ export const CreateVoucherWizard = ({
                   type="button"
                   className="cv-btn-secondary"
                   onClick={() => setShowAddPartyModal(false)}
-                  style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid var(--btn-secondary-border, rgba(0,0,0,0.1))', background: 'var(--btn-secondary-bg, #f8fafc)', color: 'var(--btn-secondary-color, #0f172a)', fontWeight: 700, cursor: 'pointer' }}
+                  style={{
+                    flex: 1,
+                    padding: '11px',
+                    borderRadius: '12px',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--btn-secondary-border, rgba(0,0,0,0.1))',
+                    background: isDark ? 'rgba(255, 255, 255, 0.12)' : 'var(--btn-secondary-bg, #f8fafc)',
+                    color: isDark ? '#ffffff' : 'var(--btn-secondary-color, #0f172a)',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ flex: 1.5, padding: '10px', borderRadius: '12px', border: 'none', background: '#2563eb', color: '#ffffff', fontWeight: 800, cursor: 'pointer' }}
+                  style={{
+                    flex: 1.5,
+                    padding: '11px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)'
+                  }}
                 >
-                  Save Customer
+                  ✓ Save {partyTypeOption === 'supplier' ? 'Supplier' : 'Customer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          ADD STOCK ITEM MODAL (Opened from [+] Button in Item Row)
+          ========================================================================= */}
+      {showAddItemModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 100005,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div
+            className="glass-panel cv-modal-card"
+            style={{
+              width: '100%',
+              maxWidth: '440px',
+              background: isDark ? '#0f172a' : '#ffffff',
+              borderRadius: '24px',
+              padding: '24px',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Package size={20} color="#2563eb" />
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                  Add New Stock Item
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddItemModal(false);
+                  setActiveItemIndexForModal(null);
+                }}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewItem} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
+                  Item Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Wireless Ergonomic Mouse"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="cv-input"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--input-border, rgba(0,0,0,0.15))',
+                    background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                    color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
+                    Standard Rate (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="0.00"
+                    value={newItemRate}
+                    onChange={(e) => setNewItemRate(e.target.value)}
+                    className="cv-input"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--input-border, rgba(0,0,0,0.15))',
+                      background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'var(--input-bg, #ffffff)',
+                      color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
+                      fontSize: '14px',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
+                    Unit
+                  </label>
+                  <GlassSelect
+                    value={newItemUnit}
+                    onChange={(e, val) => setNewItemUnit(val)}
+                    options={['PCS', 'BOX', 'KG', 'MTR', 'LTR', 'SET', 'PAIR', 'NOS', 'PKT']}
+                    placeholder="Unit"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '6px' }}>
+                  GST Tax Rate
+                </label>
+                <GlassSelect
+                  value={String(newItemGstRate)}
+                  onChange={(e, val) => setNewItemGstRate(Number(val))}
+                  options={[
+                    { value: '0', label: '0% (Nil / Exempt)' },
+                    { value: '5', label: '5% (Essential Goods)' },
+                    { value: '12', label: '12% (Standard Low)' },
+                    { value: '18', label: '18% (Standard / Services)' },
+                    { value: '28', label: '28% (Luxury / High)' }
+                  ]}
+                  placeholder="Select GST rate..."
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  className="cv-btn-secondary"
+                  onClick={() => {
+                    setShowAddItemModal(false);
+                    setActiveItemIndexForModal(null);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '11px',
+                    borderRadius: '12px',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid var(--btn-secondary-border, rgba(0,0,0,0.1))',
+                    background: isDark ? 'rgba(255, 255, 255, 0.12)' : 'var(--btn-secondary-bg, #f8fafc)',
+                    color: isDark ? '#ffffff' : 'var(--btn-secondary-color, #0f172a)',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1.5,
+                    padding: '11px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)'
+                  }}
+                >
+                  ✓ Save Stock Item
                 </button>
               </div>
             </form>
