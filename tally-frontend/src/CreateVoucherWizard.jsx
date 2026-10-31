@@ -185,6 +185,11 @@ export const CreateVoucherWizard = ({
   showToast = () => {},
   initialVoucher = null
 }) => {
+  // Voucher Type Selection - initialized first to avoid TDZ
+  const [voucherType, setVoucherType] = useState(initialType);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const typeDropdownRef = useRef(null);
+
   // Current step in the 4-step wizard: 1 | 2 | 3 | 4
   const [currentStep, setCurrentStep] = useState(1);
   const [maxVisitedStep, setMaxVisitedStep] = useState(1);
@@ -197,14 +202,10 @@ export const CreateVoucherWizard = ({
     setCurrentStep(1);
     setMaxVisitedStep(1);
   }, [voucherType]);
+
   const [showHelp, setShowHelp] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState('faq-1');
   const [showAddPartyModal, setShowAddPartyModal] = useState(false);
-
-  // Voucher Type Selection
-  const [voucherType, setVoucherType] = useState(initialType);
-  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
-  const typeDropdownRef = useRef(null);
 
   // Close type dropdown on click outside
   useEffect(() => {
@@ -1699,26 +1700,6 @@ export const CreateVoucherWizard = ({
               <button
                 type="button"
                 className="cv-header-btn"
-                onClick={() => setShowFieldSettingsModal(true)}
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
-                  transition: 'all 0.15s ease'
-                }}
-                title="Customize Entry Fields"
-              >
-                <Sliders size={18} />
-              </button>
-
-              <button
-                type="button"
-                className="cv-header-btn"
                 onClick={() => setShowHelp(true)}
                 style={{
                   width: '42px',
@@ -1873,6 +1854,7 @@ export const CreateVoucherWizard = ({
                         fontSize: '14px',
                         fontWeight: 600,
                         color: isDark ? '#f8fafc' : 'var(--input-color, #0f172a)',
+                        colorScheme: isDark ? 'dark' : 'light',
                         outline: 'none',
                         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                       }}
@@ -2008,6 +1990,7 @@ export const CreateVoucherWizard = ({
                             fontSize: '14px',
                             fontWeight: 600,
                             color: 'var(--input-color, #0f172a)',
+                            colorScheme: isDark ? 'dark' : 'light',
                             outline: 'none',
                             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
                           }}
@@ -2966,7 +2949,7 @@ export const CreateVoucherWizard = ({
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
                       <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Reference / Bill No</span>
-                      <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{referenceNo || billNo || 'Auto'}</span>
+                      <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{billNo || 'Auto'}</span>
                     </div>
                     {note && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
@@ -3009,9 +2992,9 @@ export const CreateVoucherWizard = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
                       {items.map((it, idx) => {
                         const lineSub = (Number(it.quantity) || 0) * (Number(it.rate) || 0);
-                        const disc = Number(it.discount) || 0;
+                        const disc = Number(it.discount_pct) || 0;
                         const lineAfterDisc = Math.max(0, lineSub - (lineSub * disc / 100));
-                        const gstRate = Number(it.gstRate ?? (taxBreakdown.cgstRate + taxBreakdown.sgstRate)) || 18;
+                        const gstRate = Number(it.tax_rate) || 18;
                         const lineTotal = lineAfterDisc * (1 + gstRate / 100);
                         return (
                           <div
@@ -3028,7 +3011,7 @@ export const CreateVoucherWizard = ({
                             }}
                           >
                             <div>
-                              <div style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{it.item_name || 'Unnamed Item'}</div>
+                              <div style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{it.stock_item_name || 'Unnamed Item'}</div>
                               <div style={{ fontSize: '11.5px', color: 'var(--text-muted, #64748b)', marginTop: '2px' }}>
                                 {it.quantity || 1} {it.unit || 'PCS'} × {formatInr(it.rate || 0)}
                                 {disc > 0 && ` (-${disc}%)`}
@@ -3049,21 +3032,26 @@ export const CreateVoucherWizard = ({
                         <span style={{ color: 'var(--text-muted, #64748b)' }}>Subtotal</span>
                         <span style={{ fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.subtotal)}</span>
                       </div>
-                      {taxType === 'intrastate' ? (
+                      {itemCalculations.totalTax > 0 && (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--text-muted, #64748b)' }}>CGST ({taxBreakdown.cgstRate}%)</span>
+                            <span style={{ color: 'var(--text-muted, #64748b)' }}>CGST</span>
                             <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.cgst)}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--text-muted, #64748b)' }}>SGST ({taxBreakdown.sgstRate}%)</span>
+                            <span style={{ color: 'var(--text-muted, #64748b)' }}>SGST</span>
                             <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.sgst)}</span>
                           </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: 'var(--text-muted, #64748b)' }}>Total Tax</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.totalTax)}</span>
+                          </div>
                         </>
-                      ) : (
+                      )}
+                      {itemCalculations.roundOff !== 0 && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted, #64748b)' }}>IGST ({taxBreakdown.igstRate}%)</span>
-                          <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.igst)}</span>
+                          <span style={{ color: 'var(--text-muted, #64748b)' }}>Round Off</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-dark, #0f172a)' }}>{formatInr(itemCalculations.roundOff)}</span>
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', fontWeight: 800, fontSize: '13.5px', color: 'var(--text-dark, #0f172a)' }}>
@@ -3118,10 +3106,10 @@ export const CreateVoucherWizard = ({
                           <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Transfer Amount</span>
                           <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 800, fontSize: '14px' }}>{formatInr(contraAmount)}</span>
                         </div>
-                        {contraChequeNo && (
+                        {instrumentNo && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
                             <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Cheque / Ref No</span>
-                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{contraChequeNo}</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{instrumentNo}</span>
                           </div>
                         )}
                       </>
@@ -3141,12 +3129,12 @@ export const CreateVoucherWizard = ({
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
                           <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Account / Ledger</span>
-                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankLedger || selectedBankLedger || '—'}</span>
+                          <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankLedger || '—'}</span>
                         </div>
-                        {bankTxnRef && (
+                        {paymentRef && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
                             <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Cheque / UTR Ref</span>
-                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankTxnRef}</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{paymentRef}</span>
                           </div>
                         )}
                       </>
@@ -3163,13 +3151,13 @@ export const CreateVoucherWizard = ({
                         {paymentMode !== 'Cash' && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
                             <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Bank Account / Ledger</span>
-                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{selectedBankLedger || bankLedger || '—'}</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankLedger || '—'}</span>
                           </div>
                         )}
-                        {bankTxnRef && (
+                        {paymentRef && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>
                             <span style={{ color: 'var(--text-muted, #64748b)', fontWeight: 600 }}>Txn / Cheque Ref</span>
-                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{bankTxnRef}</span>
+                            <span style={{ color: 'var(--text-dark, #0f172a)', fontWeight: 700 }}>{paymentRef}</span>
                           </div>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px' }}>

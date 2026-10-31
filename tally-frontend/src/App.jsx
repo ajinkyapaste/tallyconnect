@@ -70,11 +70,11 @@ const inr = (n) => {
 const shortDate = (s) =>
   s ? new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
 
-export const CLEAN_WHITE_BG = 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #edf2f7 100%)';
+const CLEAN_WHITE_BG = 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #edf2f7 100%)';
 
-export const WALLPAPER_PRESETS = ALL_THEMES_PRESETS;
+const WALLPAPER_PRESETS = ALL_THEMES_PRESETS;
 
-export const formatSyncTime = (ts) => {
+const formatSyncTime = (ts) => {
   if (!ts) return 'Never';
   const d = new Date(ts);
   if (isNaN(d.getTime())) return String(ts);
@@ -103,7 +103,7 @@ const voucherMeta = (type) => {
   return VOUCHER_META[key] || { icon: <FileText size={20} />, color: 'var(--text-dark)' };
 };
 
-export const APP_DEMO_LEDGERS = [
+const APP_DEMO_LEDGERS = [
   { ledger_guid: 'demo-led-01', name: 'Acme Infotech Pvt Ltd', parent: 'Sundry Debtors', parent_group: 'Sundry Debtors', closing_balance: 485200, opening_balance: 320000, credit_period: 30, state: 'Maharashtra', is_debit: true },
   { ledger_guid: 'demo-led-02', name: 'Apex Industrial Supplies', parent: 'Sundry Creditors', parent_group: 'Sundry Creditors', closing_balance: -312400, opening_balance: -200000, credit_period: 45, state: 'Gujarat', is_debit: false },
   { ledger_guid: 'demo-led-03', name: 'Reliance Retail Enterprises', parent: 'Sundry Debtors', parent_group: 'Sundry Debtors', closing_balance: 890000, opening_balance: 650000, credit_period: 15, state: 'Delhi', is_debit: true },
@@ -8715,8 +8715,66 @@ const Orders = ({ companyGuid, externalQuery, setCurrentTab, user: propUser }) =
 
 
 
+/* ---------------- Voucher Error Boundary ---------------- */
+class VoucherErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('Voucher section error caught:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fade-in glass-panel" style={{ padding: '48px 24px', textAlign: 'center', maxWidth: '560px', margin: '40px auto', borderRadius: '24px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#ef4444' }}>
+            <AlertCircle size={28} />
+          </div>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px', color: 'var(--text-dark, #fff)' }}>Unable to Load Vouchers</h2>
+          <p style={{ color: 'var(--text-muted, rgba(255, 255, 255, 0.7))', fontSize: '14px', lineHeight: 1.6, margin: '0 0 24px' }}>
+            {this.state.error?.message || 'A temporary issue occurred while rendering the vouchers view.'}
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <button
+              className="btn btn-primary"
+              style={{ padding: '8px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 600 }}
+              onClick={() => this.setState({ hasError: false, error: null })}
+            >
+              Retry
+            </button>
+            <button
+              className="btn"
+              style={{ padding: '8px 20px', borderRadius: '12px', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: 'var(--text-dark, #fff)' }}
+              onClick={() => {
+                try {
+                  localStorage.removeItem('tc_vouchers_hidden');
+                  localStorage.removeItem('tc_vouchers_order');
+                  localStorage.removeItem('tc_vouchers_pinned');
+                } catch {}
+                this.setState({ hasError: false, error: null });
+                window.location.reload();
+              }}
+            >
+              Reset Cache & Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /* ---------------- Voucher Explore ---------------- */
-const VoucherExplore = (props) => <VoucherManager {...props} />;
+const VoucherExplore = (props) => (
+  <VoucherErrorBoundary>
+    <VoucherManager {...props} />
+  </VoucherErrorBoundary>
+);
 
 /* ---------------- CompanyManager ---------------- */
 const CompanyManager = ({ companyGuid, setCompanyGuid }) => {
@@ -18934,6 +18992,8 @@ function App() {
       <div
         key={item.id}
         draggable={true}
+        onMouseDown={() => { wasDraggingNavRef.current = false; }}
+        onPointerDown={() => { wasDraggingNavRef.current = false; }}
         onDragStart={(e) => {
           wasDraggingNavRef.current = true;
           setDraggedNavId(item.id);
@@ -18969,7 +19029,10 @@ function App() {
         }, 1300)}
         className={`nav-item draggable ${isActive ? 'active' : ''} ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over nav-drag-over' : ''}`}
         onClick={() => {
-          if (wasDraggingNavRef.current) return;
+          if (wasDraggingNavRef.current) {
+            wasDraggingNavRef.current = false;
+            return;
+          }
           handleNav(item.id);
         }}
         title={railMode ? `${item.name} · Drag to reorder, hold for options` : 'Drag to reorder, hold for options'}

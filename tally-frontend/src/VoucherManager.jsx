@@ -361,6 +361,12 @@ const withLocalDemoVouchers = (vouchers) => {
   }
 };
 
+// Hoisted getVKey helper accessible across the module
+export const getVKey = (v) => {
+  if (!v) return '';
+  return String(v.voucher_guid || v.id || `${v.reference_no || ''}-${v.voucher_date || ''}`);
+};
+
 /* ------------------------------------------------------------------
    VoucherManager Component
    ------------------------------------------------------------------ */
@@ -681,8 +687,7 @@ export const VoucherManager = ({
     }
   };
 
-  // Helper key
-  const getVKey = (v) => String(v.voucher_guid || v.id || `${v.reference_no}-${v.voucher_date}`);
+  // Helper key & pinned status
   const isVoucherPinned = (v) => voucherPinned.includes(getVKey(v));
 
   // Date filtering logic using standard 5 options
@@ -780,7 +785,7 @@ export const VoucherManager = ({
 
   // Filter vouchers by selected category & search query
   const filteredList = useMemo(() => {
-    let list = dateFilteredVouchers;
+    let list = [...dateFilteredVouchers];
 
     // Filter by category
     if (selectedCategory && selectedCategory !== 'All') {

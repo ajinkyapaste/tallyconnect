@@ -6,60 +6,51 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const TARGET = env.VITE_BACKEND_TARGET || env.VITE_API_TARGET || env.VITE_API_URL || 'https://tallymobile.utkarshmishra.online'
 
+  const proxyRoutes = [
+    '/auth', '/company', '/ledger', '/voucher-entry', '/orders', '/bill', '/ageing',
+    '/sales-order', '/sales-order-item', '/stock-item', '/stock-summary', '/invoice',
+    '/invoice-item', '/sync', '/inventory', '/users', '/uploads', '/dashboard',
+    '/api/leave', '/api/attendance', '/api/reminders', '/api/assistant',
+    '/api/financial', '/api/analytics', '/api/cashflow', '/api/tally-reports',
+    '/api/mobile-voucher-command', '/api/feedback', '/api/admin/feedback', '/api',
+    '/send-invite', '/agent', '/agent-status', '/voucher-command', '/sync-queue',
+    '/admin', '/notify-permission-update', '/request-to-admin', '/ledger-items',
+    '/entry-field-settings', '/check-db'
+  ];
+
+  const proxy = {};
+  for (const route of proxyRoutes) {
+    proxy[route] = {
+      target: TARGET,
+      changeOrigin: true,
+      secure: false,
+      timeout: 12000,
+      proxyTimeout: 12000,
+      configure: (proxyServer) => {
+        proxyServer.on('error', (err, req, res) => {
+          if (res && !res.headersSent && typeof res.writeHead === 'function') {
+            try {
+              res.writeHead(504, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Gateway Timeout', message: err?.message || 'Backend timeout' }));
+            } catch {}
+          }
+        });
+      }
+    };
+  }
+
   return {
     plugins: [react()],
     server: {
       port: 5173,
       strictPort: true,
       host: true,
-      proxy: {
-        '/auth': { target: TARGET, changeOrigin: true, secure: false },
-        '/company': { target: TARGET, changeOrigin: true, secure: false },
-        '/ledger': { target: TARGET, changeOrigin: true, secure: false },
-        '/voucher-entry': { target: TARGET, changeOrigin: true, secure: false },
-        '/orders': { target: TARGET, changeOrigin: true, secure: false },
-        '/bill': { target: TARGET, changeOrigin: true, secure: false },
-        '/ageing': { target: TARGET, changeOrigin: true, secure: false },
-        '/sales-order': { target: TARGET, changeOrigin: true, secure: false },
-        '/sales-order-item': { target: TARGET, changeOrigin: true, secure: false },
-        '/stock-item': { target: TARGET, changeOrigin: true, secure: false },
-        '/stock-summary': { target: TARGET, changeOrigin: true, secure: false },
-        '/invoice': { target: TARGET, changeOrigin: true, secure: false },
-        '/invoice-item': { target: TARGET, changeOrigin: true, secure: false },
-        '/sync': { target: TARGET, changeOrigin: true, secure: false },
-        '/inventory': { target: TARGET, changeOrigin: true, secure: false },
-        '/users': { target: TARGET, changeOrigin: true, secure: false },
-        '/uploads': { target: TARGET, changeOrigin: true, secure: false },
-        '/dashboard': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/leave': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/attendance': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/reminders': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/assistant': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/financial': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/analytics': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/cashflow': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/tally-reports': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/mobile-voucher-command': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/feedback': { target: TARGET, changeOrigin: true, secure: false },
-        '/api/admin/feedback': { target: TARGET, changeOrigin: true, secure: false },
-        '/api': { target: TARGET, changeOrigin: true, secure: false },
-        '/send-invite': { target: TARGET, changeOrigin: true, secure: false },
-        '/agent': { target: TARGET, changeOrigin: true, secure: false },
-        '/agent-status': { target: TARGET, changeOrigin: true, secure: false },
-        '/voucher-command': { target: TARGET, changeOrigin: true, secure: false },
-        '/sync-queue': { target: TARGET, changeOrigin: true, secure: false },
-        '/admin': { target: TARGET, changeOrigin: true, secure: false },
-        '/notify-permission-update': { target: TARGET, changeOrigin: true, secure: false },
-        '/request-to-admin': { target: TARGET, changeOrigin: true, secure: false },
-        '/ledger-items': { target: TARGET, changeOrigin: true, secure: false },
-        '/entry-field-settings': { target: TARGET, changeOrigin: true, secure: false },
-        '/check-db': { target: TARGET, changeOrigin: true, secure: false },
-      },
+      proxy
     },
     preview: {
       port: 5173,
       strictPort: true,
-      host: true,
-    },
+      host: true
+    }
   }
 })
